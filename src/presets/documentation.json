@@ -1,0 +1,38 @@
+{
+	"name": "Documentation",
+	"description": "Optimized for technical documentation",
+	"features": {
+		"commandPalette": false,
+		"tableOfContents": true,
+		"readingTime": false,
+		"linkedMentions": true,
+		"comments": true
+	},
+	"theme": "nord",
+	"contentOrganization": "file-based",
+	"config": {
+		"currentTemplate": "documentation",
+		"currentTheme": "nord",
+		"contentOrganization": "file-based",
+		"features": {
+			"commandPalette": false,
+			"tableOfContents": true,
+			"readingTime": false,
+			"linkedMentions": true,
+			"comments": true
+		},
+		"pluginConfig": {
+			"obsidianSettings": {
+				"attachmentLocation": "subfolder",
+				"subfolderName": "attachments"
+			},
+			"astroComposerSettings": {
+				"creationMode": "file-based",
+				"indexFileName": "index"
+			},
+			"imageInserterSettings": {
+				"insertFormat": "[[attachments/{image-url}]]"
+			}
+		}
+	}
+}

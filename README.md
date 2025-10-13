@@ -1,94 +1,218 @@
-# Obsidian Sample Plugin
+# Astro Modular Settings
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+A comprehensive Obsidian plugin for easy setup and configuration management of the Astro Modular theme. This plugin provides a user-friendly setup wizard, preset configurations, and automatic plugin settings management to streamline your Astro Modular experience.
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+## Features
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+### 🚀 Setup Wizard
+- **Welcome Screen**: Beautiful onboarding with Astro Modular branding
+- **Template Selection**: Choose from Standard, Minimal, Compact, Documentation, or Custom templates
+- **Theme Selection**: Visual theme picker with 18+ beautiful color schemes
+- **Content Organization**: Choose between file-based or folder-based content structure
+- **Feature Configuration**: Granular control over theme features (for custom templates)
+- **Plugin Configuration**: Automatic setup of required Obsidian plugins
+- **Smart Defaults**: Skip options with sensible defaults for quick setup
 
-## First time developing plugins?
+### ⚙️ Settings Interface
+- **General Tab**: Basic plugin settings and current configuration overview
+- **Quick Config**: Fast template, theme, and organization changes
+- **Features Tab**: Toggle individual theme features on/off
+- **Plugin Settings**: Manage Obsidian plugin configurations
+- **Advanced Tab**: Direct config file editing and import/export
 
-Quick starting guide for new plugin devs:
+### 🎨 Preset Templates
+- **Standard**: Full-featured blog with all options enabled
+- **Minimal**: Clean, simple blog with minimal features
+- **Compact**: Balanced setup for smaller sites
+- **Documentation**: Optimized for technical documentation
+- **Custom**: Granular control over every setting
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+### 🌈 Theme Support
+- Oxygen (default) - Modern, clean design
+- Minimal - Understated with high contrast
+- Atom - Dark theme with vibrant accents
+- Ayu - Three variants (light, mirage, dark)
+- Catppuccin - Pastel color palette
+- Charcoal - Dark, professional look
+- Dracula - Dark theme with purple accents
+- Everforest - Soft, warm colors
+- Flexoki - Based on Material Design 3
+- Gruvbox - Retro groove color scheme
+- macOS - Native macOS appearance
+- Nord - Arctic-inspired color palette
+- Obsidian - Matches Obsidian's default theme
+- Rosé Pine - All natural pine, faux fir, and winter
+- Sky - Light, airy design
+- Solarized - Precision colors for machines and people
+- Things - Clean, minimal design
 
-## Releasing new releases
+## Installation
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+### From Obsidian Community Plugins
+1. Open Obsidian
+2. Go to **Settings → Community plugins**
+3. Click **Browse** and search for "Astro Modular Settings"
+4. Click **Install** and then **Enable**
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+### Manual Installation
+1. Download the latest release from [GitHub](https://github.com/astro-modular/obsidian-astro-modular-settings)
+2. Extract the files to your vault's `.obsidian/plugins/astro-modular-settings/` folder
+3. Reload Obsidian
+4. Go to **Settings → Community plugins** and enable "Astro Modular Settings"
 
-## Adding your plugin to the community plugin list
+## Quick Start
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+### First Time Setup
+1. **Enable the plugin** in **Settings → Community plugins**
+2. **Click the rocket icon** in the left ribbon or run the command "Run Setup Wizard"
+3. **Follow the wizard steps**:
+   - Choose your template (Standard recommended for beginners)
+   - Select your preferred theme
+   - Pick content organization (file-based recommended)
+   - Configure features (if using custom template)
+   - Let the plugin configure your other plugins automatically
+   - Review and complete setup
 
-## How to use
+### Using the Settings
+- **Access settings**: Go to **Settings → Plugin Options → Astro Modular Settings**
+- **Quick changes**: Use the "Quick Config" tab for fast template/theme changes
+- **Feature control**: Use the "Features" tab to toggle individual features
+- **Plugin management**: Use the "Plugin Settings" tab to manage Obsidian plugins
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+## Commands
 
-## Manually installing the plugin
+The plugin provides several commands accessible via the Command Palette (`Ctrl/Cmd + P`):
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+- **Astro Modular: Open Settings** - Open the plugin settings
+- **Astro Modular: Run Setup Wizard** - Launch the setup wizard
+- **Astro Modular: Open config.ts** - Open your Astro configuration file
+- **Astro Modular: Apply Current Configuration** - Apply current settings to config
+- **Astro Modular: Toggle Wizard on Startup** - Enable/disable startup wizard
 
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint ./src/`
+## Configuration
 
-## Funding URL
+### Content Organization
 
-You can include funding URLs where people who use your plugin can financially support it.
-
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
-
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
+#### File-based (Default)
+```
+posts/
+├── my-post.md
+└── attachments/
+    └── image.jpg
 ```
 
-If you have multiple URLs, you can also do:
-
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
+#### Folder-based
+```
+posts/
+├── my-post/
+│   ├── index.md
+│   └── image.jpg
+└── another-post/
+    ├── index.md
+    └── image.jpg
 ```
 
-## API Documentation
+### Plugin Integration
 
-See https://github.com/obsidianmd/obsidian-api
+The plugin automatically configures these Obsidian plugins:
+
+- **Astro Composer**: Sets creation mode and index file name
+- **Image Inserter**: Configures frontmatter format for images
+- **Obsidian Settings**: Sets attachment location and subfolder name
+
+### Configuration File
+
+The plugin reads and writes to your `astro.config.ts` file. It preserves your existing configuration while applying the selected template and theme settings.
+
+## Troubleshooting
+
+### Plugin Not Loading
+- Ensure the plugin is enabled in **Settings → Community plugins**
+- Check that you have the required files: `main.js`, `manifest.json`, `styles.css`
+- Try reloading Obsidian (`Ctrl/Cmd + R`)
+
+### Setup Wizard Not Appearing
+- Check the "Run wizard on startup" setting in the General tab
+- Ensure "Do not show this again" is not checked
+- Manually run the wizard via the Command Palette
+
+### Configuration Not Applied
+- Verify your `astro.config.ts` file exists and is valid
+- Check the console for any error messages
+- Try manually applying configuration from the Quick Config tab
+
+### Missing Plugins
+- Install required plugins: Astro Composer, Image Inserter
+- Use the "Show manual instructions" option in Plugin Settings tab
+- Follow the step-by-step configuration guide
+
+### Theme Not Changing
+- Ensure your Astro dev server is running
+- Check that the theme name is correct in your config
+- Try restarting your Astro dev server after configuration changes
+
+## Development
+
+### Building from Source
+```bash
+# Install dependencies
+npm install
+
+# Development build with watch mode
+npm run dev
+
+# Production build
+npm run build
+```
+
+### Project Structure
+```
+src/
+├── main.ts              # Plugin entry point
+├── settings.ts          # Settings interface
+├── types.ts             # TypeScript definitions
+├── commands/            # Command implementations
+├── ui/                  # UI components
+│   ├── SetupWizardModal.ts
+│   └── SettingsTab.ts
+├── utils/               # Utility functions
+│   ├── ConfigManager.ts
+│   └── PluginManager.ts
+└── presets/             # Template presets
+    ├── standard.json
+    ├── minimal.json
+    ├── compact.json
+    └── documentation.json
+```
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### Development Setup
+1. Fork the repository
+2. Clone your fork
+3. Install dependencies: `npm install`
+4. Make your changes
+5. Test thoroughly
+6. Submit a pull request
+
+## Support
+
+- **Documentation**: [GitHub Wiki](https://github.com/astro-modular/obsidian-astro-modular-settings/wiki)
+- **Issues**: [GitHub Issues](https://github.com/astro-modular/obsidian-astro-modular-settings/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/astro-modular/obsidian-astro-modular-settings/discussions)
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Built for the [Astro Modular](https://github.com/astro-modular) theme
+- Inspired by the Obsidian community's need for easier theme configuration
+- Thanks to all contributors and users who provide feedback
+
+---
+
+**Made with ❤️ for the Obsidian and Astro communities**

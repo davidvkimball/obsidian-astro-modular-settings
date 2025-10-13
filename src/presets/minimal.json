@@ -1,0 +1,38 @@
+{
+	"name": "Minimal",
+	"description": "Clean, simple blog with minimal features",
+	"features": {
+		"commandPalette": true,
+		"tableOfContents": true,
+		"readingTime": false,
+		"linkedMentions": false,
+		"comments": false
+	},
+	"theme": "minimal",
+	"contentOrganization": "file-based",
+	"config": {
+		"currentTemplate": "minimal",
+		"currentTheme": "minimal",
+		"contentOrganization": "file-based",
+		"features": {
+			"commandPalette": true,
+			"tableOfContents": true,
+			"readingTime": false,
+			"linkedMentions": false,
+			"comments": false
+		},
+		"pluginConfig": {
+			"obsidianSettings": {
+				"attachmentLocation": "subfolder",
+				"subfolderName": "attachments"
+			},
+			"astroComposerSettings": {
+				"creationMode": "file-based",
+				"indexFileName": "index"
+			},
+			"imageInserterSettings": {
+				"insertFormat": "[[attachments/{image-url}]]"
+			}
+		}
+	}
+}

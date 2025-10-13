@@ -1,0 +1,38 @@
+{
+	"name": "Standard",
+	"description": "Full-featured blog with all options enabled",
+	"features": {
+		"commandPalette": true,
+		"tableOfContents": true,
+		"readingTime": true,
+		"linkedMentions": true,
+		"comments": true
+	},
+	"theme": "oxygen",
+	"contentOrganization": "file-based",
+	"config": {
+		"currentTemplate": "standard",
+		"currentTheme": "oxygen",
+		"contentOrganization": "file-based",
+		"features": {
+			"commandPalette": true,
+			"tableOfContents": true,
+			"readingTime": true,
+			"linkedMentions": true,
+			"comments": true
+		},
+		"pluginConfig": {
+			"obsidianSettings": {
+				"attachmentLocation": "subfolder",
+				"subfolderName": "attachments"
+			},
+			"astroComposerSettings": {
+				"creationMode": "file-based",
+				"indexFileName": "index"
+			},
+			"imageInserterSettings": {
+				"insertFormat": "[[attachments/{image-url}]]"
+			}
+		}
+	}
+}

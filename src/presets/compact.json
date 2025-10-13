@@ -1,0 +1,38 @@
+{
+	"name": "Compact",
+	"description": "Balanced setup for smaller sites",
+	"features": {
+		"commandPalette": true,
+		"tableOfContents": true,
+		"readingTime": true,
+		"linkedMentions": false,
+		"comments": false
+	},
+	"theme": "oxygen",
+	"contentOrganization": "file-based",
+	"config": {
+		"currentTemplate": "compact",
+		"currentTheme": "oxygen",
+		"contentOrganization": "file-based",
+		"features": {
+			"commandPalette": true,
+			"tableOfContents": true,
+			"readingTime": true,
+			"linkedMentions": false,
+			"comments": false
+		},
+		"pluginConfig": {
+			"obsidianSettings": {
+				"attachmentLocation": "subfolder",
+				"subfolderName": "attachments"
+			},
+			"astroComposerSettings": {
+				"creationMode": "file-based",
+				"indexFileName": "index"
+			},
+			"imageInserterSettings": {
+				"insertFormat": "[[attachments/{image-url}]]"
+			}
+		}
+	}
+}
