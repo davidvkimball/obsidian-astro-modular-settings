@@ -10,6 +10,15 @@ export interface AstroModularSettings {
 	// Features (for custom template)
 	features: FeatureSettings;
 	
+	// Typography settings
+	typography: TypographySettings;
+	
+	// Optional features
+	optionalFeatures: OptionalFeatures;
+	
+	// Deployment settings
+	deployment: DeploymentSettings;
+	
 	// Plugin configuration
 	pluginConfig: PluginConfiguration;
 }
@@ -20,6 +29,63 @@ export interface FeatureSettings {
 	readingTime: boolean;
 	linkedMentions: boolean;
 	comments: boolean;
+	graphView: boolean;
+	postNavigation: boolean;
+	scrollToTop: boolean;
+	darkModeToggleButton: 'navigation' | 'commandPalette' | 'both';
+	showSocialIconsInFooter: boolean;
+	showPostCardCoverImages: 'all' | 'featured' | 'home' | 'posts' | 'featured-and-posts' | 'none';
+	postCardAspectRatio: 'og' | '16:9' | '4:3' | '3:2' | 'square' | 'golden' | 'custom';
+	customPostCardAspectRatio?: string;
+	linkedMentionsCompact: boolean;
+}
+
+export interface TypographySettings {
+	headingFont: string;
+	proseFont: string;
+	monoFont: string;
+	fontSource: 'local' | 'cdn';
+	customFonts: {
+		heading: string;
+		prose: string;
+		mono: string;
+	};
+}
+
+export interface OptionalFeatures {
+	profilePicture: ProfilePictureSettings;
+	comments: CommentsSettings;
+}
+
+export interface ProfilePictureSettings {
+	enabled: boolean;
+	image: string;
+	alt: string;
+	size: 'sm' | 'md' | 'lg';
+	url?: string;
+	placement: 'footer' | 'header';
+	style: 'circle' | 'square' | 'none';
+}
+
+export interface CommentsSettings {
+	enabled: boolean;
+	provider: 'giscus';
+	repo?: string;
+	repoId?: string;
+	category?: string;
+	categoryId?: string;
+	mapping?: string;
+	strict?: string;
+	reactions?: string;
+	metadata?: string;
+	inputPosition?: string;
+	theme?: string;
+	lang?: string;
+	loading?: string;
+}
+
+export interface DeploymentSettings {
+	platform: 'netlify' | 'vercel' | 'github-pages';
 }
 
 export interface PluginConfiguration {
@@ -100,6 +166,12 @@ export interface ConfigFileInfo {
 	errors: string[];
 }
 
+export const FONT_OPTIONS = [
+	'Inter', 'Roboto', 'Open Sans', 'Lato', 'Poppins', 'Source Sans Pro', 'Nunito', 'Montserrat',
+	'Playfair Display', 'Merriweather', 'Lora', 'Crimson Text', 'PT Serif', 'Libre Baskerville',
+	'Fira Code', 'JetBrains Mono', 'Source Code Pro', 'IBM Plex Mono', 'Cascadia Code'
+];
+
 export const DEFAULT_SETTINGS: AstroModularSettings = {
 	runWizardOnStartup: true,
 	currentTemplate: 'standard',
@@ -110,7 +182,43 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 		tableOfContents: true,
 		readingTime: true,
 		linkedMentions: true,
-		comments: true,
+		comments: false,
+		graphView: true,
+		postNavigation: true,
+		scrollToTop: true,
+		darkModeToggleButton: 'both',
+		showSocialIconsInFooter: true,
+		showPostCardCoverImages: 'featured-and-posts',
+		postCardAspectRatio: 'og',
+		linkedMentionsCompact: false,
+	},
+	typography: {
+		headingFont: 'Inter',
+		proseFont: 'Inter',
+		monoFont: 'JetBrains Mono',
+		fontSource: 'local',
+		customFonts: {
+			heading: '',
+			prose: '',
+			mono: '',
+		},
+	},
+	optionalFeatures: {
+		profilePicture: {
+			enabled: false,
+			image: '/profile.jpg',
+			alt: 'Profile picture',
+			size: 'md',
+			placement: 'footer',
+			style: 'circle',
+		},
+		comments: {
+			enabled: false,
+			provider: 'giscus',
+		},
+	},
+	deployment: {
+		platform: 'netlify',
 	},
 	pluginConfig: {
 		obsidianSettings: {
@@ -132,115 +240,115 @@ export const THEME_OPTIONS: ThemeOption[] = [
 		id: 'oxygen',
 		name: 'Oxygen',
 		description: 'Modern, clean design',
-		previewColors: ['#3b82f6', '#1e40af', '#ffffff'],
+		previewColors: ['#0ea5e9', '#0284c7', '#f8fafc'],
 	},
 	{
 		id: 'minimal',
 		name: 'Minimal',
 		description: 'Understated with high contrast',
-		previewColors: ['#000000', '#ffffff', '#666666'],
+		previewColors: ['#708794', '#5a6d77', '#fafafa'],
 	},
 	{
 		id: 'atom',
 		name: 'Atom',
 		description: 'Dark theme with vibrant accents',
-		previewColors: ['#282c34', '#61dafb', '#98c379'],
+		previewColors: ['#61dafb', '#1a92ff', '#282c34'],
 	},
 	{
 		id: 'ayu-light',
 		name: 'Ayu Light',
 		description: 'Clean light theme',
-		previewColors: ['#fafafa', '#ff6b6b', '#4ecdc4'],
+		previewColors: ['#ffcc66', '#e6913d', '#fefefe'],
 	},
 	{
 		id: 'ayu-mirage',
 		name: 'Ayu Mirage',
 		description: 'Soft dark theme',
-		previewColors: ['#1f2430', '#ffcc66', '#5ccfe6'],
+		previewColors: ['#ffcc66', '#e6913d', '#1f2430'],
 	},
 	{
 		id: 'ayu-dark',
 		name: 'Ayu Dark',
 		description: 'Deep dark theme',
-		previewColors: ['#0d1117', '#ffcc66', '#5ccfe6'],
+		previewColors: ['#ffcc66', '#e6913d', '#0f1419'],
 	},
 	{
 		id: 'catppuccin',
 		name: 'Catppuccin',
 		description: 'Pastel color palette',
-		previewColors: ['#1e1e2e', '#f5c2e7', '#a6e3a1'],
+		previewColors: ['#dcb6af', '#c49a8f', '#1e1e2e'],
 	},
 	{
 		id: 'charcoal',
 		name: 'Charcoal',
 		description: 'Dark, professional look',
-		previewColors: ['#2d2d2d', '#ffffff', '#ff6b6b'],
+		previewColors: ['#ffffff', '#ff6b6b', '#2d2d2d'],
 	},
 	{
 		id: 'dracula',
 		name: 'Dracula',
 		description: 'Dark theme with purple accents',
-		previewColors: ['#282a36', '#bd93f9', '#50fa7b'],
+		previewColors: ['#bd93f9', '#8b5cf6', '#282a36'],
 	},
 	{
 		id: 'everforest',
 		name: 'Everforest',
 		description: 'Soft, warm colors',
-		previewColors: ['#2d353b', '#a7c080', '#dbbc7f'],
+		previewColors: ['#a7c080', '#dbbc7f', '#2d353b'],
 	},
 	{
 		id: 'flexoki',
 		name: 'Flexoki',
 		description: 'Based on Material Design 3',
-		previewColors: ['#100f0f', '#f2f0e5', '#ff6b6b'],
+		previewColors: ['#ff6b6b', '#e6b673', '#100f0f'],
 	},
 	{
 		id: 'gruvbox',
 		name: 'Gruvbox',
 		description: 'Retro groove color scheme',
-		previewColors: ['#282828', '#fabd2f', '#b16286'],
+		previewColors: ['#fabd2f', '#b16286', '#282828'],
 	},
 	{
 		id: 'macos',
 		name: 'macOS',
 		description: 'Native macOS appearance',
-		previewColors: ['#ffffff', '#007aff', '#34c759'],
+		previewColors: ['#007aff', '#34c759', '#ffffff'],
 	},
 	{
 		id: 'nord',
 		name: 'Nord',
 		description: 'Arctic-inspired color palette',
-		previewColors: ['#2e3440', '#88c0d0', '#a3be8c'],
+		previewColors: ['#88c0d0', '#a3be8c', '#2e3440'],
 	},
 	{
 		id: 'obsidian',
 		name: 'Obsidian',
 		description: 'Matches Obsidian\'s default theme',
-		previewColors: ['#1e1e1e', '#ffffff', '#7c3aed'],
+		previewColors: ['#7c3aed', '#ffffff', '#1e1e1e'],
 	},
 	{
 		id: 'rose-pine',
 		name: 'Rosé Pine',
 		description: 'All natural pine, faux fir, and winter',
-		previewColors: ['#191724', '#eb6f92', '#9ccfd8'],
+		previewColors: ['#eb6f92', '#9ccfd8', '#191724'],
 	},
 	{
 		id: 'sky',
 		name: 'Sky',
 		description: 'Light, airy design',
-		previewColors: ['#f0f9ff', '#0ea5e9', '#06b6d4'],
+		previewColors: ['#0ea5e9', '#06b6d4', '#f0f9ff'],
 	},
 	{
 		id: 'solarized',
 		name: 'Solarized',
 		description: 'Precision colors for machines and people',
-		previewColors: ['#002b36', '#268bd2', '#859900'],
+		previewColors: ['#268bd2', '#859900', '#002b36'],
 	},
 	{
 		id: 'things',
 		name: 'Things',
 		description: 'Clean, minimal design',
-		previewColors: ['#ffffff', '#000000', '#007aff'],
+		previewColors: ['#007aff', '#000000', '#ffffff'],
 	},
 ];
 
@@ -248,35 +356,28 @@ export const TEMPLATE_OPTIONS: TemplateOption[] = [
 	{
 		id: 'standard',
 		name: 'Standard',
-		description: 'Full-featured blog with all options enabled',
-		features: ['Command palette', 'Table of contents', 'Reading time', 'Linked mentions', 'Comments'],
+		description: 'Full-featured blog with all default options enabled',
+		features: ['Command palette', 'Table of contents', 'Reading time', 'Linked mentions', 'Footer', 'Social icons', 'Scroll to top', 'Dark mode toggle'],
 		recommended: true,
-	},
-	{
-		id: 'minimal',
-		name: 'Minimal',
-		description: 'Clean, simple blog with minimal features',
-		features: ['Command palette', 'Table of contents'],
-		recommended: false,
 	},
 	{
 		id: 'compact',
 		name: 'Compact',
-		description: 'Balanced setup for smaller sites',
-		features: ['Command palette', 'Table of contents', 'Reading time'],
+		description: 'Balanced setup for smaller sites with optimized layout',
+		features: ['Command palette', 'Table of contents', 'Reading time', 'Compact linked mentions', 'Custom aspect ratio'],
 		recommended: false,
 	},
 	{
-		id: 'documentation',
-		name: 'Documentation',
-		description: 'Optimized for technical documentation',
-		features: ['Table of contents', 'Linked mentions', 'Comments'],
+		id: 'minimal',
+		name: 'Minimal',
+		description: 'Clean, simple blog with minimal features and content',
+		features: ['Command palette', 'Search posts/pages', 'Minimal navigation'],
 		recommended: false,
 	},
 	{
 		id: 'custom',
 		name: 'Custom',
-		description: 'Granular control over every setting',
+		description: 'Granular control over every setting - opens config.ts',
 		features: ['All features configurable'],
 		recommended: false,
 	},

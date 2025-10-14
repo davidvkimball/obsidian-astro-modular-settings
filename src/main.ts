@@ -33,10 +33,7 @@ export default class AstroModularSettingsPlugin extends Plugin {
 			}, 2000);
 		}
 
-		// Show welcome notice for first-time users
-		if (this.settings.currentTemplate === 'standard' && this.settings.currentTheme === 'oxygen') {
-			new Notice('Astro Modular Settings loaded! Click the rocket icon to get started.');
-		}
+		// No welcome notice needed - modal is the intro
 	}
 
 	onunload() {

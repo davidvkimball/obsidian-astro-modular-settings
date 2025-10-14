@@ -36,16 +36,31 @@
 
 .progress-bar {
 	flex: 1;
-	height: 8px;
+	height: 12px !important;
 	background: var(--background-modifier-border);
 	border-radius: 4px;
 	overflow: hidden;
+	position: relative;
+	margin: 0 !important;
+	padding: 0 !important;
+	display: flex !important;
+	align-items: flex-start !important;
 }
 
 .progress-fill {
-	height: 100%;
-	background: var(--interactive-accent);
+	height: 12px !important;
+	background: var(--interactive-accent) !important;
 	transition: width 0.3s ease;
+	border-radius: 4px;
+	min-width: 2px;
+	min-height: 12px !important;
+	opacity: 1;
+	display: block !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	position: absolute !important;
+	top: 0 !important;
+	left: 0 !important;
 }
 
 .progress-text {
@@ -768,4 +783,198 @@
 .theme-dark .theme-option:hover,
 .theme-dark .org-option:hover {
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Specific improvements added by AI assistant */
+
+/* Fix content organization display - use proper pre/code blocks */
+.org-example pre {
+	margin: 0;
+	font-family: var(--font-monospace);
+	font-size: 12px;
+	color: var(--text-normal);
+	white-space: pre;
+	line-height: 1.4;
+	overflow-x: auto;
+}
+
+.org-example code {
+	background: none;
+	padding: 0;
+	font-size: inherit;
+	color: inherit;
+}
+
+/* Font selection improvements - prevent dropdown flashing */
+.font-options {
+	display: grid;
+	gap: 1rem;
+}
+
+.font-setting {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.font-setting label {
+	font-weight: 500;
+	color: var(--text-normal);
+}
+
+.font-setting select,
+.font-setting input {
+	padding: 0.5rem;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background-color: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 0.875rem;
+	transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.font-setting select:focus,
+.font-setting input:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+	background-color: var(--background-primary);
+}
+
+.font-setting select:hover,
+.font-setting input:hover {
+	border-color: var(--text-muted);
+}
+
+/* Optional features improvements - better layout */
+.features-grid {
+	display: grid;
+	gap: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+.feature-card {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	padding: 1.25rem;
+	background-color: var(--background-secondary);
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.feature-card:hover {
+	border-color: var(--interactive-accent);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.settings-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 1rem;
+}
+
+.setting-group {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.setting-group label {
+	font-weight: 500;
+	color: var(--text-normal);
+	font-size: 0.875rem;
+}
+
+.setting-group input,
+.setting-group select {
+	padding: 0.5rem;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background-color: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 0.875rem;
+	transition: border-color 0.2s ease;
+}
+
+.setting-group input:focus,
+.setting-group select:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+}
+
+/* File input group removed - browse button no longer needed */
+
+/* Feature spacing improvements */
+.feature-header {
+	margin-bottom: 1.5rem;
+}
+
+.feature-details {
+	margin-top: 0.5rem;
+}
+
+.feature-note {
+	padding: 0.75rem;
+	background-color: var(--background-modifier-border);
+	border-radius: 4px;
+	border-left: 3px solid var(--interactive-accent);
+}
+
+.feature-note p {
+	margin: 0;
+	font-size: 0.875rem;
+	color: var(--text-muted);
+}
+
+.feature-note a {
+	color: var(--interactive-accent);
+	text-decoration: none;
+}
+
+.feature-note a:hover {
+	text-decoration: underline;
+}
+
+/* Deployment options improvements */
+.deployment-options {
+	display: grid;
+	gap: 1rem;
+	margin-top: 1.5rem;
+}
+
+.deployment-option {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	padding: 1.25rem;
+	background-color: var(--background-secondary);
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.deployment-option:hover {
+	border-color: var(--interactive-accent);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.deployment-option.selected {
+	border-color: var(--interactive-accent);
+	background-color: var(--interactive-accent-2);
+}
+
+.deployment-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 0.5rem;
+}
+
+.deployment-header h3 {
+	margin: 0;
+	font-size: 1.125rem;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.deployment-option p {
+	margin: 0;
+	color: var(--text-muted);
+	font-size: 0.875rem;
 }

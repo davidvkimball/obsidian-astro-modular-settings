@@ -234,17 +234,25 @@ export class AstroModularSettingsTab extends PluginSettingTab {
 			{ key: 'tableOfContents', name: 'Table of contents', desc: 'Show table of contents on pages' },
 			{ key: 'readingTime', name: 'Reading time', desc: 'Display estimated reading time' },
 			{ key: 'linkedMentions', name: 'Linked mentions', desc: 'Show linked mentions and backlinks' },
-			{ key: 'comments', name: 'Comments', desc: 'Enable comment system' }
+			{ key: 'comments', name: 'Comments', desc: 'Enable comment system' },
+			{ key: 'graphView', name: 'Graph view', desc: 'Show graph view of post connections' },
+			{ key: 'postNavigation', name: 'Post navigation', desc: 'Show next/previous post navigation' },
+			{ key: 'scrollToTop', name: 'Scroll to top', desc: 'Show scroll to top button' },
+			{ key: 'showSocialIconsInFooter', name: 'Social icons in footer', desc: 'Show social icons in footer' }
 		];
 
 		features.forEach(feature => {
+			const featureKey = feature.key as keyof typeof this.settings.features;
+			const currentValue = this.settings.features[featureKey];
+			const boolValue = typeof currentValue === 'boolean' ? currentValue : false;
+			
 			new Setting(container)
 				.setName(feature.name)
 				.setDesc(feature.desc)
 				.addToggle(toggle => toggle
-					.setValue(this.settings.features[feature.key as keyof typeof this.settings.features])
+					.setValue(boolValue)
 					.onChange(async (value) => {
-						this.settings.features[feature.key as keyof typeof this.settings.features] = value;
+						(this.settings.features as any)[featureKey] = value;
 						await this.plugin.saveData(this.settings);
 					}));
 		});
