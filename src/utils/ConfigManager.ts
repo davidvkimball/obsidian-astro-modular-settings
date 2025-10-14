@@ -237,12 +237,24 @@ export class ConfigManager {
 			);
 		}
 		
-		// Update footer social icons if specified in template
-		if (templateConfig.footer?.showSocialIconsInFooter !== undefined) {
-			modifiedConfig = modifiedConfig.replace(
-				/showSocialIconsInFooter:\s*(true|false)/,
-				`showSocialIconsInFooter: ${templateConfig.footer.showSocialIconsInFooter}`
-			);
+		// Update footer settings if specified in template
+		// NOTE: We only update showSocialIconsInFooter and enabled, NEVER the footer.content
+		if (templateConfig.footer) {
+			// Update footer enabled state
+			if (templateConfig.footer.enabled !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/footer:\s*\{\s*enabled:\s*(true|false),/,
+					`footer: {
+    enabled: ${templateConfig.footer.enabled},`
+				);
+			}
+			// Update footer social icons
+			if (templateConfig.footer.showSocialIconsInFooter !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/showSocialIconsInFooter:\s*(true|false)/,
+					`showSocialIconsInFooter: ${templateConfig.footer.showSocialIconsInFooter}`
+				);
+			}
 		}
 		
 		// Update navigation style if specified in template
@@ -263,50 +275,64 @@ export class ConfigManager {
 				);
 			}
 			
-		// Update search settings - use the working context regex
+		// Update search settings - use context-specific replacement
 		if (templateConfig.commandPalette.search) {
-			// Replace the entire search object with the correct values
-			const searchObject = `search: {
-      posts: ${templateConfig.commandPalette.search.posts},
-      pages: ${templateConfig.commandPalette.search.pages},
-      projects: ${templateConfig.commandPalette.search.projects},
-      docs: ${templateConfig.commandPalette.search.docs},
-    }`;
+			console.log('🔍 Template search config:', templateConfig.commandPalette.search);
 			
-			// Use the working context regex that we know matches
-			modifiedConfig = modifiedConfig.replace(
-				/search:\s*\{\s*posts:\s*(true|false),\s*pages:\s*(true|false),\s*projects:\s*(true|false),\s*docs:\s*(true|false),\s*\}/,
-				searchObject
-			);
+			// Replace each field individually with context-specific regex
+			if (templateConfig.commandPalette.search.posts !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/search:\s*\{[\s\S]*?posts:\s*(true|false),/,
+					(match) => match.replace(/posts:\s*(true|false),/, `posts: ${templateConfig.commandPalette.search.posts},`)
+				);
+			}
+			if (templateConfig.commandPalette.search.pages !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/search:\s*\{[\s\S]*?pages:\s*(true|false),/,
+					(match) => match.replace(/pages:\s*(true|false),/, `pages: ${templateConfig.commandPalette.search.pages},`)
+				);
+			}
+			if (templateConfig.commandPalette.search.projects !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/search:\s*\{[\s\S]*?projects:\s*(true|false),/,
+					(match) => match.replace(/projects:\s*(true|false),/, `projects: ${templateConfig.commandPalette.search.projects},`)
+				);
+			}
+			if (templateConfig.commandPalette.search.docs !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/search:\s*\{[\s\S]*?docs:\s*(true|false),/,
+					(match) => match.replace(/docs:\s*(true|false),/, `docs: ${templateConfig.commandPalette.search.docs},`)
+				);
+			}
+			
+			console.log('🔍 Search replacement completed');
 		}
 			
-			// Update sections settings with capture groups to distinguish from other similar keys
+			// Update sections settings - use simple line-by-line replacement
 			if (templateConfig.commandPalette.sections) {
-				Object.entries(templateConfig.commandPalette.sections).forEach(([key, value]) => {
-					let regex;
-					if (key === 'pages') {
-						// Distinguish from search.pages by capturing trailing ', social:'
-						regex = /pages:\s*(true|false)(,\s*social:)/;
-						modifiedConfig = modifiedConfig.replace(
-							regex,
-							`pages: ${value}$2`
-						);
-					} else if (key === 'social') {
-						// Capture trailing ', }' (end of sections object)
-						regex = /social:\s*(true|false)(,\s*\})/;
-						modifiedConfig = modifiedConfig.replace(
-							regex,
-							`social: ${value}$2`
-						);
-					} else if (key === 'quickActions') {
-						// Capture trailing ', pages:'
-						regex = /quickActions:\s*(true|false)(,\s*pages:)/;
-						modifiedConfig = modifiedConfig.replace(
-							regex,
-							`quickActions: ${value}$2`
-						);
-					}
-				});
+				console.log('🔍 Template sections config:', templateConfig.commandPalette.sections);
+				
+				// Replace each field individually with very specific regex
+				if (templateConfig.commandPalette.sections.quickActions !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/quickActions:\s*(true|false),/,
+						`quickActions: ${templateConfig.commandPalette.sections.quickActions},`
+					);
+				}
+				if (templateConfig.commandPalette.sections.pages !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/pages:\s*(true|false),/,
+						`pages: ${templateConfig.commandPalette.sections.pages},`
+					);
+				}
+				if (templateConfig.commandPalette.sections.social !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/social:\s*(true|false),/,
+						`social: ${templateConfig.commandPalette.sections.social},`
+					);
+				}
+				
+				console.log('🔍 Sections replacement completed');
 			}
 		}
 		
@@ -395,16 +421,30 @@ export class ConfigManager {
 				);
 			}
 			
-			// Update boolean features with safer regex patterns
+			// Update boolean features with highly specific regex patterns
 			const booleanFeatures = ['readingTime', 'wordCount', 'tableOfContents', 'tags', 'postNavigation'];
 			booleanFeatures.forEach(feature => {
 				if (templateConfig.postOptions[feature] !== undefined) {
-					// Use safer regex that only matches within postOptions context
-					const regex = new RegExp(`(\\s+)${feature}:\\s*(true|false)(,?\\s*\\/\\/.*)?`);
-					modifiedConfig = modifiedConfig.replace(
-						regex,
-						`$1${feature}: ${templateConfig.postOptions[feature]}$3`
-					);
+					// Use highly specific regex that targets each feature individually with context
+					let regex;
+					if (feature === 'readingTime') {
+						regex = /readingTime:\s*(true|false),?\s*\/\/ Show estimated reading time/;
+					} else if (feature === 'wordCount') {
+						regex = /wordCount:\s*(true|false),?\s*\/\/ Show word count/;
+					} else if (feature === 'tableOfContents') {
+						regex = /tableOfContents:\s*(true|false),?\s*\/\/ Show table of contents/;
+					} else if (feature === 'tags') {
+						regex = /tags:\s*(true|false),?\s*\/\/ Show tags/;
+					} else if (feature === 'postNavigation') {
+						regex = /postNavigation:\s*(true|false),?\s*\/\/ Show post navigation/;
+					}
+					
+					if (regex) {
+						modifiedConfig = modifiedConfig.replace(
+							regex,
+							`${feature}: ${templateConfig.postOptions[feature]}, // Show ${feature}`
+						);
+					}
 				}
 			});
 			
@@ -424,26 +464,53 @@ export class ConfigManager {
 				}
 			}
 			
-			// Update graph view settings with safer regex patterns
-			if (templateConfig.postOptions.graphView) {
-				const graphViewFeatures = ['enabled', 'showInSidebar', 'showInCommandPalette'];
-				graphViewFeatures.forEach(feature => {
-					if (templateConfig.postOptions.graphView[feature] !== undefined) {
-						// Use safer regex that preserves structure
-						const regex = new RegExp(`(\\s+)${feature}:\\s*(true|false)(,?\\s*\\/\\/.*)?`);
-						modifiedConfig = modifiedConfig.replace(
-							regex,
-							`$1${feature}: ${templateConfig.postOptions.graphView[feature]}$3`
+		// Update graph view settings with highly specific regex patterns
+		if (templateConfig.postOptions.graphView) {
+			// Update enabled state - target specifically within graphView object
+			if (templateConfig.postOptions.graphView.enabled !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/graphView:\s*\{\s*enabled:\s*(true|false),/,
+					`graphView: {
+    enabled: ${templateConfig.postOptions.graphView.enabled},`
+				);
+			}
+			// Update showInSidebar state - target specifically within graphView object
+			if (templateConfig.postOptions.graphView.showInSidebar !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/graphView:\s*\{[\s\S]*?showInSidebar:\s*(true|false),/,
+					(match) => {
+						return match.replace(
+							/showInSidebar:\s*(true|false),/,
+							`showInSidebar: ${templateConfig.postOptions.graphView.showInSidebar},`
 						);
 					}
-				});
-				if (templateConfig.postOptions.graphView.maxNodes) {
-					modifiedConfig = modifiedConfig.replace(
-						/maxNodes:\s*\d+/,
-						`maxNodes: ${templateConfig.postOptions.graphView.maxNodes}`
-					);
-				}
+				);
 			}
+			// Update showInCommandPalette state - target specifically within graphView object
+			if (templateConfig.postOptions.graphView.showInCommandPalette !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/graphView:\s*\{[\s\S]*?showInCommandPalette:\s*(true|false),/,
+					(match) => {
+						return match.replace(
+							/showInCommandPalette:\s*(true|false),/,
+							`showInCommandPalette: ${templateConfig.postOptions.graphView.showInCommandPalette},`
+						);
+					}
+				);
+			}
+			// Update maxNodes - target specifically within graphView object
+			if (templateConfig.postOptions.graphView.maxNodes) {
+				modifiedConfig = modifiedConfig.replace(
+					/graphView:\s*\{[\s\S]*?maxNodes:\s*\d+,/,
+					(match) => {
+						return match.replace(
+							/maxNodes:\s*\d+,/,
+							`maxNodes: ${templateConfig.postOptions.graphView.maxNodes},`
+						);
+					}
+				);
+			}
+		}
 			
 			// Update post card settings
 			if (templateConfig.postOptions.showPostCardCoverImages) {
@@ -468,34 +535,54 @@ export class ConfigManager {
 		
 		// Update profile picture settings - only update if profile picture is enabled
 		if (settings.optionalFeatures.profilePicture.enabled) {
+			// Update enabled state - target specifically within profilePicture object
 			modifiedConfig = modifiedConfig.replace(
 				/profilePicture:\s*\{\s*enabled:\s*(true|false),?\s*\/\/ Profile picture/,
 				`profilePicture: {
     enabled: ${settings.optionalFeatures.profilePicture.enabled}, // Profile picture`
 			);
+			// Update image - target specifically within profilePicture object
 			modifiedConfig = modifiedConfig.replace(
-				/image:\s*"[^"]*",?\s*\/\/ Path to your profile image/,
-				`image: "${settings.optionalFeatures.profilePicture.image}", // Path to your profile image`
+				/profilePicture:\s*\{[\s\S]*?image:\s*"[^"]*",?\s*\/\/ Path to your profile image/,
+				(match) => {
+					return match.replace(
+						/image:\s*"[^"]*",?\s*\/\/ Path to your profile image/,
+						`image: "${settings.optionalFeatures.profilePicture.image}", // Path to your profile image`
+					);
+				}
 			);
+			// Update alt - target specifically within profilePicture object
 			modifiedConfig = modifiedConfig.replace(
-				/alt:\s*"[^"]*"/,
-				`alt: "${settings.optionalFeatures.profilePicture.alt}"`
+				/profilePicture:\s*\{[\s\S]*?alt:\s*"[^"]*"/,
+				(match) => {
+					return match.replace(
+						/alt:\s*"[^"]*"/,
+						`alt: "${settings.optionalFeatures.profilePicture.alt}"`
+					);
+				}
 			);
+			// Update size - target specifically within profilePicture object
 			modifiedConfig = modifiedConfig.replace(
-				/size:\s*"[^"]*",?\s*\/\/ "sm" \(32px\), "md" \(48px\), or "lg" \(64px\)/,
-				`size: "${settings.optionalFeatures.profilePicture.size}", // "sm" (32px), "md" (48px), or "lg" (64px)`
+				/profilePicture:\s*\{[\s\S]*?size:\s*"[^"]*",?\s*\/\/ "sm" \(32px\), "md" \(48px\), or "lg" \(64px\)/,
+				(match) => {
+					return match.replace(
+						/size:\s*"[^"]*",?\s*\/\/ "sm" \(32px\), "md" \(48px\), or "lg" \(64px\)/,
+						`size: "${settings.optionalFeatures.profilePicture.size}", // "sm" (32px), "md" (48px), or "lg" (64px)`
+					);
+				}
 			);
-			// Update profile picture settings - use context regex to avoid type definitions
-			// Only update if profile picture is enabled
-			if (settings.optionalFeatures.profilePicture.enabled) {
-				// Use a more specific regex that includes context to avoid type definitions
-				modifiedConfig = modifiedConfig.replace(
-					/url:\s*"[^"]*",?\s*\/\/ Optional\s*,\s*placement:\s*"[^"]*",?\s*\/\/ "footer" or "header"\s*,\s*style:\s*"[^"]*",?\s*\/\/ "circle", "square", or "none"/,
-					`url: "${settings.optionalFeatures.profilePicture.url || ''}", // Optional
+			// Update url, placement, and style - target specifically within profilePicture object
+			modifiedConfig = modifiedConfig.replace(
+				/profilePicture:\s*\{[\s\S]*?url:\s*"[^"]*",?\s*\/\/ Optional\s*,\s*placement:\s*"[^"]*",?\s*\/\/ "footer" or "header"\s*,\s*style:\s*"[^"]*",?\s*\/\/ "circle", "square", or "none"/,
+				(match) => {
+					return match.replace(
+						/url:\s*"[^"]*",?\s*\/\/ Optional\s*,\s*placement:\s*"[^"]*",?\s*\/\/ "footer" or "header"\s*,\s*style:\s*"[^"]*",?\s*\/\/ "circle", "square", or "none"/,
+						`url: "${settings.optionalFeatures.profilePicture.url || ''}", // Optional
     placement: "${settings.optionalFeatures.profilePicture.placement}", // "footer" or "header"
     style: "${settings.optionalFeatures.profilePicture.style}", // "circle", "square", or "none"`
-				);
-			}
+					);
+				}
+			);
 		}
 		
 		// Update comments settings
@@ -575,6 +662,7 @@ export class ConfigManager {
           contentWidth: '45rem',
         },
         footer: {
+          enabled: true,
           showSocialIconsInFooter: true,
         },
         darkModeToggleButton: 'both',
@@ -587,6 +675,7 @@ export class ConfigManager {
 							docs: false,
 						},
           sections: {
+            quickActions: true,
             pages: true,
             social: true,
           },
@@ -662,7 +751,8 @@ export class ConfigManager {
 							docs: false,
 						},
           sections: {
-            pages: true,
+            quickActions: true,
+            pages: false,
             social: true,
           },
         },
@@ -723,7 +813,8 @@ export class ConfigManager {
 							docs: false,
 						},
           sections: {
-            pages: false,
+            quickActions: false,
+            pages: true,
             social: true,
           },
         },
