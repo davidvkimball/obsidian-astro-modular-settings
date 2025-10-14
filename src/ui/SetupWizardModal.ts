@@ -17,7 +17,6 @@ export class SetupWizardModal extends Modal {
 	private selectedContentOrg: ContentOrganizationType = 'file-based';
 	private selectedFeatures: any = {};
 	private runWizardOnStartup: boolean = true;
-	private doNotShowAgain: boolean = false;
 
 	constructor(app: App, settings: AstroModularSettings, onComplete: (settings: AstroModularSettings) => void) {
 		super(app);
@@ -345,10 +344,6 @@ export class SetupWizardModal extends Modal {
 						<input type="checkbox" ${this.runWizardOnStartup ? 'checked' : ''} id="run-on-startup">
 						<span>Run wizard on startup</span>
 					</label>
-					<label class="checkbox-option">
-						<input type="checkbox" ${this.doNotShowAgain ? 'checked' : ''} id="do-not-show-again">
-						<span>Do not show this again</span>
-					</label>
 				</div>
 			</div>
 		`;
@@ -356,10 +351,6 @@ export class SetupWizardModal extends Modal {
 		// Add change handlers
 		container.querySelector('#run-on-startup')?.addEventListener('change', (e) => {
 			this.runWizardOnStartup = (e.target as HTMLInputElement).checked;
-		});
-
-		container.querySelector('#do-not-show-again')?.addEventListener('change', (e) => {
-			this.doNotShowAgain = (e.target as HTMLInputElement).checked;
 		});
 	}
 
@@ -463,7 +454,6 @@ export class SetupWizardModal extends Modal {
 		this.settings.currentTheme = this.selectedTheme;
 		this.settings.contentOrganization = this.selectedContentOrg;
 		this.settings.runWizardOnStartup = this.runWizardOnStartup;
-		this.settings.doNotShowWizardAgain = this.doNotShowAgain;
 
 		// Apply configuration
 		await this.configManager.applyPreset({

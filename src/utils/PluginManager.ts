@@ -11,19 +11,27 @@ export class PluginManager {
 	async getPluginStatus(): Promise<PluginStatus[]> {
 		const plugins = (this.app as any).plugins;
 		const requiredPlugins = [
-			'obsidian-astro-composer',
-			'image-inserter',
-			'shell-commands'
+			'astro-composer',
+			'insert-unsplash-image',
+			'obsidian-shellcommands'
 		];
+
 
 		const status: PluginStatus[] = [];
 
 		for (const pluginId of requiredPlugins) {
 			const plugin = plugins?.plugins?.[pluginId];
+			const isInEnabledSet = plugins?.enabledPlugins && plugins.enabledPlugins.has(pluginId);
+			
+			// Check if plugin is installed by looking at community plugins list
+			// This works even when the plugin is disabled
+			const isInstalled = this.isPluginInstalled(pluginId);
+			
+			
 			status.push({
 				name: this.getPluginDisplayName(pluginId),
-				installed: !!plugin,
-				enabled: plugin?.enabled || false,
+				installed: isInstalled,
+				enabled: isInEnabledSet,
 				configurable: this.isPluginConfigurable(pluginId),
 				currentSettings: plugin ? await this.getPluginSettings(plugin) : undefined
 			});
@@ -32,19 +40,32 @@ export class PluginManager {
 		return status;
 	}
 
+	private isPluginInstalled(pluginId: string): boolean {
+		// Check if plugin is in the community plugins list
+		// This works even when the plugin is disabled
+		const communityPlugins = (this.app as any).plugins?.communityPlugins;
+		if (communityPlugins && Array.isArray(communityPlugins)) {
+			return communityPlugins.includes(pluginId);
+		}
+		
+		// Fallback: check if plugin exists in plugins object (only works when enabled)
+		const plugins = (this.app as any).plugins;
+		return !!plugins?.plugins?.[pluginId];
+	}
+
 	private getPluginDisplayName(pluginId: string): string {
 		const names: Record<string, string> = {
-			'obsidian-astro-composer': 'Astro Composer',
-			'image-inserter': 'Image Inserter',
-			'shell-commands': 'Shell Commands'
+			'astro-composer': 'Astro Composer',
+			'insert-unsplash-image': 'Image Inserter',
+			'obsidian-shellcommands': 'Shell Commands'
 		};
 		return names[pluginId] || pluginId;
 	}
 
 	private isPluginConfigurable(pluginId: string): boolean {
 		const configurablePlugins = [
-			'obsidian-astro-composer',
-			'image-inserter'
+			'astro-composer',
+			'insert-unsplash-image'
 		];
 		return configurablePlugins.includes(pluginId);
 	}

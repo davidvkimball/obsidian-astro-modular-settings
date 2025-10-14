@@ -143,16 +143,6 @@ export class AstroModularSettingsTab extends PluginSettingTab {
 					wizard.open();
 				}));
 
-		// Do not show wizard again
-		new Setting(container)
-			.setName('Do not show wizard again')
-			.setDesc('Permanently disable the setup wizard')
-			.addToggle(toggle => toggle
-				.setValue(this.settings.doNotShowWizardAgain)
-				.onChange(async (value) => {
-					this.settings.doNotShowWizardAgain = value;
-					await this.plugin.saveData(this.settings);
-				}));
 	}
 
 	private renderQuickConfigTab(container: HTMLElement) {

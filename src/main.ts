@@ -26,7 +26,7 @@ export default class AstroModularSettingsPlugin extends Plugin {
 		});
 
 		// Check if we should run the wizard on startup
-		if (this.settings.runWizardOnStartup && !this.settings.doNotShowWizardAgain) {
+		if (this.settings.runWizardOnStartup) {
 			// Delay the wizard to let Obsidian fully load
 			setTimeout(() => {
 				this.runStartupWizard();
@@ -52,16 +52,12 @@ export default class AstroModularSettingsPlugin extends Plugin {
 	}
 
 	private async runStartupWizard() {
-		// Check if this is the first time running the plugin
-		const hasRunBefore = this.settings.doNotShowWizardAgain;
-		
-		if (!hasRunBefore) {
-			const wizard = new SetupWizardModal(this.app, this.settings, async (newSettings) => {
-				this.settings = newSettings;
-				await this.saveSettings();
-			});
-			wizard.open();
-		}
+		// Run the wizard on startup if enabled
+		const wizard = new SetupWizardModal(this.app, this.settings, async (newSettings) => {
+			this.settings = newSettings;
+			await this.saveSettings();
+		});
+		wizard.open();
 	}
 
 	// Public method to open settings (called by commands)

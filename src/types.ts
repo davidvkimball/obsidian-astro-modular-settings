@@ -1,7 +1,6 @@
 export interface AstroModularSettings {
 	// Wizard settings
 	runWizardOnStartup: boolean;
-	doNotShowWizardAgain: boolean;
 	
 	// Current configuration
 	currentTemplate: TemplateType;
@@ -103,7 +102,6 @@ export interface ConfigFileInfo {
 
 export const DEFAULT_SETTINGS: AstroModularSettings = {
 	runWizardOnStartup: true,
-	doNotShowWizardAgain: false,
 	currentTemplate: 'standard',
 	currentTheme: 'oxygen',
 	contentOrganization: 'file-based',
