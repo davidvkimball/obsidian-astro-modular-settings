@@ -175,15 +175,15 @@ export class SetupWizardModal extends Modal {
 	private renderTemplateStep(container: HTMLElement) {
 		container.innerHTML = `
 			<div class="template-selection">
-				<h2>Choose your template</h2>
-				<p>Select a template that best fits your content type and goals.</p>
+				<h2>Choose your preset</h2>
+				<p>Select a preset that best fits your content type and goals.</p>
 				<div class="template-options">
 					${TEMPLATE_OPTIONS.map(template => `
 						<div class="template-option ${this.selectedTemplate === template.id ? 'selected' : ''}" 
 							 data-template="${template.id}">
 							<div class="template-header">
 								<h3>${template.name}</h3>
-								${template.recommended ? '<span class="recommended">Recommended</span>' : ''}
+								${template.recommended ? '<span class="recommended">Default</span>' : ''}
 							</div>
 							<p class="template-description">${template.description}</p>
 							<div class="template-features">
@@ -638,7 +638,7 @@ export class SetupWizardModal extends Modal {
 				<p>Review your configuration and complete the setup.</p>
 				<div class="config-summary">
 					<div class="summary-item">
-						<strong>Template:</strong> ${TEMPLATE_OPTIONS.find(t => t.id === this.selectedTemplate)?.name}
+						<strong>Preset:</strong> ${TEMPLATE_OPTIONS.find(t => t.id === this.selectedTemplate)?.name}
 					</div>
 					<div class="summary-item">
 						<strong>Theme:</strong> ${THEME_OPTIONS.find(t => t.id === this.selectedTheme)?.name}

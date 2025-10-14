@@ -114,91 +114,422 @@ export class ConfigManager {
 		console.log('📋 Preset:', preset.name);
 		console.log('⚙️ Settings:', preset.config);
 		
+		// Read the existing config file
 		const currentConfig = await this.readConfig();
 		console.log('📖 Current config length:', currentConfig.length);
 		console.log('📖 Current config preview:', currentConfig.substring(0, 200) + '...');
 		
-		const newConfig = this.generateConfigFromPreset(preset, currentConfig);
-		console.log('🆕 New config length:', newConfig.length);
-		console.log('🆕 New config preview:', newConfig.substring(0, 200) + '...');
+		// Modify the existing config based on the preset
+		const modifiedConfig = this.modifyConfigFromPreset(preset, currentConfig);
+		console.log('🆕 Modified config length:', modifiedConfig.length);
+		console.log('🆕 Modified config preview:', modifiedConfig.substring(0, 200) + '...');
 		
-		const writeResult = await this.writeConfig(newConfig);
+		const writeResult = await this.writeConfig(modifiedConfig);
 		console.log('💾 Write result:', writeResult);
 		
 		return writeResult;
 	}
 
-	private generateConfigFromPreset(preset: PresetTemplate, currentConfig: string): string {
-		// Update only the specific values in the existing config
+	private modifyConfigFromPreset(preset: PresetTemplate, currentConfig: string): string {
 		const settings = preset.config as AstroModularSettings;
 		
-		console.log('🔄 ConfigManager: Updating existing config with new values');
-		console.log('🎨 Theme to update:', settings.currentTheme);
-		console.log('🔤 Fonts to update:', settings.typography);
+		console.log('🔄 ConfigManager: Modifying existing config from preset');
+		console.log('🎨 Theme:', settings.currentTheme);
+		console.log('🔤 Fonts:', settings.typography);
+		console.log('🔍 Current config contains style:', currentConfig.includes('style: "circle"'));
+		console.log('🔍 Current config contains pages:', currentConfig.includes('pages: false'));
 		
-		// Start with the current config
-		let updatedConfig = currentConfig;
+		// Debug: Check if the regex patterns will match
+		const searchRegex = /search:\s*\{\s*posts:\s*(true|false),\s*pages:\s*(true|false),\s*projects:\s*(true|false),\s*docs:\s*(true|false),\s*\}/;
+		const styleRegex = /url:\s*"[^"]*",?\s*\/\/ Optional\s*,\s*placement:\s*"[^"]*",?\s*\/\/ "footer" or "header"\s*,\s*style:\s*"[^"]*",?\s*\/\/ "circle", "square", or "none"/;
 		
-		// Update theme - target the siteConfig object specifically
-		updatedConfig = updatedConfig.replace(
-			/export const siteConfig: SiteConfig = \{[\s\S]*?theme:\s*"[^"]*"/,
-			(match) => match.replace(/theme:\s*"[^"]*"/, `theme: "${settings.currentTheme}"`)
+		console.log('🔍 Search regex will match:', searchRegex.test(currentConfig));
+		console.log('🔍 Style regex will match:', styleRegex.test(currentConfig));
+		
+		// Debug: Find all occurrences of "style:" in the config
+		const styleMatches = currentConfig.match(/style:\s*"[^"]*"/g);
+		console.log('🔍 All style matches:', styleMatches);
+		
+		// Debug: Find all occurrences of "pages:" in the config
+		const pagesMatches = currentConfig.match(/pages:\s*(true|false)/g);
+		console.log('🔍 All pages matches:', pagesMatches);
+		
+		// Debug: Check if the specific regex patterns will match
+		const styleRegexTest = /style:\s*"[^"]*",?\s*\/\/ "circle", "square", or "none"/;
+		const pagesRegexTest = /pages:\s*(true|false),/;
+		
+		console.log('🔍 Style regex test:', styleRegexTest.test(currentConfig));
+		console.log('🔍 Pages regex test:', pagesRegexTest.test(currentConfig));
+		
+		// Debug: Find the exact context around style and pages
+		const styleContext = currentConfig.match(/placement:\s*"[^"]*",?\s*\/\/ "footer" or "header"\s*,\s*style:\s*"[^"]*",?\s*\/\/ "circle", "square", or "none"/);
+		console.log('🔍 Style context match:', styleContext);
+		
+		const pagesContext = currentConfig.match(/search:\s*\{\s*posts:\s*(true|false),\s*pages:\s*(true|false),\s*projects:\s*(true|false),\s*docs:\s*(true|false),\s*\}/);
+		console.log('🔍 Pages context match:', pagesContext);
+		
+		// Get the template configuration based on the preset name
+		const templateConfig = this.getTemplateConfig(preset.name, settings);
+		
+		let modifiedConfig = currentConfig;
+		
+		// Update theme - target the actual value assignment, not the type definition
+		modifiedConfig = modifiedConfig.replace(
+			/theme:\s*"[^"]*",?\s*\/\/ Available themes:/,
+			`theme: "${settings.currentTheme}", // Available themes:`
 		);
 		
-		// Update font families - target the siteConfig object specifically
-		updatedConfig = updatedConfig.replace(
-			/export const siteConfig: SiteConfig = \{[\s\S]*?families:\s*\{[^}]*body:\s*"[^"]*"[^}]*heading:\s*"[^"]*"[^}]*mono:\s*"[^"]*"[^}]*\}/s,
-			(match) => match.replace(
-				/families:\s*\{[^}]*body:\s*"[^"]*"[^}]*heading:\s*"[^"]*"[^}]*mono:\s*"[^"]*"[^}]*\}/s,
-				`families: {
-      body: "${settings.typography.proseFont}",
-      heading: "${settings.typography.headingFont}",
-      mono: "${settings.typography.monoFont}",
-    }`
-			)
+		// Update font source
+		modifiedConfig = modifiedConfig.replace(
+			/source:\s*"[^"]*"/,
+			`source: "${settings.typography.fontSource}"`
 		);
 		
-		// Update font source - target the siteConfig object specifically
-		updatedConfig = updatedConfig.replace(
-			/export const siteConfig: SiteConfig = \{[\s\S]*?source:\s*"[^"]*"/,
-			(match) => match.replace(/source:\s*"[^"]*"/, `source: "${settings.typography.fontSource}"`)
+		// Update font families
+		modifiedConfig = modifiedConfig.replace(
+			/body:\s*"[^"]*"/,
+			`body: "${settings.typography.fontSource === 'cdn' ? settings.typography.customFonts.prose : settings.typography.proseFont}"`
+		);
+		modifiedConfig = modifiedConfig.replace(
+			/heading:\s*"[^"]*"/,
+			`heading: "${settings.typography.fontSource === 'cdn' ? settings.typography.customFonts.heading : settings.typography.headingFont}"`
+		);
+		modifiedConfig = modifiedConfig.replace(
+			/mono:\s*"[^"]*"/,
+			`mono: "${settings.typography.fontSource === 'cdn' ? settings.typography.customFonts.mono : settings.typography.monoFont}"`
 		);
 		
-		// Update deployment platform - target the siteConfig object specifically
-		updatedConfig = updatedConfig.replace(
-			/export const siteConfig: SiteConfig = \{[\s\S]*?platform:\s*"[^"]*"/,
-			(match) => match.replace(/platform:\s*"[^"]*"/, `platform: "${settings.deployment.platform}"`)
+		// Update deployment platform
+		modifiedConfig = modifiedConfig.replace(
+			/platform:\s*"[^"]*"/,
+			`platform: "${settings.deployment.platform}"`
 		);
 		
-		// Update profile picture settings
-		if (settings.optionalFeatures.profilePicture.enabled) {
-			updatedConfig = updatedConfig.replace(
-				/profilePicture:\s*\{[^}]*enabled:\s*false[^}]*\}/s,
-				`profilePicture: {
-    enabled: true,
-    image: "${settings.optionalFeatures.profilePicture.image}",
-    alt: "${settings.optionalFeatures.profilePicture.alt}",
-    size: "${settings.optionalFeatures.profilePicture.size}",
-    url: "${settings.optionalFeatures.profilePicture.url || ''}",
-    placement: "${settings.optionalFeatures.profilePicture.placement}",
-    style: "${settings.optionalFeatures.profilePicture.style}",
-  }`
+		// Update layout content width if specified in template
+		if (templateConfig.layout?.contentWidth) {
+			modifiedConfig = modifiedConfig.replace(
+				/contentWidth:\s*"[^"]*"/,
+				`contentWidth: "${templateConfig.layout.contentWidth}"`
 			);
+		}
+		
+		// Update optional content types if specified in template
+		if (templateConfig.optionalContentTypes) {
+			if (templateConfig.optionalContentTypes.projects !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/projects:\s*(true|false),?\s*\/\/ Enable projects section/,
+					`projects: ${templateConfig.optionalContentTypes.projects}, // Enable projects section`
+				);
+			}
+			if (templateConfig.optionalContentTypes.docs !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/docs:\s*(true|false),?\s*\/\/ Enable documentation section/,
+					`docs: ${templateConfig.optionalContentTypes.docs}, // Enable documentation section`
+				);
+			}
+		}
+		
+		// Update dark mode toggle button if specified in template
+		if (templateConfig.darkModeToggleButton) {
+			modifiedConfig = modifiedConfig.replace(
+				/darkModeToggleButton:\s*"[^"]*",?\s*\/\/ "navigation" \| "commandPalette" \| "both"/,
+				`darkModeToggleButton: "${templateConfig.darkModeToggleButton}", // "navigation" | "commandPalette" | "both"`
+			);
+		}
+		
+		// Update footer social icons if specified in template
+		if (templateConfig.footer?.showSocialIconsInFooter !== undefined) {
+			modifiedConfig = modifiedConfig.replace(
+				/showSocialIconsInFooter:\s*(true|false)/,
+				`showSocialIconsInFooter: ${templateConfig.footer.showSocialIconsInFooter}`
+			);
+		}
+		
+		// Update navigation style if specified in template
+		if (templateConfig.navigation?.style) {
+			modifiedConfig = modifiedConfig.replace(
+				/style:\s*"[^"]*",?\s*\/\/ 'minimal' or 'traditional'/,
+				`style: "${templateConfig.navigation.style}", // 'minimal' or 'traditional'`
+			);
+		}
+		
+		// Update command palette settings if specified in template
+		if (templateConfig.commandPalette) {
+			// Update enabled state
+			if (templateConfig.commandPalette.enabled !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/enabled:\s*(true|false)(,\s*shortcut:)/,
+					`enabled: ${templateConfig.commandPalette.enabled}$2`
+				);
+			}
+			
+		// Update search settings - use the working context regex
+		if (templateConfig.commandPalette.search) {
+			// Replace the entire search object with the correct values
+			const searchObject = `search: {
+      posts: ${templateConfig.commandPalette.search.posts},
+      pages: ${templateConfig.commandPalette.search.pages},
+      projects: ${templateConfig.commandPalette.search.projects},
+      docs: ${templateConfig.commandPalette.search.docs},
+    }`;
+			
+			// Use the working context regex that we know matches
+			modifiedConfig = modifiedConfig.replace(
+				/search:\s*\{\s*posts:\s*(true|false),\s*pages:\s*(true|false),\s*projects:\s*(true|false),\s*docs:\s*(true|false),\s*\}/,
+				searchObject
+			);
+		}
+			
+			// Update sections settings with capture groups to distinguish from other similar keys
+			if (templateConfig.commandPalette.sections) {
+				Object.entries(templateConfig.commandPalette.sections).forEach(([key, value]) => {
+					let regex;
+					if (key === 'pages') {
+						// Distinguish from search.pages by capturing trailing ', social:'
+						regex = /pages:\s*(true|false)(,\s*social:)/;
+						modifiedConfig = modifiedConfig.replace(
+							regex,
+							`pages: ${value}$2`
+						);
+					} else if (key === 'social') {
+						// Capture trailing ', }' (end of sections object)
+						regex = /social:\s*(true|false)(,\s*\})/;
+						modifiedConfig = modifiedConfig.replace(
+							regex,
+							`social: ${value}$2`
+						);
+					} else if (key === 'quickActions') {
+						// Capture trailing ', pages:'
+						regex = /quickActions:\s*(true|false)(,\s*pages:)/;
+						modifiedConfig = modifiedConfig.replace(
+							regex,
+							`quickActions: ${value}$2`
+						);
+					}
+				});
+			}
+		}
+		
+		// Update home options if specified in template
+		if (templateConfig.homeOptions) {
+			// Update featured post settings
+			if (templateConfig.homeOptions.featuredPost) {
+				if (templateConfig.homeOptions.featuredPost.enabled !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/enabled:\s*(true|false),?\s*\/\/ Show featured post on homepage/,
+						`enabled: ${templateConfig.homeOptions.featuredPost.enabled}, // Show featured post on homepage`
+					);
+				}
+				if (templateConfig.homeOptions.featuredPost.type) {
+					modifiedConfig = modifiedConfig.replace(
+						/type:\s*"[^"]*",?\s*\/\/ "latest" or "featured"/,
+						`type: "${templateConfig.homeOptions.featuredPost.type}", // "latest" or "featured"`
+					);
+				}
+			}
+			
+			// Update recent posts settings
+			if (templateConfig.homeOptions.recentPosts) {
+				if (templateConfig.homeOptions.recentPosts.enabled !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/enabled:\s*(true|false),?\s*\/\/ Show recent posts on homepage/,
+						`enabled: ${templateConfig.homeOptions.recentPosts.enabled}, // Show recent posts on homepage`
+					);
+				}
+				if (templateConfig.homeOptions.recentPosts.count) {
+					modifiedConfig = modifiedConfig.replace(
+						/count:\s*\d+,?\s*\/\/ Number of recent posts to show/,
+						`count: ${templateConfig.homeOptions.recentPosts.count}, // Number of recent posts to show`
+					);
+				}
+			}
+			
+			// Update projects settings
+			if (templateConfig.homeOptions.projects) {
+				if (templateConfig.homeOptions.projects.enabled !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/enabled:\s*(true|false),?\s*\/\/ Show featured projects on homepage/,
+						`enabled: ${templateConfig.homeOptions.projects.enabled}, // Show featured projects on homepage`
+					);
+				}
+				if (templateConfig.homeOptions.projects.count) {
+					modifiedConfig = modifiedConfig.replace(
+						/count:\s*\d+,?\s*\/\/ Number of projects to show/,
+						`count: ${templateConfig.homeOptions.projects.count}, // Number of projects to show`
+					);
+				}
+			}
+			
+			// Update docs settings
+			if (templateConfig.homeOptions.docs) {
+				if (templateConfig.homeOptions.docs.enabled !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/enabled:\s*(true|false),?\s*\/\/ Show featured docs on homepage/,
+						`enabled: ${templateConfig.homeOptions.docs.enabled}, // Show featured docs on homepage`
+					);
+				}
+				if (templateConfig.homeOptions.docs.count) {
+					modifiedConfig = modifiedConfig.replace(
+						/count:\s*\d+,?\s*\/\/ Number of docs to show/,
+						`count: ${templateConfig.homeOptions.docs.count}, // Number of docs to show`
+					);
+				}
+			}
+			
+			// Update blurb placement
+			if (templateConfig.homeOptions.blurb?.placement) {
+				modifiedConfig = modifiedConfig.replace(
+					/placement:\s*"[^"]*",?\s*\/\/ 'above' \(at the top\), 'below' \(after content\), or 'none' \(disabled\)/,
+					`placement: "${templateConfig.homeOptions.blurb.placement}", // 'above' (at the top), 'below' (after content), or 'none' (disabled)`
+				);
+			}
+		}
+		
+		// Update post options if specified in template
+		if (templateConfig.postOptions) {
+			// Update posts per page
+			if (templateConfig.postOptions.postsPerPage) {
+				modifiedConfig = modifiedConfig.replace(
+					/postsPerPage:\s*\d+/,
+					`postsPerPage: ${templateConfig.postOptions.postsPerPage}`
+				);
+			}
+			
+			// Update boolean features with safer regex patterns
+			const booleanFeatures = ['readingTime', 'wordCount', 'tableOfContents', 'tags', 'postNavigation'];
+			booleanFeatures.forEach(feature => {
+				if (templateConfig.postOptions[feature] !== undefined) {
+					// Use safer regex that only matches within postOptions context
+					const regex = new RegExp(`(\\s+)${feature}:\\s*(true|false)(,?\\s*\\/\\/.*)?`);
+					modifiedConfig = modifiedConfig.replace(
+						regex,
+						`$1${feature}: ${templateConfig.postOptions[feature]}$3`
+					);
+				}
+			});
+			
+			// Update linked mentions settings
+			if (templateConfig.postOptions.linkedMentions) {
+				if (templateConfig.postOptions.linkedMentions.enabled !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/enabled:\s*(true|false),?\s*\/\/ Enable linked mentions/,
+						`enabled: ${templateConfig.postOptions.linkedMentions.enabled}, // Enable linked mentions`
+					);
+				}
+				if (templateConfig.postOptions.linkedMentions.linkedMentionsCompact !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/linkedMentionsCompact:\s*(true|false)/,
+						`linkedMentionsCompact: ${templateConfig.postOptions.linkedMentions.linkedMentionsCompact}`
+					);
+				}
+			}
+			
+			// Update graph view settings with safer regex patterns
+			if (templateConfig.postOptions.graphView) {
+				const graphViewFeatures = ['enabled', 'showInSidebar', 'showInCommandPalette'];
+				graphViewFeatures.forEach(feature => {
+					if (templateConfig.postOptions.graphView[feature] !== undefined) {
+						// Use safer regex that preserves structure
+						const regex = new RegExp(`(\\s+)${feature}:\\s*(true|false)(,?\\s*\\/\\/.*)?`);
+						modifiedConfig = modifiedConfig.replace(
+							regex,
+							`$1${feature}: ${templateConfig.postOptions.graphView[feature]}$3`
+						);
+					}
+				});
+				if (templateConfig.postOptions.graphView.maxNodes) {
+					modifiedConfig = modifiedConfig.replace(
+						/maxNodes:\s*\d+/,
+						`maxNodes: ${templateConfig.postOptions.graphView.maxNodes}`
+					);
+				}
+			}
+			
+			// Update post card settings
+			if (templateConfig.postOptions.showPostCardCoverImages) {
+				modifiedConfig = modifiedConfig.replace(
+					/showPostCardCoverImages:\s*"[^"]*",?\s*\/\/ "all" \| "featured" \| "home" \| "posts" \| "featured-and-posts" \| "none"/,
+					`showPostCardCoverImages: "${templateConfig.postOptions.showPostCardCoverImages}", // "all" | "featured" | "home" | "posts" | "featured-and-posts" | "none"`
+				);
+			}
+			if (templateConfig.postOptions.postCardAspectRatio) {
+				modifiedConfig = modifiedConfig.replace(
+					/postCardAspectRatio:\s*"[^"]*",?\s*\/\/ "16:9" \| "4:3" \| "3:2" \| "og" \| "square" \| "golden" \| "custom"/,
+					`postCardAspectRatio: "${templateConfig.postOptions.postCardAspectRatio}", // "16:9" | "4:3" | "3:2" | "og" | "square" | "golden" | "custom"`
+				);
+			}
+			if (templateConfig.postOptions.customPostCardAspectRatio) {
+				modifiedConfig = modifiedConfig.replace(
+					/customPostCardAspectRatio:\s*"[^"]*",?\s*\/\/ For custom aspect ratio/,
+					`customPostCardAspectRatio: "${templateConfig.postOptions.customPostCardAspectRatio}", // For custom aspect ratio`
+				);
+			}
+		}
+		
+		// Update profile picture settings - only update if profile picture is enabled
+		if (settings.optionalFeatures.profilePicture.enabled) {
+			modifiedConfig = modifiedConfig.replace(
+				/profilePicture:\s*\{\s*enabled:\s*(true|false),?\s*\/\/ Profile picture/,
+				`profilePicture: {
+    enabled: ${settings.optionalFeatures.profilePicture.enabled}, // Profile picture`
+			);
+			modifiedConfig = modifiedConfig.replace(
+				/image:\s*"[^"]*",?\s*\/\/ Path to your profile image/,
+				`image: "${settings.optionalFeatures.profilePicture.image}", // Path to your profile image`
+			);
+			modifiedConfig = modifiedConfig.replace(
+				/alt:\s*"[^"]*"/,
+				`alt: "${settings.optionalFeatures.profilePicture.alt}"`
+			);
+			modifiedConfig = modifiedConfig.replace(
+				/size:\s*"[^"]*",?\s*\/\/ "sm" \(32px\), "md" \(48px\), or "lg" \(64px\)/,
+				`size: "${settings.optionalFeatures.profilePicture.size}", // "sm" (32px), "md" (48px), or "lg" (64px)`
+			);
+			// Update profile picture settings - use context regex to avoid type definitions
+			// Only update if profile picture is enabled
+			if (settings.optionalFeatures.profilePicture.enabled) {
+				// Use a more specific regex that includes context to avoid type definitions
+				modifiedConfig = modifiedConfig.replace(
+					/url:\s*"[^"]*",?\s*\/\/ Optional\s*,\s*placement:\s*"[^"]*",?\s*\/\/ "footer" or "header"\s*,\s*style:\s*"[^"]*",?\s*\/\/ "circle", "square", or "none"/,
+					`url: "${settings.optionalFeatures.profilePicture.url || ''}", // Optional
+    placement: "${settings.optionalFeatures.profilePicture.placement}", // "footer" or "header"
+    style: "${settings.optionalFeatures.profilePicture.style}", // "circle", "square", or "none"`
+				);
+			}
 		}
 		
 		// Update comments settings
-		if (settings.optionalFeatures.comments.enabled) {
-			updatedConfig = updatedConfig.replace(
-				/comments:\s*\{[^}]*enabled:\s*false[^}]*\}/s,
+		modifiedConfig = modifiedConfig.replace(
+			/comments:\s*\{\s*enabled:\s*(true|false),/,
 				`comments: {
-    enabled: true,
-    provider: "giscus",
-  }`
+      enabled: ${settings.optionalFeatures.comments.enabled},`
 			);
+		
+		// Validate the modified config has proper syntax
+		try {
+			// Check for basic syntax issues
+			const openBraces = (modifiedConfig.match(/\{/g) || []).length;
+			const closeBraces = (modifiedConfig.match(/\}/g) || []).length;
+			const openBrackets = (modifiedConfig.match(/\[/g) || []).length;
+			const closeBrackets = (modifiedConfig.match(/\]/g) || []).length;
+			
+			if (openBraces !== closeBraces) {
+				console.error('❌ Config modification failed: Mismatched braces');
+				return currentConfig; // Return original config if syntax is broken
+			}
+			
+			if (openBrackets !== closeBrackets) {
+				console.error('❌ Config modification failed: Mismatched brackets');
+				return currentConfig; // Return original config if syntax is broken
+			}
+			
+			console.log('✅ Config modification complete');
+		} catch (error) {
+			console.error('❌ Config validation failed:', error);
+			return currentConfig; // Return original config if validation fails
 		}
 		
-		console.log('✅ Config update complete');
-		return updatedConfig;
+		return modifiedConfig;
 	}
 
 	private interpolateTemplate(template: string, settings: AstroModularSettings, templateName: string): string {
@@ -235,191 +566,34 @@ export class ConfigManager {
 		return result;
 	}
 
-	private getTemplateConfig(templateName: string, settings: AstroModularSettings): string {
-		const baseConfig = `// Site configuration with TypeScript types
-
-// Aspect ratio options for post cards
-export type AspectRatio = 
-  | "16:9" 
-  | "4:3"
-  | "3:2"
-  | "og"
-  | "square"
-  | "golden"
-  | "custom";
-
-export interface SiteConfig {
-  // Site Information
-  site: string;
-  title: string;
-  description: string;
-  author: string;
-  language: string;
-  
-  // Global Settings
-  theme: "minimal" | "oxygen" | "atom" | "ayu" | "catppuccin" | "charcoal" | "dracula" | "everforest" | "flexoki" | "gruvbox" | "macos" | "nord" | "obsidian" | "rose-pine" | "sky" | "solarized" | "things" | "custom";
-  customThemeFile?: string;
-  fonts: {
-    source: "local" | "cdn";
-    families: {
-      body: string;
-      heading: string;
-      mono: string;
-    };
-    display: "swap" | "fallback" | "optional";
-  };
-  layout: {
-    contentWidth: string;
-  };
-  footer: {
-    enabled: boolean;
-    content: string;
-    showSocialIconsInFooter: boolean;
-  };
-  scrollToTop: boolean;
-  darkModeToggleButton: "navigation" | "commandPalette" | "both";
-  seo: {
-    defaultOgImageAlt: string;
-  };
-  deployment: {
-    platform: "netlify" | "vercel" | "github-pages";
-  };
-  
-  // Command Palette
-  commandPalette: {
-    enabled: boolean;
-    searchPosts: boolean;
-    searchPages: boolean;
-    searchProjects: boolean;
-    searchDocs: boolean;
-    sections: {
-      quotations: boolean;
-      pages: boolean;
-      social: boolean;
-    };
-  };
-  
-  // Homepage Options
-  homeOptions: {
-    featuredPost: {
-      enabled: boolean;
-      type: "latest" | "featured";
-      slug?: string;
-    };
-    recentPosts: {
-      enabled: boolean;
-      count: number;
-    };
-    projects: {
-      enabled: boolean;
-      count: number;
-    };
-    docs: {
-      enabled: boolean;
-      count: number;
-    };
-    blurb: {
-      placement: "above" | "below" | "none";
-    };
-  };
-  
-  // Post Options
-  postOptions: {
-    postsPerPage: number;
-    readingTime: boolean;
-    wordCount: boolean;
-    tableOfContents: boolean;
-    tags: boolean;
-    linkedMentions: {
-      enabled: boolean;
-      linkedMentionsCompact: boolean;
-    };
-    graphView: {
-      enabled: boolean;
-      showInSidebar: boolean;
-      showInCommandPalette: boolean;
-      maxNodes: number;
-      showOrphanedPosts: boolean;
-    };
-    postNavigation: boolean;
-    showPostCardCoverImages: "all" | "featured" | "home" | "posts" | "featured-and-posts" | "none";
-    postCardAspectRatio: AspectRatio;
-    customPostCardAspectRatio?: string;
-    comments: {
-      enabled: boolean;
-      provider: "giscus";
-      repo?: string;
-      repoId?: string;
-      category?: string;
-      categoryId?: string;
-      mapping?: string;
-      strict?: string;
-      reactions?: string;
-      metadata?: string;
-      inputPosition?: string;
-      theme?: string;
-      lang?: string;
-      loading?: string;
-    };
-  };
-  
-  // Navigation
-  navigation: {
-    showNavigation: boolean;
-    style: "traditional" | "minimal";
-    showMobileMenu: boolean;
-    pages: Array<{ title: string; url: string }>;
-    social: Array<{ title: string; url: string; icon: string }>;
-  };
-  
-  // Profile Picture
-  profilePicture: {
-    enabled: boolean;
-    image: string;
-    alt: string;
-    size: "sm" | "md" | "lg";
-    url?: string;
-    placement: "footer" | "header";
-    style: "circle" | "square" | "none";
-  };
-}
-
-// Template-specific configurations
-const getTemplateConfig = (template: string): Partial<SiteConfig> => {
-  switch (template) {
+	private getTemplateConfig(templateName: string, settings: AstroModularSettings): any {
+		// Return template-specific configuration based on the preset name
+		switch (templateName) {
             case 'standard':
               return {
-                theme: '${settings.currentTheme}',
-                fonts: {
-                  source: '${settings.typography.fontSource}',
-                  families: {
-                    body: '${settings.typography.fontSource === 'cdn' ? settings.typography.customFonts.prose : settings.typography.proseFont}',
-                    heading: '${settings.typography.fontSource === 'cdn' ? settings.typography.customFonts.heading : settings.typography.headingFont}',
-                    mono: '${settings.typography.fontSource === 'cdn' ? settings.typography.customFonts.mono : settings.typography.monoFont}',
-                  },
-                  display: 'swap',
-                },
         layout: {
           contentWidth: '45rem',
         },
         footer: {
-          enabled: true,
-          content: '© 2025 {author}. Built with Astro Modular.',
           showSocialIconsInFooter: true,
         },
-        scrollToTop: true,
         darkModeToggleButton: 'both',
         commandPalette: {
           enabled: true,
-          searchPosts: true,
-          searchPages: true,
-          searchProjects: true,
-          searchDocs: true,
+						search: {
+							posts: true,
+							pages: false,
+							projects: false,
+							docs: false,
+						},
           sections: {
-            quotations: true,
             pages: true,
             social: true,
           },
+        },
+        optionalContentTypes: {
+          projects: true,
+          docs: true,
         },
         homeOptions: {
           featuredPost: {
@@ -431,11 +605,11 @@ const getTemplateConfig = (template: string): Partial<SiteConfig> => {
             count: 7,
           },
           projects: {
-            enabled: false,
+							enabled: true,
             count: 2,
           },
           docs: {
-            enabled: false,
+							enabled: true,
             count: 3,
           },
           blurb: {
@@ -457,71 +631,37 @@ const getTemplateConfig = (template: string): Partial<SiteConfig> => {
             showInSidebar: true,
             showInCommandPalette: true,
             maxNodes: 100,
-            showOrphanedPosts: true,
           },
           postNavigation: true,
           showPostCardCoverImages: 'featured-and-posts',
           postCardAspectRatio: 'og',
-          comments: {
-            enabled: ${settings.optionalFeatures.comments.enabled},
-            provider: 'giscus',
-          },
         },
         navigation: {
-          showNavigation: true,
           style: 'traditional',
-          showMobileMenu: true,
-          pages: [
-            { title: 'Posts', url: '/posts' },
-            { title: 'About', url: '/about' }
-          ],
-          social: [
-            { title: 'GitHub', url: 'https://github.com/username', icon: 'github' }
-          ],
-        },
-        profilePicture: {
-          enabled: ${settings.optionalFeatures.profilePicture.enabled},
-          image: '${settings.optionalFeatures.profilePicture.image}',
-          alt: '${settings.optionalFeatures.profilePicture.alt}',
-          size: '${settings.optionalFeatures.profilePicture.size}',
-          url: '${settings.optionalFeatures.profilePicture.url}',
-          placement: '${settings.optionalFeatures.profilePicture.placement}',
-          style: '${settings.optionalFeatures.profilePicture.style}',
-        },
-        deployment: {
-          platform: '${settings.deployment.platform}',
         },
       };
             case 'compact':
               return {
-                theme: '${settings.currentTheme}',
-                fonts: {
-                  source: '${settings.typography.fontSource}',
-                  families: {
-                    body: '${settings.typography.fontSource === 'cdn' ? settings.typography.customFonts.prose : settings.typography.proseFont}',
-                    heading: '${settings.typography.fontSource === 'cdn' ? settings.typography.customFonts.heading : settings.typography.headingFont}',
-                    mono: '${settings.typography.fontSource === 'cdn' ? settings.typography.customFonts.mono : settings.typography.monoFont}',
-                  },
-                  display: 'swap',
-                },
         layout: {
           contentWidth: '42rem',
         },
+        optionalContentTypes: {
+          projects: false,
+          docs: false,
+        },
         footer: {
-          enabled: true,
-          content: '© 2025 {author}. Built with Astro Modular.',
           showSocialIconsInFooter: false,
         },
-        scrollToTop: true,
         darkModeToggleButton: 'commandPalette',
         commandPalette: {
           enabled: true,
-          searchPosts: true,
-          searchPages: false,
-          searchProjects: true,
-          searchDocs: true,
+						search: {
+							posts: true,
+							pages: false,
+							projects: false,
+							docs: false,
+						},
           sections: {
-            quotations: true,
             pages: true,
             social: true,
           },
@@ -534,14 +674,6 @@ const getTemplateConfig = (template: string): Partial<SiteConfig> => {
           recentPosts: {
             enabled: true,
             count: 7,
-          },
-          projects: {
-            enabled: false,
-            count: 2,
-          },
-          docs: {
-            enabled: false,
-            count: 3,
           },
           blurb: {
             placement: 'below',
@@ -559,75 +691,38 @@ const getTemplateConfig = (template: string): Partial<SiteConfig> => {
           },
           graphView: {
             enabled: false,
-            showInSidebar: false,
-            showInCommandPalette: false,
-            maxNodes: 100,
-            showOrphanedPosts: true,
           },
           postNavigation: true,
           showPostCardCoverImages: 'posts',
           postCardAspectRatio: 'custom',
           customPostCardAspectRatio: '2.5/1',
-          comments: {
-            enabled: ${settings.optionalFeatures.comments.enabled},
-            provider: 'giscus',
-          },
         },
         navigation: {
-          showNavigation: true,
           style: 'minimal',
-          showMobileMenu: true,
-          pages: [
-            { title: 'Posts', url: '/posts' },
-            { title: 'About', url: '/about' }
-          ],
-          social: [
-            { title: 'GitHub', url: 'https://github.com/username', icon: 'github' }
-          ],
-        },
-        profilePicture: {
-          enabled: ${settings.optionalFeatures.profilePicture.enabled},
-          image: '${settings.optionalFeatures.profilePicture.image}',
-          alt: '${settings.optionalFeatures.profilePicture.alt}',
-          size: '${settings.optionalFeatures.profilePicture.size}',
-          url: '${settings.optionalFeatures.profilePicture.url}',
-          placement: '${settings.optionalFeatures.profilePicture.placement}',
-          style: '${settings.optionalFeatures.profilePicture.style}',
-        },
-        deployment: {
-          platform: '${settings.deployment.platform}',
         },
       };
             case 'minimal':
               return {
-                theme: '${settings.currentTheme}',
-                fonts: {
-                  source: '${settings.typography.fontSource}',
-                  families: {
-                    body: '${settings.typography.fontSource === 'cdn' ? settings.typography.customFonts.prose : settings.typography.proseFont}',
-                    heading: '${settings.typography.fontSource === 'cdn' ? settings.typography.customFonts.heading : settings.typography.headingFont}',
-                    mono: '${settings.typography.fontSource === 'cdn' ? settings.typography.customFonts.mono : settings.typography.monoFont}',
-                  },
-                  display: 'swap',
-                },
         layout: {
           contentWidth: '40rem',
         },
+        optionalContentTypes: {
+          projects: false,
+          docs: false,
+        },
         footer: {
-          enabled: true,
-          content: '© 2025 {author}. Built with Astro Modular.',
           showSocialIconsInFooter: true,
         },
-        scrollToTop: true,
         darkModeToggleButton: 'commandPalette',
         commandPalette: {
           enabled: true,
-          searchPosts: true,
-          searchPages: true,
-          searchProjects: false,
-          searchDocs: false,
+						search: {
+							posts: true,
+							pages: true,
+							projects: false,
+							docs: false,
+						},
           sections: {
-            quotations: false,
             pages: false,
             social: true,
           },
@@ -640,14 +735,6 @@ const getTemplateConfig = (template: string): Partial<SiteConfig> => {
           recentPosts: {
             enabled: true,
             count: 7,
-          },
-          projects: {
-            enabled: false,
-            count: 2,
-          },
-          docs: {
-            enabled: false,
-            count: 3,
           },
           blurb: {
             placement: 'below',
@@ -665,65 +752,18 @@ const getTemplateConfig = (template: string): Partial<SiteConfig> => {
           },
           graphView: {
             enabled: false,
-            showInSidebar: false,
-            showInCommandPalette: false,
-            maxNodes: 100,
-            showOrphanedPosts: true,
           },
           postNavigation: false,
           showPostCardCoverImages: 'none',
           postCardAspectRatio: 'og',
-          comments: {
-            enabled: ${settings.optionalFeatures.comments.enabled},
-            provider: 'giscus',
-          },
         },
         navigation: {
-          showNavigation: true,
           style: 'minimal',
-          showMobileMenu: true,
-          pages: [
-            { title: 'Posts', url: '/posts' },
-            { title: 'About', url: '/about' }
-          ],
-          social: [
-            { title: 'GitHub', url: 'https://github.com/username', icon: 'github' }
-          ],
-        },
-        profilePicture: {
-          enabled: ${settings.optionalFeatures.profilePicture.enabled},
-          image: '${settings.optionalFeatures.profilePicture.image}',
-          alt: '${settings.optionalFeatures.profilePicture.alt}',
-          size: '${settings.optionalFeatures.profilePicture.size}',
-          url: '${settings.optionalFeatures.profilePicture.url}',
-          placement: '${settings.optionalFeatures.profilePicture.placement}',
-          style: '${settings.optionalFeatures.profilePicture.style}',
-        },
-        deployment: {
-          platform: '${settings.deployment.platform}',
         },
       };
     default:
       return {};
   }
-};
-
-// Export the site configuration
-export const siteConfig: SiteConfig = {
-  // Site Information
-  site: 'https://yourdomain.com',
-  title: 'Your Blog Title',
-  description: 'Your blog description',
-  author: 'Your Name',
-  language: 'en',
-  
-  // Apply template configuration
-  ...getTemplateConfig('${templateName}'),
-} as SiteConfig;
-
-export default siteConfig;`;
-
-		return baseConfig;
 	}
 
 	async detectAstroDevServer(): Promise<boolean> {
