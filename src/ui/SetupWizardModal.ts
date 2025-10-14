@@ -72,7 +72,6 @@ export class SetupWizardModal extends Modal {
 		// Header
 		const header = contentEl.createDiv('wizard-header');
 		const progressPercentage = Math.max((this.currentStep / this.totalSteps) * 100, 5);
-		console.log(`Progress: Step ${this.currentStep}/${this.totalSteps} = ${progressPercentage}%`);
 		
 		header.innerHTML = `
 			<h1>Astro Modular Setup</h1>
@@ -88,7 +87,6 @@ export class SetupWizardModal extends Modal {
 		const progressFill = header.querySelector('.progress-fill') as HTMLElement;
 		const progressBar = header.querySelector('.progress-bar') as HTMLElement;
 		if (progressFill && progressBar) {
-			console.log(`Setting progress bar to ${progressPercentage}% width`);
 			progressFill.style.width = `${progressPercentage}%`;
 			progressFill.style.setProperty('background', 'var(--interactive-accent)', 'important'); // Use Obsidian theme color
 			progressFill.style.setProperty('height', '12px', 'important'); // Match container height
@@ -101,14 +99,6 @@ export class SetupWizardModal extends Modal {
 			progressFill.style.setProperty('top', '0', 'important'); // Start from top
 			progressFill.style.setProperty('left', '0', 'important'); // Start from left
 			
-			// Debug the parent container
-			console.log(`Progress bar container:`, progressBar);
-			console.log(`Progress bar container computed height:`, window.getComputedStyle(progressBar).height);
-			console.log(`Progress fill computed height:`, window.getComputedStyle(progressFill).height);
-			console.log(`Progress fill computed background:`, window.getComputedStyle(progressFill).backgroundColor);
-			console.log(`Progress fill computed width:`, window.getComputedStyle(progressFill).width);
-		} else {
-			console.error('Progress elements not found!', { progressFill, progressBar });
 		}
 
 		// Content
@@ -679,7 +669,6 @@ export class SetupWizardModal extends Modal {
 			if (this.currentStep === this.totalSteps) {
 				this.completeSetup();
 			} else {
-				console.log(`Moving from step ${this.currentStep} to ${this.currentStep + 1}`);
 				this.currentStep++;
 				this.renderCurrentStep();
 			}
@@ -692,7 +681,6 @@ export class SetupWizardModal extends Modal {
 				cls: 'wizard-button tertiary'
 			});
 			skipButton.addEventListener('click', () => {
-				console.log(`Skipping from step ${this.currentStep} to ${this.currentStep + 1}`);
 				this.applyDefaultValues();
 				this.currentStep++;
 				this.renderCurrentStep();

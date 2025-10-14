@@ -89,7 +89,6 @@ export class PluginManager {
 			
 			return true;
 		} catch (error) {
-			console.error('Error configuring plugins:', error);
 			return false;
 		}
 	}
@@ -112,13 +111,11 @@ export class PluginManager {
 	private async configureAstroComposerSettings(settings: any): Promise<void> {
 		// This would need to be implemented based on Astro Composer's API
 		// For now, we'll just log the configuration
-		console.log('Configuring Astro Composer:', settings);
 	}
 
 	private async configureImageInserterSettings(settings: any): Promise<void> {
 		// This would need to be implemented based on Image Inserter's API
 		// For now, we'll just log the configuration
-		console.log('Configuring Image Inserter:', settings);
 	}
 
 	async getManualConfigurationInstructions(config: PluginConfiguration): Promise<string> {
