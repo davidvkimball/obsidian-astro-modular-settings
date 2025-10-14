@@ -19,13 +19,5 @@
       "ES6",
       "ES7"
     ]
-  },
-  "include": [
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "**/*.d.ts",
-    "../../../../../node_modules"
-  ]
+  }
 }

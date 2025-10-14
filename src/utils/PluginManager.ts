@@ -98,10 +98,12 @@ export class PluginManager {
 		const obsidianSettings = (this.app.vault as any).config;
 		
 		if (settings.attachmentLocation === 'subfolder') {
-			obsidianSettings.newLinkFormat = 'shortest';
-			obsidianSettings.attachmentFolderPath = settings.subfolderName;
+			// File-based: attachments in subfolder, keep relative links
+			obsidianSettings.newLinkFormat = 'relative';
+			obsidianSettings.attachmentFolderPath = `./${settings.subfolderName}`;
 		} else {
-			obsidianSettings.newLinkFormat = 'shortest';
+			// Folder-based: attachments in same folder, keep relative links
+			obsidianSettings.newLinkFormat = 'relative';
 			obsidianSettings.attachmentFolderPath = '';
 		}
 		

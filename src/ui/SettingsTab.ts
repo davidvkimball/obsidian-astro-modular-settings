@@ -131,17 +131,17 @@ export class AstroModularSettingsTab extends PluginSettingTab {
 		new Setting(container)
 			.setName('Setup wizard')
 			.setDesc('Run the setup wizard to reconfigure your theme')
-			.addButton(button => button
-				.setButtonText('Run Setup Wizard')
-				.setCta()
-				.onClick(() => {
-					const wizard = new SetupWizardModal(this.app, this.settings, async (newSettings) => {
-						this.settings = newSettings;
-						await this.plugin.saveData(this.settings);
-						this.display(); // Refresh the settings tab
-					});
-					wizard.open();
-				}));
+				.addButton(button => button
+					.setButtonText('Run Setup Wizard')
+					.setCta()
+					.onClick(() => {
+						const wizard = new SetupWizardModal(this.app, this.settings, async (newSettings) => {
+							this.settings = newSettings;
+							await this.plugin.saveData(this.settings);
+							// Don't refresh the settings tab - it will stay where it is
+						});
+						wizard.open();
+					}));
 
 	}
 
@@ -165,7 +165,7 @@ export class AstroModularSettingsTab extends PluginSettingTab {
 				dropdown.onChange(async (value) => {
 					this.settings.currentTemplate = value as any;
 					await this.plugin.saveData(this.settings);
-					this.display(); // Refresh to update other dropdowns
+					// No need to refresh - the dropdowns are independent
 				});
 			});
 
@@ -445,7 +445,8 @@ export class AstroModularSettingsTab extends PluginSettingTab {
 					this.settings = { ...this.settings, ...importedSettings };
 					await this.plugin.saveData(this.settings);
 					
-					this.display(); // Refresh the settings tab
+					// Refresh the settings tab to show imported settings
+					this.display();
 					new Notice('Configuration imported successfully!');
 				} catch (error) {
 					new Notice('Failed to import configuration. Please check the file format.');

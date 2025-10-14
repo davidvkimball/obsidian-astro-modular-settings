@@ -11,39 +11,15 @@ export class SetupWizardModal extends Modal {
 	private pluginManager: PluginManager;
 	private onComplete: (settings: AstroModularSettings) => void;
 
-	// Wizard state
-	private selectedTemplate: TemplateType = 'standard';
-	private selectedTheme: ThemeType = 'oxygen';
-	private selectedContentOrg: ContentOrganizationType = 'file-based';
+	// Wizard state - initialized from current settings
+	private selectedTemplate: TemplateType;
+	private selectedTheme: ThemeType;
+	private selectedContentOrg: ContentOrganizationType;
 	private selectedFeatures: any = {};
-	private selectedTypography = {
-		headingFont: 'Inter',
-		proseFont: 'Inter',
-		monoFont: 'JetBrains Mono',
-		fontSource: 'local' as 'local' | 'cdn',
-		customFonts: {
-			heading: '',
-			prose: '',
-			mono: ''
-		}
-	};
-	private selectedOptionalFeatures = {
-		profilePicture: {
-			enabled: false,
-			image: '/profile.jpg',
-			alt: 'Profile picture',
-			size: 'md' as 'sm' | 'md' | 'lg',
-			url: '',
-			placement: 'footer' as 'footer' | 'header',
-			style: 'circle' as 'circle' | 'square' | 'none'
-		},
-		comments: {
-			enabled: false,
-			provider: 'giscus' as 'giscus'
-		}
-	};
-	private selectedDeployment: 'netlify' | 'vercel' | 'github-pages' = 'netlify';
-	private runWizardOnStartup: boolean = true;
+	private selectedTypography: any;
+	private selectedOptionalFeatures: any;
+	private selectedDeployment: 'netlify' | 'vercel' | 'github-pages';
+	private runWizardOnStartup: boolean;
 
 	constructor(app: App, settings: AstroModularSettings, onComplete: (settings: AstroModularSettings) => void) {
 		super(app);
@@ -51,6 +27,9 @@ export class SetupWizardModal extends Modal {
 		this.configManager = new ConfigManager(app);
 		this.pluginManager = new PluginManager(app);
 		this.onComplete = onComplete;
+		
+		// Initialize wizard state from current settings
+		this.initializeFromSettings();
 	}
 
 	onOpen() {
@@ -65,9 +44,48 @@ export class SetupWizardModal extends Modal {
 		contentEl.empty();
 	}
 
+	private initializeFromSettings() {
+		// Initialize from current settings, with fallbacks to defaults
+		this.selectedTemplate = this.settings.currentTemplate || 'standard';
+		this.selectedTheme = this.settings.currentTheme || 'oxygen';
+		this.selectedContentOrg = this.settings.contentOrganization || 'file-based';
+		this.selectedFeatures = { ...this.settings.features } || {};
+		this.selectedTypography = { ...this.settings.typography } || {
+			headingFont: 'Inter',
+			proseFont: 'Inter',
+			monoFont: 'JetBrains Mono',
+			fontSource: 'local' as 'local' | 'cdn',
+			customFonts: {
+				heading: '',
+				prose: '',
+				mono: ''
+			}
+		};
+		this.selectedOptionalFeatures = { ...this.settings.optionalFeatures } || {
+			profilePicture: {
+				enabled: false,
+				image: '/profile.jpg',
+				alt: 'Profile picture',
+				size: 'md' as 'sm' | 'md' | 'lg',
+				url: '',
+				placement: 'footer' as 'footer' | 'header',
+				style: 'circle' as 'circle' | 'square' | 'none'
+			},
+			comments: {
+				enabled: false,
+				provider: 'giscus' as 'giscus'
+			}
+		};
+		this.selectedDeployment = this.settings.deployment?.platform || 'netlify';
+		this.runWizardOnStartup = this.settings.runWizardOnStartup !== undefined ? this.settings.runWizardOnStartup : true;
+	}
+
 	private renderCurrentStep() {
 		const { contentEl } = this;
 		contentEl.empty();
+
+		// Reset scroll position to top
+		contentEl.scrollTop = 0;
 
 		// Header
 		const header = contentEl.createDiv('wizard-header');
@@ -689,10 +707,10 @@ export class SetupWizardModal extends Modal {
 	}
 
 	private applyDefaultValues() {
-		// Apply default values based on current step
+		// Apply default values based on current step, using current settings as defaults
 		switch (this.currentStep) {
 			case 4: // Font step
-				this.selectedTypography = {
+				this.selectedTypography = { ...this.settings.typography } || {
 					headingFont: 'Inter',
 					proseFont: 'Inter',
 					monoFont: 'JetBrains Mono',
@@ -705,10 +723,10 @@ export class SetupWizardModal extends Modal {
 				};
 				break;
 			case 5: // Content organization step
-				this.selectedContentOrg = 'file-based';
+				this.selectedContentOrg = this.settings.contentOrganization || 'file-based';
 				break;
 			case 6: // Optional features step
-				this.selectedOptionalFeatures = {
+				this.selectedOptionalFeatures = { ...this.settings.optionalFeatures } || {
 					profilePicture: {
 						enabled: false,
 						image: '/profile.jpg',
@@ -725,7 +743,7 @@ export class SetupWizardModal extends Modal {
 				};
 				break;
 			case 7: // Deployment step
-				this.selectedDeployment = 'netlify';
+				this.selectedDeployment = this.settings.deployment?.platform || 'netlify';
 				break;
 		}
 	}
@@ -801,6 +819,11 @@ export class SetupWizardModal extends Modal {
 	}
 
 	private async completeSetup() {
+		console.log('🎯 SetupWizard: Starting completion process');
+		console.log('📋 Selected template:', this.selectedTemplate);
+		console.log('🎨 Selected theme:', this.selectedTheme);
+		console.log('📁 Selected content org:', this.selectedContentOrg);
+		
 		// Update settings
 		this.settings.currentTemplate = this.selectedTemplate;
 		this.settings.currentTheme = this.selectedTheme;
@@ -810,8 +833,10 @@ export class SetupWizardModal extends Modal {
 		this.settings.optionalFeatures = this.selectedOptionalFeatures;
 		this.settings.deployment = { platform: this.selectedDeployment };
 
+		console.log('💾 Settings updated, calling config manager...');
+
 		// Apply configuration
-		await this.configManager.applyPreset({
+		const configResult = await this.configManager.applyPreset({
 			name: this.selectedTemplate,
 			description: '',
 			features: this.selectedFeatures,
@@ -819,6 +844,8 @@ export class SetupWizardModal extends Modal {
 			contentOrganization: this.selectedContentOrg,
 			config: this.settings
 		});
+
+		console.log('🔧 Config manager result:', configResult);
 
 		// Trigger rebuild
 		await this.configManager.triggerRebuild();
@@ -832,8 +859,8 @@ export class SetupWizardModal extends Modal {
 		
 		// Show comprehensive completion notice
 		const message = pluginSuccess 
-			? '🎉 Astro Modular setup complete! Configuration saved and plugins configured successfully. Your site is ready to go!'
-			: '🎉 Astro Modular setup complete! Configuration saved. Some plugins may need manual configuration - check the documentation for details.';
+			? 'Astro Modular setup complete! Configuration saved and plugins configured successfully. Your site is ready to go!'
+			: 'Astro Modular setup complete! Configuration saved. Some plugins may need manual configuration - check the documentation for details.';
 		
 		new Notice(message, 8000); // Show for 8 seconds instead of default 3
 	}

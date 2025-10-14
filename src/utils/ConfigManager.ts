@@ -7,47 +7,64 @@ export class ConfigManager {
 
 	constructor(app: App) {
 		this.app = app;
-		this.configPath = '../../../config.ts'; // Path to src/config.ts from the plugin location
+		// The main Astro config.ts file is one level up from vault (src/config.ts)
+		this.configPath = '../config.ts';
+		console.log('📁 Config path:', this.configPath);
 	}
 
 	async getConfigFileInfo(): Promise<ConfigFileInfo> {
-		const file = this.app.vault.getAbstractFileByPath(this.configPath) as TFile;
+		// The main Astro config.ts file is one level up from vault (src/config.ts)
+		console.log('🔍 Looking for config at:', this.configPath);
+		console.log('🏠 Vault root path:', (this.app.vault.adapter as any).path);
 		
-		if (!file) {
+		// Try to access the file outside the vault using Node.js fs
+		try {
+			const fs = require('fs');
+			const path = require('path');
+			// Get the actual vault path string from the adapter
+			const vaultPath = (this.app.vault.adapter as any).basePath || (this.app.vault.adapter as any).path;
+			console.log('🏠 Vault path object:', vaultPath);
+			console.log('🏠 Vault path type:', typeof vaultPath);
+			
+			// If vaultPath is an object, try to get the string value
+			const vaultPathString = typeof vaultPath === 'string' ? vaultPath : vaultPath.toString();
+			console.log('🏠 Vault path string:', vaultPathString);
+			
+			const configPath = path.join(vaultPathString, '..', 'config.ts');
+			console.log('🔍 Trying to read config from:', configPath);
+			
+			if (fs.existsSync(configPath)) {
+				console.log('✅ Found config file outside vault at:', configPath);
+				const content = fs.readFileSync(configPath, 'utf8');
+				const stats = fs.statSync(configPath);
+				return {
+					exists: true,
+					path: configPath,
+					content: content,
+					lastModified: new Date(stats.mtime),
+					valid: true,
+					errors: []
+				};
+			} else {
+				console.log('❌ Config file not found at:', configPath);
+				return {
+					exists: false,
+					path: configPath,
+					content: '',
+					lastModified: new Date(),
+					valid: false,
+					errors: ['Config file not found']
+				};
+			}
+		} catch (error) {
+			console.log('❌ Error accessing file outside vault:', error.message);
 			return {
 				exists: false,
 				path: this.configPath,
 				content: '',
 				lastModified: new Date(),
 				valid: false,
-				errors: ['Config file not found']
-			};
-		}
-
-		try {
-			const content = await this.app.vault.read(file);
-			const lastModified = new Date(file.stat.mtime);
-			
-			// Basic validation - check if it's a valid TypeScript file
-			const valid = this.validateConfigContent(content);
-			const errors = valid ? [] : ['Invalid TypeScript syntax or missing required exports'];
-
-			return {
-				exists: true,
-				path: this.configPath,
-				content,
-				lastModified,
-				valid,
-				errors
-			};
-		} catch (error) {
-			return {
-				exists: true,
-				path: this.configPath,
-				content: '',
-				lastModified: new Date(),
-				valid: false,
-				errors: [`Error reading file: ${error.message}`]
+				errors: ['Cannot access file outside vault']
 			};
 		}
 	}
@@ -65,37 +82,157 @@ export class ConfigManager {
 	}
 
 	async writeConfig(content: string): Promise<boolean> {
+		console.log('📝 ConfigManager: Attempting to write config');
+		
+		// Try to write the file outside the vault using Node.js fs
 		try {
-			await this.app.vault.create(this.configPath, content);
+			const fs = require('fs');
+			const path = require('path');
+			// Get the actual vault path string from the adapter
+			const vaultPath = (this.app.vault.adapter as any).basePath || (this.app.vault.adapter as any).path;
+			console.log('🏠 Vault path object:', vaultPath);
+			console.log('🏠 Vault path type:', typeof vaultPath);
+			
+			// If vaultPath is an object, try to get the string value
+			const vaultPathString = typeof vaultPath === 'string' ? vaultPath : vaultPath.toString();
+			console.log('🏠 Vault path string:', vaultPathString);
+			
+			const configPath = path.join(vaultPathString, '..', 'config.ts');
+			console.log('📁 Writing config to:', configPath);
+			
+			fs.writeFileSync(configPath, content, 'utf8');
+			console.log('✅ Config file written successfully');
 			return true;
 		} catch (error) {
-			// If file exists, try to modify it
-			try {
-				await this.app.vault.modify(
-					this.app.vault.getAbstractFileByPath(this.configPath) as TFile,
-					content
-				);
-				return true;
-			} catch (modifyError) {
-				return false;
-			}
+			console.log('❌ Error writing config file:', error.message);
+			return false;
 		}
 	}
 
 	async applyPreset(preset: PresetTemplate): Promise<boolean> {
+		console.log('🔧 ConfigManager: Starting preset application');
+		console.log('📋 Preset:', preset.name);
+		console.log('⚙️ Settings:', preset.config);
+		
 		const currentConfig = await this.readConfig();
+		console.log('📖 Current config length:', currentConfig.length);
+		console.log('📖 Current config preview:', currentConfig.substring(0, 200) + '...');
+		
 		const newConfig = this.generateConfigFromPreset(preset, currentConfig);
-		return await this.writeConfig(newConfig);
+		console.log('🆕 New config length:', newConfig.length);
+		console.log('🆕 New config preview:', newConfig.substring(0, 200) + '...');
+		
+		const writeResult = await this.writeConfig(newConfig);
+		console.log('💾 Write result:', writeResult);
+		
+		return writeResult;
 	}
 
 	private generateConfigFromPreset(preset: PresetTemplate, currentConfig: string): string {
-		// Generate a proper config.ts file based on the selected template
+		// Update only the specific values in the existing config
 		const settings = preset.config as AstroModularSettings;
 		
-		// Template-specific configurations
-		let config = this.getTemplateConfig(preset.name, settings);
+		console.log('🔄 ConfigManager: Updating existing config with new values');
+		console.log('🎨 Theme to update:', settings.currentTheme);
+		console.log('🔤 Fonts to update:', settings.typography);
 		
-		return config;
+		// Start with the current config
+		let updatedConfig = currentConfig;
+		
+		// Update theme - target the siteConfig object specifically
+		updatedConfig = updatedConfig.replace(
+			/export const siteConfig: SiteConfig = \{[\s\S]*?theme:\s*"[^"]*"/,
+			(match) => match.replace(/theme:\s*"[^"]*"/, `theme: "${settings.currentTheme}"`)
+		);
+		
+		// Update font families - target the siteConfig object specifically
+		updatedConfig = updatedConfig.replace(
+			/export const siteConfig: SiteConfig = \{[\s\S]*?families:\s*\{[^}]*body:\s*"[^"]*"[^}]*heading:\s*"[^"]*"[^}]*mono:\s*"[^"]*"[^}]*\}/s,
+			(match) => match.replace(
+				/families:\s*\{[^}]*body:\s*"[^"]*"[^}]*heading:\s*"[^"]*"[^}]*mono:\s*"[^"]*"[^}]*\}/s,
+				`families: {
+      body: "${settings.typography.proseFont}",
+      heading: "${settings.typography.headingFont}",
+      mono: "${settings.typography.monoFont}",
+    }`
+			)
+		);
+		
+		// Update font source - target the siteConfig object specifically
+		updatedConfig = updatedConfig.replace(
+			/export const siteConfig: SiteConfig = \{[\s\S]*?source:\s*"[^"]*"/,
+			(match) => match.replace(/source:\s*"[^"]*"/, `source: "${settings.typography.fontSource}"`)
+		);
+		
+		// Update deployment platform - target the siteConfig object specifically
+		updatedConfig = updatedConfig.replace(
+			/export const siteConfig: SiteConfig = \{[\s\S]*?platform:\s*"[^"]*"/,
+			(match) => match.replace(/platform:\s*"[^"]*"/, `platform: "${settings.deployment.platform}"`)
+		);
+		
+		// Update profile picture settings
+		if (settings.optionalFeatures.profilePicture.enabled) {
+			updatedConfig = updatedConfig.replace(
+				/profilePicture:\s*\{[^}]*enabled:\s*false[^}]*\}/s,
+				`profilePicture: {
+    enabled: true,
+    image: "${settings.optionalFeatures.profilePicture.image}",
+    alt: "${settings.optionalFeatures.profilePicture.alt}",
+    size: "${settings.optionalFeatures.profilePicture.size}",
+    url: "${settings.optionalFeatures.profilePicture.url || ''}",
+    placement: "${settings.optionalFeatures.profilePicture.placement}",
+    style: "${settings.optionalFeatures.profilePicture.style}",
+  }`
+			);
+		}
+		
+		// Update comments settings
+		if (settings.optionalFeatures.comments.enabled) {
+			updatedConfig = updatedConfig.replace(
+				/comments:\s*\{[^}]*enabled:\s*false[^}]*\}/s,
+				`comments: {
+    enabled: true,
+    provider: "giscus",
+  }`
+			);
+		}
+		
+		console.log('✅ Config update complete');
+		return updatedConfig;
+	}
+
+	private interpolateTemplate(template: string, settings: AstroModularSettings, templateName: string): string {
+		console.log('🔄 ConfigManager: Interpolating template variables');
+		console.log('🎨 Theme:', settings.currentTheme);
+		console.log('📝 Font source:', settings.typography.fontSource);
+		console.log('🔤 Prose font:', settings.typography.proseFont);
+		console.log('📋 Template name:', templateName);
+		
+		// Replace all template variables with actual values
+		const result = template
+			.replace(/\$\{settings\.currentTheme\}/g, settings.currentTheme)
+			.replace(/\$\{settings\.typography\.fontSource\}/g, settings.typography.fontSource)
+			.replace(/\$\{settings\.typography\.proseFont\}/g, settings.typography.proseFont)
+			.replace(/\$\{settings\.typography\.headingFont\}/g, settings.typography.headingFont)
+			.replace(/\$\{settings\.typography\.monoFont\}/g, settings.typography.monoFont)
+			.replace(/\$\{settings\.typography\.customFonts\.prose\}/g, settings.typography.customFonts.prose)
+			.replace(/\$\{settings\.typography\.customFonts\.heading\}/g, settings.typography.customFonts.heading)
+			.replace(/\$\{settings\.typography\.customFonts\.mono\}/g, settings.typography.customFonts.mono)
+			.replace(/\$\{settings\.optionalFeatures\.comments\.enabled\}/g, settings.optionalFeatures.comments.enabled.toString())
+			.replace(/\$\{settings\.optionalFeatures\.profilePicture\.enabled\}/g, settings.optionalFeatures.profilePicture.enabled.toString())
+			.replace(/\$\{settings\.optionalFeatures\.profilePicture\.image\}/g, settings.optionalFeatures.profilePicture.image)
+			.replace(/\$\{settings\.optionalFeatures\.profilePicture\.alt\}/g, settings.optionalFeatures.profilePicture.alt)
+			.replace(/\$\{settings\.optionalFeatures\.profilePicture\.size\}/g, settings.optionalFeatures.profilePicture.size)
+			.replace(/\$\{settings\.optionalFeatures\.profilePicture\.url\}/g, settings.optionalFeatures.profilePicture.url || '')
+			.replace(/\$\{settings\.optionalFeatures\.profilePicture\.placement\}/g, settings.optionalFeatures.profilePicture.placement)
+			.replace(/\$\{settings\.optionalFeatures\.profilePicture\.style\}/g, settings.optionalFeatures.profilePicture.style)
+			.replace(/\$\{settings\.deployment\.platform\}/g, settings.deployment.platform)
+			.replace(/\$\{templateName\}/g, templateName);
+		
+		console.log('✅ Template interpolation complete');
+		console.log('🔍 Sample of interpolated result:', result.substring(0, 300) + '...');
+		
+		return result;
 	}
 
 	private getTemplateConfig(templateName: string, settings: AstroModularSettings): string {
