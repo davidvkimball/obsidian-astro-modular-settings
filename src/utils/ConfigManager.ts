@@ -173,43 +173,56 @@ export class ConfigManager {
 		
 		let modifiedConfig = currentConfig;
 		
-		// Update theme - target the actual value assignment, not the type definition
-		modifiedConfig = modifiedConfig.replace(
-			/theme:\s*"[^"]*",?\s*\/\/ Available themes:/,
-			`theme: "${settings.currentTheme}", // Available themes:`
-		);
+		// Update theme - use marker-based replacement
+		console.log('🔍 Looking for theme marker in config...');
+		const themeMarkerExists = currentConfig.includes('// [CONFIG:THEME]');
+		console.log('🔍 Theme marker exists:', themeMarkerExists);
+		
+		if (themeMarkerExists) {
+			const themeRegex = /\/\/ \[CONFIG:THEME\]\s*\n\s*theme:\s*"[^"]*"/;
+			const themeMatch = currentConfig.match(themeRegex);
+			console.log('🔍 Theme regex match:', themeMatch);
+			
+			modifiedConfig = modifiedConfig.replace(
+				themeRegex,
+				`// [CONFIG:THEME]\n  theme: "${settings.currentTheme}"`
+			);
+			console.log('🔍 Theme replacement applied');
+		} else {
+			console.log('❌ Theme marker not found in config!');
+		}
 		
 		// Update font source
 		modifiedConfig = modifiedConfig.replace(
-			/source:\s*"[^"]*"/,
-			`source: "${settings.typography.fontSource}"`
+			/\/\/ \[CONFIG:FONT_SOURCE\]\s*\n\s*source:\s*"[^"]*"/,
+			`// [CONFIG:FONT_SOURCE]\n    source: "${settings.typography.fontSource}"`
 		);
 		
 		// Update font families
 		modifiedConfig = modifiedConfig.replace(
-			/body:\s*"[^"]*"/,
-			`body: "${settings.typography.fontSource === 'cdn' ? settings.typography.customFonts.prose : settings.typography.proseFont}"`
+			/\/\/ \[CONFIG:FONT_BODY\]\s*\n\s*body:\s*"[^"]*"/,
+			`// [CONFIG:FONT_BODY]\n      body: "${settings.typography.fontSource === 'cdn' ? settings.typography.customFonts.prose : settings.typography.proseFont}"`
 		);
 		modifiedConfig = modifiedConfig.replace(
-			/heading:\s*"[^"]*"/,
-			`heading: "${settings.typography.fontSource === 'cdn' ? settings.typography.customFonts.heading : settings.typography.headingFont}"`
+			/\/\/ \[CONFIG:FONT_HEADING\]\s*\n\s*heading:\s*"[^"]*"/,
+			`// [CONFIG:FONT_HEADING]\n      heading: "${settings.typography.fontSource === 'cdn' ? settings.typography.customFonts.heading : settings.typography.headingFont}"`
 		);
 		modifiedConfig = modifiedConfig.replace(
-			/mono:\s*"[^"]*"/,
-			`mono: "${settings.typography.fontSource === 'cdn' ? settings.typography.customFonts.mono : settings.typography.monoFont}"`
+			/\/\/ \[CONFIG:FONT_MONO\]\s*\n\s*mono:\s*"[^"]*"/,
+			`// [CONFIG:FONT_MONO]\n      mono: "${settings.typography.fontSource === 'cdn' ? settings.typography.customFonts.mono : settings.typography.monoFont}"`
 		);
 		
 		// Update deployment platform
 		modifiedConfig = modifiedConfig.replace(
-			/platform:\s*"[^"]*"/,
-			`platform: "${settings.deployment.platform}"`
+			/\/\/ \[CONFIG:DEPLOYMENT_PLATFORM\]\s*\n\s*platform:\s*"[^"]*"/,
+			`// [CONFIG:DEPLOYMENT_PLATFORM]\n    platform: "${settings.deployment.platform}"`
 		);
 		
 		// Update layout content width if specified in template
 		if (templateConfig.layout?.contentWidth) {
 			modifiedConfig = modifiedConfig.replace(
-				/contentWidth:\s*"[^"]*"/,
-				`contentWidth: "${templateConfig.layout.contentWidth}"`
+				/\/\/ \[CONFIG:LAYOUT_CONTENT_WIDTH\]\s*\n\s*contentWidth:\s*"[^"]*"/,
+				`// [CONFIG:LAYOUT_CONTENT_WIDTH]\n    contentWidth: "${templateConfig.layout.contentWidth}"`
 			);
 		}
 		
@@ -217,14 +230,14 @@ export class ConfigManager {
 		if (templateConfig.optionalContentTypes) {
 			if (templateConfig.optionalContentTypes.projects !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
-					/projects:\s*(true|false),?\s*\/\/ Enable projects section/,
-					`projects: ${templateConfig.optionalContentTypes.projects}, // Enable projects section`
+					/\/\/ \[CONFIG:OPTIONAL_CONTENT_TYPES_PROJECTS\]\s*\n\s*projects:\s*(true|false)/,
+					`// [CONFIG:OPTIONAL_CONTENT_TYPES_PROJECTS]\n    projects: ${templateConfig.optionalContentTypes.projects}`
 				);
 			}
 			if (templateConfig.optionalContentTypes.docs !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
-					/docs:\s*(true|false),?\s*\/\/ Enable documentation section/,
-					`docs: ${templateConfig.optionalContentTypes.docs}, // Enable documentation section`
+					/\/\/ \[CONFIG:OPTIONAL_CONTENT_TYPES_DOCS\]\s*\n\s*docs:\s*(true|false)/,
+					`// [CONFIG:OPTIONAL_CONTENT_TYPES_DOCS]\n    docs: ${templateConfig.optionalContentTypes.docs}`
 				);
 			}
 		}
@@ -232,8 +245,8 @@ export class ConfigManager {
 		// Update dark mode toggle button if specified in template
 		if (templateConfig.darkModeToggleButton) {
 			modifiedConfig = modifiedConfig.replace(
-				/darkModeToggleButton:\s*"[^"]*",?\s*\/\/ "navigation" \| "commandPalette" \| "both"/,
-				`darkModeToggleButton: "${templateConfig.darkModeToggleButton}", // "navigation" | "commandPalette" | "both"`
+				/\/\/ \[CONFIG:DARK_MODE_TOGGLE_BUTTON\]\s*\n\s*darkModeToggleButton:\s*"[^"]*"/,
+				`// [CONFIG:DARK_MODE_TOGGLE_BUTTON]\n  darkModeToggleButton: "${templateConfig.darkModeToggleButton}"`
 			);
 		}
 		
@@ -243,16 +256,15 @@ export class ConfigManager {
 			// Update footer enabled state
 			if (templateConfig.footer.enabled !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
-					/footer:\s*\{\s*enabled:\s*(true|false),/,
-					`footer: {
-    enabled: ${templateConfig.footer.enabled},`
+					/\/\/ \[CONFIG:FOOTER_ENABLED\]\s*enabled:\s*(true|false)/,
+					`// [CONFIG:FOOTER_ENABLED]\n    enabled: ${templateConfig.footer.enabled}`
 				);
 			}
 			// Update footer social icons
 			if (templateConfig.footer.showSocialIconsInFooter !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
-					/showSocialIconsInFooter:\s*(true|false)/,
-					`showSocialIconsInFooter: ${templateConfig.footer.showSocialIconsInFooter}`
+					/\/\/ \[CONFIG:FOOTER_SHOW_SOCIAL_ICONS\]\s*showSocialIconsInFooter:\s*(true|false)/,
+					`// [CONFIG:FOOTER_SHOW_SOCIAL_ICONS]\n    showSocialIconsInFooter: ${templateConfig.footer.showSocialIconsInFooter}`
 				);
 			}
 		}
@@ -262,24 +274,24 @@ export class ConfigManager {
 			// Update navigation style
 			if (templateConfig.navigation.style) {
 				modifiedConfig = modifiedConfig.replace(
-					/style:\s*"[^"]*",?\s*\/\/ 'minimal' or 'traditional'/,
-					`style: "${templateConfig.navigation.style}", // 'minimal' or 'traditional'`
+					/\/\/ \[CONFIG:NAVIGATION_STYLE\]\s*style:\s*"[^"]*"/,
+					`// [CONFIG:NAVIGATION_STYLE]\n    style: "${templateConfig.navigation.style}"`
 				);
 			}
 			
 			// Update showNavigation
 			if (templateConfig.navigation.showNavigation !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
-					/showNavigation:\s*(true|false),/,
-					`showNavigation: ${templateConfig.navigation.showNavigation},`
+					/\/\/ \[CONFIG:NAVIGATION_SHOW_NAVIGATION\]\s*showNavigation:\s*(true|false)/,
+					`// [CONFIG:NAVIGATION_SHOW_NAVIGATION]\n    showNavigation: ${templateConfig.navigation.showNavigation}`
 				);
 			}
 			
 			// Update showMobileMenu
 			if (templateConfig.navigation.showMobileMenu !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
-					/showMobileMenu:\s*(true|false),/,
-					`showMobileMenu: ${templateConfig.navigation.showMobileMenu},`
+					/\/\/ \[CONFIG:NAVIGATION_SHOW_MOBILE_MENU\]\s*showMobileMenu:\s*(true|false)/,
+					`// [CONFIG:NAVIGATION_SHOW_MOBILE_MENU]\n    showMobileMenu: ${templateConfig.navigation.showMobileMenu}`
 				);
 			}
 		}
@@ -289,64 +301,83 @@ export class ConfigManager {
 			// Update enabled state
 			if (templateConfig.commandPalette.enabled !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
-					/enabled:\s*(true|false)(,\s*shortcut:)/,
-					`enabled: ${templateConfig.commandPalette.enabled}$2`
+					/\/\/ \[CONFIG:COMMAND_PALETTE_ENABLED\]\s*enabled:\s*(true|false)/,
+					`// [CONFIG:COMMAND_PALETTE_ENABLED]\n    enabled: ${templateConfig.commandPalette.enabled}`
 				);
 			}
 			
 			// Update shortcut
 			if (templateConfig.commandPalette.shortcut !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
-					/shortcut:\s*"[^"]*"/,
-					`shortcut: "${templateConfig.commandPalette.shortcut}"`
+					/\/\/ \[CONFIG:COMMAND_PALETTE_SHORTCUT\]\s*shortcut:\s*"[^"]*"/,
+					`// [CONFIG:COMMAND_PALETTE_SHORTCUT]\n    shortcut: "${templateConfig.commandPalette.shortcut}"`
 				);
 			}
 			
 			// Update placeholder
 			if (templateConfig.commandPalette.placeholder !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
-					/placeholder:\s*"[^"]*"/,
-					`placeholder: "${templateConfig.commandPalette.placeholder}"`
+					/\/\/ \[CONFIG:COMMAND_PALETTE_PLACEHOLDER\]\s*placeholder:\s*"[^"]*"/,
+					`// [CONFIG:COMMAND_PALETTE_PLACEHOLDER]\n    placeholder: "${templateConfig.commandPalette.placeholder}"`
 				);
 			}
 			
-		// Update search settings - SIMPLE EXACT MATCH
+		// Update search settings - use individual markers
 		if (templateConfig.commandPalette.search) {
 			console.log('🔍 Template search config:', templateConfig.commandPalette.search);
 			
-			// Replace the exact search object in siteConfig
-			const searchObject = `search: {
-      posts: ${templateConfig.commandPalette.search.posts},
-      pages: ${templateConfig.commandPalette.search.pages},
-      projects: ${templateConfig.commandPalette.search.projects},
-      docs: ${templateConfig.commandPalette.search.docs},
-    }`;
-			
-			// Find and replace the search object in the actual siteConfig (not interface)
-			modifiedConfig = modifiedConfig.replace(
-				/search: \{\s*posts: (true|false),\s*pages: (true|false),\s*projects: (true|false),\s*docs: (true|false),\s*\}/,
-				searchObject
-			);
+			// Update each search setting individually
+			if (templateConfig.commandPalette.search.posts !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:COMMAND_PALETTE_SEARCH_POSTS\]\s*posts:\s*(true|false)/,
+					`// [CONFIG:COMMAND_PALETTE_SEARCH_POSTS]\n      posts: ${templateConfig.commandPalette.search.posts}`
+				);
+			}
+			if (templateConfig.commandPalette.search.pages !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:COMMAND_PALETTE_SEARCH_PAGES\]\s*pages:\s*(true|false)/,
+					`// [CONFIG:COMMAND_PALETTE_SEARCH_PAGES]\n      pages: ${templateConfig.commandPalette.search.pages}`
+				);
+			}
+			if (templateConfig.commandPalette.search.projects !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:COMMAND_PALETTE_SEARCH_PROJECTS\]\s*projects:\s*(true|false)/,
+					`// [CONFIG:COMMAND_PALETTE_SEARCH_PROJECTS]\n      projects: ${templateConfig.commandPalette.search.projects}`
+				);
+			}
+			if (templateConfig.commandPalette.search.docs !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:COMMAND_PALETTE_SEARCH_DOCS\]\s*docs:\s*(true|false)/,
+					`// [CONFIG:COMMAND_PALETTE_SEARCH_DOCS]\n      docs: ${templateConfig.commandPalette.search.docs}`
+				);
+			}
 			
 			console.log('🔍 Search replacement completed');
 		}
 			
-			// Update sections settings - SIMPLE EXACT MATCH
+			// Update sections settings - use individual markers
 			if (templateConfig.commandPalette.sections) {
 				console.log('🔍 Template sections config:', templateConfig.commandPalette.sections);
 				
-				// Replace the exact sections object in siteConfig
-				const sectionsObject = `sections: {
-      quickActions: ${templateConfig.commandPalette.sections.quickActions},
-      pages: ${templateConfig.commandPalette.sections.pages},
-      social: ${templateConfig.commandPalette.sections.social},
-    }`;
-				
-				// Find and replace the sections object in the actual siteConfig (not interface)
-				modifiedConfig = modifiedConfig.replace(
-					/sections: \{\s*quickActions: (true|false),\s*pages: (true|false),\s*social: (true|false),\s*\}/,
-					sectionsObject
-				);
+				// Update each section setting individually
+				if (templateConfig.commandPalette.sections.quickActions !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:COMMAND_PALETTE_SECTIONS_QUICK_ACTIONS\]\s*quickActions:\s*(true|false)/,
+						`// [CONFIG:COMMAND_PALETTE_SECTIONS_QUICK_ACTIONS]\n      quickActions: ${templateConfig.commandPalette.sections.quickActions}`
+					);
+				}
+				if (templateConfig.commandPalette.sections.pages !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:COMMAND_PALETTE_SECTIONS_PAGES\]\s*pages:\s*(true|false)/,
+						`// [CONFIG:COMMAND_PALETTE_SECTIONS_PAGES]\n      pages: ${templateConfig.commandPalette.sections.pages}`
+					);
+				}
+				if (templateConfig.commandPalette.sections.social !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:COMMAND_PALETTE_SECTIONS_SOCIAL\]\s*social:\s*(true|false)/,
+						`// [CONFIG:COMMAND_PALETTE_SECTIONS_SOCIAL]\n      social: ${templateConfig.commandPalette.sections.social}`
+					);
+				}
 				
 				console.log('🔍 Sections replacement completed');
 			}
@@ -358,14 +389,14 @@ export class ConfigManager {
 			if (templateConfig.homeOptions.featuredPost) {
 				if (templateConfig.homeOptions.featuredPost.enabled !== undefined) {
 					modifiedConfig = modifiedConfig.replace(
-						/enabled:\s*(true|false),?\s*\/\/ Show featured post on homepage/,
-						`enabled: ${templateConfig.homeOptions.featuredPost.enabled}, // Show featured post on homepage`
+						/\/\/ \[CONFIG:HOME_OPTIONS_FEATURED_POST_ENABLED\]\s*enabled:\s*(true|false)/,
+						`// [CONFIG:HOME_OPTIONS_FEATURED_POST_ENABLED]\n      enabled: ${templateConfig.homeOptions.featuredPost.enabled}`
 					);
 				}
 				if (templateConfig.homeOptions.featuredPost.type) {
 					modifiedConfig = modifiedConfig.replace(
-						/type:\s*"[^"]*",?\s*\/\/ "latest" or "featured"/,
-						`type: "${templateConfig.homeOptions.featuredPost.type}", // "latest" or "featured"`
+						/\/\/ \[CONFIG:HOME_OPTIONS_FEATURED_POST_TYPE\]\s*type:\s*"[^"]*"/,
+						`// [CONFIG:HOME_OPTIONS_FEATURED_POST_TYPE]\n      type: "${templateConfig.homeOptions.featuredPost.type}"`
 					);
 				}
 			}
@@ -374,14 +405,14 @@ export class ConfigManager {
 			if (templateConfig.homeOptions.recentPosts) {
 				if (templateConfig.homeOptions.recentPosts.enabled !== undefined) {
 					modifiedConfig = modifiedConfig.replace(
-						/enabled:\s*(true|false),?\s*\/\/ Show recent posts on homepage/,
-						`enabled: ${templateConfig.homeOptions.recentPosts.enabled}, // Show recent posts on homepage`
+						/\/\/ \[CONFIG:HOME_OPTIONS_RECENT_POSTS_ENABLED\]\s*enabled:\s*(true|false)/,
+						`// [CONFIG:HOME_OPTIONS_RECENT_POSTS_ENABLED]\n      enabled: ${templateConfig.homeOptions.recentPosts.enabled}`
 					);
 				}
 				if (templateConfig.homeOptions.recentPosts.count) {
 					modifiedConfig = modifiedConfig.replace(
-						/count:\s*\d+,?\s*\/\/ Number of recent posts to show/,
-						`count: ${templateConfig.homeOptions.recentPosts.count}, // Number of recent posts to show`
+						/\/\/ \[CONFIG:HOME_OPTIONS_RECENT_POSTS_COUNT\]\s*count:\s*\d+/,
+						`// [CONFIG:HOME_OPTIONS_RECENT_POSTS_COUNT]\n      count: ${templateConfig.homeOptions.recentPosts.count}`
 					);
 				}
 			}
@@ -390,14 +421,14 @@ export class ConfigManager {
 			if (templateConfig.homeOptions.projects) {
 				if (templateConfig.homeOptions.projects.enabled !== undefined) {
 					modifiedConfig = modifiedConfig.replace(
-						/enabled:\s*(true|false),?\s*\/\/ Show featured projects on homepage/,
-						`enabled: ${templateConfig.homeOptions.projects.enabled}, // Show featured projects on homepage`
+						/\/\/ \[CONFIG:HOME_OPTIONS_PROJECTS_ENABLED\]\s*enabled:\s*(true|false)/,
+						`// [CONFIG:HOME_OPTIONS_PROJECTS_ENABLED]\n      enabled: ${templateConfig.homeOptions.projects.enabled}`
 					);
 				}
 				if (templateConfig.homeOptions.projects.count) {
 					modifiedConfig = modifiedConfig.replace(
-						/count:\s*\d+,?\s*\/\/ Number of projects to show/,
-						`count: ${templateConfig.homeOptions.projects.count}, // Number of projects to show`
+						/\/\/ \[CONFIG:HOME_OPTIONS_PROJECTS_COUNT\]\s*count:\s*\d+/,
+						`// [CONFIG:HOME_OPTIONS_PROJECTS_COUNT]\n      count: ${templateConfig.homeOptions.projects.count}`
 					);
 				}
 			}
@@ -406,14 +437,14 @@ export class ConfigManager {
 			if (templateConfig.homeOptions.docs) {
 				if (templateConfig.homeOptions.docs.enabled !== undefined) {
 					modifiedConfig = modifiedConfig.replace(
-						/enabled:\s*(true|false),?\s*\/\/ Show featured docs on homepage/,
-						`enabled: ${templateConfig.homeOptions.docs.enabled}, // Show featured docs on homepage`
+						/\/\/ \[CONFIG:HOME_OPTIONS_DOCS_ENABLED\]\s*enabled:\s*(true|false)/,
+						`// [CONFIG:HOME_OPTIONS_DOCS_ENABLED]\n      enabled: ${templateConfig.homeOptions.docs.enabled}`
 					);
 				}
 				if (templateConfig.homeOptions.docs.count) {
 					modifiedConfig = modifiedConfig.replace(
-						/count:\s*\d+,?\s*\/\/ Number of docs to show/,
-						`count: ${templateConfig.homeOptions.docs.count}, // Number of docs to show`
+						/\/\/ \[CONFIG:HOME_OPTIONS_DOCS_COUNT\]\s*count:\s*\d+/,
+						`// [CONFIG:HOME_OPTIONS_DOCS_COUNT]\n      count: ${templateConfig.homeOptions.docs.count}`
 					);
 				}
 			}
@@ -421,8 +452,8 @@ export class ConfigManager {
 			// Update blurb placement
 			if (templateConfig.homeOptions.blurb?.placement) {
 				modifiedConfig = modifiedConfig.replace(
-					/placement:\s*"[^"]*",?\s*\/\/ 'above' \(at the top\), 'below' \(after content\), or 'none' \(disabled\)/,
-					`placement: "${templateConfig.homeOptions.blurb.placement}", // 'above' (at the top), 'below' (after content), or 'none' (disabled)`
+					/\/\/ \[CONFIG:HOME_OPTIONS_BLURB_PLACEMENT\]\s*placement:\s*"[^"]*"/,
+					`// [CONFIG:HOME_OPTIONS_BLURB_PLACEMENT]\n      placement: "${templateConfig.homeOptions.blurb.placement}"`
 				);
 			}
 		}
@@ -432,35 +463,26 @@ export class ConfigManager {
 			// Update posts per page
 			if (templateConfig.postOptions.postsPerPage) {
 				modifiedConfig = modifiedConfig.replace(
-					/postsPerPage:\s*\d+/,
-					`postsPerPage: ${templateConfig.postOptions.postsPerPage}`
+					/\/\/ \[CONFIG:POST_OPTIONS_POSTS_PER_PAGE\]\s*postsPerPage:\s*\d+/,
+					`// [CONFIG:POST_OPTIONS_POSTS_PER_PAGE]\n    postsPerPage: ${templateConfig.postOptions.postsPerPage}`
 				);
 			}
 			
-			// Update boolean features with highly specific regex patterns
-			const booleanFeatures = ['readingTime', 'wordCount', 'tableOfContents', 'tags', 'postNavigation'];
+			// Update boolean features with marker-based replacement
+			const booleanFeatures = [
+				{ key: 'readingTime', marker: 'CONFIG:POST_OPTIONS_READING_TIME' },
+				{ key: 'wordCount', marker: 'CONFIG:POST_OPTIONS_WORD_COUNT' },
+				{ key: 'tableOfContents', marker: 'CONFIG:POST_OPTIONS_TABLE_OF_CONTENTS' },
+				{ key: 'tags', marker: 'CONFIG:POST_OPTIONS_TAGS' },
+				{ key: 'postNavigation', marker: 'CONFIG:POST_OPTIONS_POST_NAVIGATION' }
+			];
+			
 			booleanFeatures.forEach(feature => {
-				if (templateConfig.postOptions[feature] !== undefined) {
-					// Use highly specific regex that targets each feature individually with context
-					let regex;
-					if (feature === 'readingTime') {
-						regex = /readingTime:\s*(true|false),/;
-					} else if (feature === 'wordCount') {
-						regex = /wordCount:\s*(true|false),/;
-					} else if (feature === 'tableOfContents') {
-						regex = /tableOfContents:\s*(true|false),/;
-					} else if (feature === 'tags') {
-						regex = /tags:\s*(true|false),/;
-					} else if (feature === 'postNavigation') {
-						regex = /postNavigation:\s*(true|false),/;
-					}
-					
-					if (regex) {
-						modifiedConfig = modifiedConfig.replace(
-							regex,
-							`${feature}: ${templateConfig.postOptions[feature]},`
-						);
-					}
+				if (templateConfig.postOptions[feature.key] !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						new RegExp(`// \\[${feature.marker}\\]\\s*${feature.key}:\\s*(true|false)`),
+						`// [${feature.marker}]\n    ${feature.key}: ${templateConfig.postOptions[feature.key]}`
+					);
 				}
 			});
 			
@@ -468,62 +490,53 @@ export class ConfigManager {
 			if (templateConfig.postOptions.linkedMentions) {
 				if (templateConfig.postOptions.linkedMentions.enabled !== undefined) {
 					modifiedConfig = modifiedConfig.replace(
-						/linkedMentions:\s*\{\s*enabled:\s*(true|false),/,
-						`linkedMentions: {\n      enabled: ${templateConfig.postOptions.linkedMentions.enabled},`
+						/\/\/ \[CONFIG:POST_OPTIONS_LINKED_MENTIONS_ENABLED\]\s*enabled:\s*(true|false)/,
+						`// [CONFIG:POST_OPTIONS_LINKED_MENTIONS_ENABLED]\n      enabled: ${templateConfig.postOptions.linkedMentions.enabled}`
 					);
 				}
 				if (templateConfig.postOptions.linkedMentions.linkedMentionsCompact !== undefined) {
 					modifiedConfig = modifiedConfig.replace(
-						/linkedMentionsCompact:\s*(true|false)/,
-						`linkedMentionsCompact: ${templateConfig.postOptions.linkedMentions.linkedMentionsCompact}`
+						/\/\/ \[CONFIG:POST_OPTIONS_LINKED_MENTIONS_COMPACT\]\s*linkedMentionsCompact:\s*(true|false)/,
+						`// [CONFIG:POST_OPTIONS_LINKED_MENTIONS_COMPACT]\n      linkedMentionsCompact: ${templateConfig.postOptions.linkedMentions.linkedMentionsCompact}`
 					);
 				}
 			}
 			
-		// Update graph view settings with highly specific regex patterns
+		// Update graph view settings with marker-based replacement
 		if (templateConfig.postOptions.graphView) {
-			// Update enabled state - target specifically within graphView object
+			// Update enabled state
 			if (templateConfig.postOptions.graphView.enabled !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
-					/graphView:\s*\{\s*enabled:\s*(true|false),/,
-					`graphView: {
-    enabled: ${templateConfig.postOptions.graphView.enabled},`
+					/\/\/ \[CONFIG:POST_OPTIONS_GRAPH_VIEW_ENABLED\]\s*enabled:\s*(true|false)/,
+					`// [CONFIG:POST_OPTIONS_GRAPH_VIEW_ENABLED]\n    enabled: ${templateConfig.postOptions.graphView.enabled}`
 				);
 			}
-			// Update showInSidebar state - target specifically within graphView object
+			// Update showInSidebar state
 			if (templateConfig.postOptions.graphView.showInSidebar !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
-					/graphView:\s*\{[\s\S]*?showInSidebar:\s*(true|false),/,
-					(match) => {
-						return match.replace(
-							/showInSidebar:\s*(true|false),/,
-							`showInSidebar: ${templateConfig.postOptions.graphView.showInSidebar},`
-						);
-					}
+					/\/\/ \[CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_IN_SIDEBAR\]\s*showInSidebar:\s*(true|false)/,
+					`// [CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_IN_SIDEBAR]\n      showInSidebar: ${templateConfig.postOptions.graphView.showInSidebar}`
 				);
 			}
-			// Update showInCommandPalette state - target specifically within graphView object
+			// Update showInCommandPalette state
 			if (templateConfig.postOptions.graphView.showInCommandPalette !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
-					/graphView:\s*\{[\s\S]*?showInCommandPalette:\s*(true|false),/,
-					(match) => {
-						return match.replace(
-							/showInCommandPalette:\s*(true|false),/,
-							`showInCommandPalette: ${templateConfig.postOptions.graphView.showInCommandPalette},`
-						);
-					}
+					/\/\/ \[CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_IN_COMMAND_PALETTE\]\s*showInCommandPalette:\s*(true|false)/,
+					`// [CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_IN_COMMAND_PALETTE]\n      showInCommandPalette: ${templateConfig.postOptions.graphView.showInCommandPalette}`
 				);
 			}
-			// Update maxNodes - target specifically within graphView object
+			// Update maxNodes
 			if (templateConfig.postOptions.graphView.maxNodes) {
 				modifiedConfig = modifiedConfig.replace(
-					/graphView:\s*\{[\s\S]*?maxNodes:\s*\d+,/,
-					(match) => {
-						return match.replace(
-							/maxNodes:\s*\d+,/,
-							`maxNodes: ${templateConfig.postOptions.graphView.maxNodes},`
-						);
-					}
+					/\/\/ \[CONFIG:POST_OPTIONS_GRAPH_VIEW_MAX_NODES\]\s*maxNodes:\s*\d+/,
+					`// [CONFIG:POST_OPTIONS_GRAPH_VIEW_MAX_NODES]\n      maxNodes: ${templateConfig.postOptions.graphView.maxNodes}`
+				);
+			}
+			// Update showOrphanedPosts
+			if (templateConfig.postOptions.graphView.showOrphanedPosts !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_ORPHANED_POSTS\]\s*showOrphanedPosts:\s*(true|false)/,
+					`// [CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_ORPHANED_POSTS]\n      showOrphanedPosts: ${templateConfig.postOptions.graphView.showOrphanedPosts}`
 				);
 			}
 		}
@@ -531,82 +544,76 @@ export class ConfigManager {
 			// Update post card settings
 			if (templateConfig.postOptions.showPostCardCoverImages) {
 				modifiedConfig = modifiedConfig.replace(
-					/showPostCardCoverImages:\s*"[^"]*",/,
-					`showPostCardCoverImages: "${templateConfig.postOptions.showPostCardCoverImages}",`
+					/\/\/ \[CONFIG:POST_OPTIONS_SHOW_POST_CARD_COVER_IMAGES\]\s*showPostCardCoverImages:\s*"[^"]*"/,
+					`// [CONFIG:POST_OPTIONS_SHOW_POST_CARD_COVER_IMAGES]\n    showPostCardCoverImages: "${templateConfig.postOptions.showPostCardCoverImages}"`
 				);
 			}
 			if (templateConfig.postOptions.postCardAspectRatio) {
 				modifiedConfig = modifiedConfig.replace(
-					/postCardAspectRatio:\s*"[^"]*",?\s*\/\/ "16:9" \| "4:3" \| "3:2" \| "og" \| "square" \| "golden" \| "custom"/,
-					`postCardAspectRatio: "${templateConfig.postOptions.postCardAspectRatio}", // "16:9" | "4:3" | "3:2" | "og" | "square" | "golden" | "custom"`
+					/\/\/ \[CONFIG:POST_OPTIONS_POST_CARD_ASPECT_RATIO\]\s*postCardAspectRatio:\s*"[^"]*"/,
+					`// [CONFIG:POST_OPTIONS_POST_CARD_ASPECT_RATIO]\n    postCardAspectRatio: "${templateConfig.postOptions.postCardAspectRatio}"`
 				);
 			}
 			if (templateConfig.postOptions.customPostCardAspectRatio) {
 				modifiedConfig = modifiedConfig.replace(
-					/customPostCardAspectRatio:\s*"[^"]*",?\s*\/\/ For custom aspect ratio/,
-					`customPostCardAspectRatio: "${templateConfig.postOptions.customPostCardAspectRatio}", // For custom aspect ratio`
+					/\/\/ \[CONFIG:POST_OPTIONS_CUSTOM_POST_CARD_ASPECT_RATIO\]\s*customPostCardAspectRatio:\s*"[^"]*"/,
+					`// [CONFIG:POST_OPTIONS_CUSTOM_POST_CARD_ASPECT_RATIO]\n    customPostCardAspectRatio: "${templateConfig.postOptions.customPostCardAspectRatio}"`
 				);
 			}
 		}
 		
 		// Update profile picture settings - only update if profile picture is enabled
 		if (settings.optionalFeatures.profilePicture.enabled) {
-			// Update enabled state - target specifically within profilePicture object
+			// Update enabled state
 			modifiedConfig = modifiedConfig.replace(
-				/profilePicture:\s*\{\s*enabled:\s*(true|false),?\s*\/\/ Profile picture/,
-				`profilePicture: {
-    enabled: ${settings.optionalFeatures.profilePicture.enabled}, // Profile picture`
+				/\/\/ \[CONFIG:PROFILE_PICTURE_ENABLED\]\s*enabled:\s*(true|false)/,
+				`// [CONFIG:PROFILE_PICTURE_ENABLED]\n    enabled: ${settings.optionalFeatures.profilePicture.enabled}`
 			);
-			// Update image - target specifically within profilePicture object
+			// Update image
 			modifiedConfig = modifiedConfig.replace(
-				/profilePicture:\s*\{[\s\S]*?image:\s*"[^"]*",?\s*\/\/ Path to your profile image/,
-				(match) => {
-					return match.replace(
-						/image:\s*"[^"]*",?\s*\/\/ Path to your profile image/,
-						`image: "${settings.optionalFeatures.profilePicture.image}", // Path to your profile image`
-					);
-				}
+				/\/\/ \[CONFIG:PROFILE_PICTURE_IMAGE\]\s*image:\s*"[^"]*"/,
+				`// [CONFIG:PROFILE_PICTURE_IMAGE]\n    image: "${settings.optionalFeatures.profilePicture.image}"`
 			);
-			// Update alt - target specifically within profilePicture object
+			// Update alt
 			modifiedConfig = modifiedConfig.replace(
-				/profilePicture:\s*\{[\s\S]*?alt:\s*"[^"]*"/,
-				(match) => {
-					return match.replace(
-						/alt:\s*"[^"]*"/,
-						`alt: "${settings.optionalFeatures.profilePicture.alt}"`
-					);
-				}
+				/\/\/ \[CONFIG:PROFILE_PICTURE_ALT\]\s*alt:\s*"[^"]*"/,
+				`// [CONFIG:PROFILE_PICTURE_ALT]\n    alt: "${settings.optionalFeatures.profilePicture.alt}"`
 			);
-			// Update size - target specifically within profilePicture object
+			// Update size
 			modifiedConfig = modifiedConfig.replace(
-				/profilePicture:\s*\{[\s\S]*?size:\s*"[^"]*",?\s*\/\/ "sm" \(32px\), "md" \(48px\), or "lg" \(64px\)/,
-				(match) => {
-					return match.replace(
-						/size:\s*"[^"]*",?\s*\/\/ "sm" \(32px\), "md" \(48px\), or "lg" \(64px\)/,
-						`size: "${settings.optionalFeatures.profilePicture.size}", // "sm" (32px), "md" (48px), or "lg" (64px)`
-					);
-				}
+				/\/\/ \[CONFIG:PROFILE_PICTURE_SIZE\]\s*size:\s*"[^"]*"/,
+				`// [CONFIG:PROFILE_PICTURE_SIZE]\n    size: "${settings.optionalFeatures.profilePicture.size}"`
 			);
-			// Update url, placement, and style - target specifically within profilePicture object
+			// Update url
 			modifiedConfig = modifiedConfig.replace(
-				/profilePicture:\s*\{[\s\S]*?url:\s*"[^"]*",?\s*\/\/ Optional\s*,\s*placement:\s*"[^"]*",?\s*\/\/ "footer" or "header"\s*,\s*style:\s*"[^"]*",?\s*\/\/ "circle", "square", or "none"/,
-				(match) => {
-					return match.replace(
-						/url:\s*"[^"]*",?\s*\/\/ Optional\s*,\s*placement:\s*"[^"]*",?\s*\/\/ "footer" or "header"\s*,\s*style:\s*"[^"]*",?\s*\/\/ "circle", "square", or "none"/,
-						`url: "${settings.optionalFeatures.profilePicture.url || ''}", // Optional
-    placement: "${settings.optionalFeatures.profilePicture.placement}", // "footer" or "header"
-    style: "${settings.optionalFeatures.profilePicture.style}", // "circle", "square", or "none"`
-					);
-				}
+				/\/\/ \[CONFIG:PROFILE_PICTURE_URL\]\s*url:\s*"[^"]*"/,
+				`// [CONFIG:PROFILE_PICTURE_URL]\n    url: "${settings.optionalFeatures.profilePicture.url || ''}"`
+			);
+			// Update placement
+			modifiedConfig = modifiedConfig.replace(
+				/\/\/ \[CONFIG:PROFILE_PICTURE_PLACEMENT\]\s*placement:\s*"[^"]*"/,
+				`// [CONFIG:PROFILE_PICTURE_PLACEMENT]\n    placement: "${settings.optionalFeatures.profilePicture.placement}"`
+			);
+			// Update style
+			modifiedConfig = modifiedConfig.replace(
+				/\/\/ \[CONFIG:PROFILE_PICTURE_STYLE\]\s*style:\s*"[^"]*"/,
+				`// [CONFIG:PROFILE_PICTURE_STYLE]\n    style: "${settings.optionalFeatures.profilePicture.style}"`
 			);
 		}
 		
 		// Update comments settings
 		modifiedConfig = modifiedConfig.replace(
-			/comments:\s*\{\s*enabled:\s*(true|false),/,
-				`comments: {
-      enabled: ${settings.optionalFeatures.comments.enabled},`
-			);
+			/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_ENABLED\]\s*enabled:\s*(true|false)/,
+			`// [CONFIG:POST_OPTIONS_COMMENTS_ENABLED]\n      enabled: ${settings.optionalFeatures.comments.enabled}`
+		);
+		
+		// Validate markers are present
+		const markerValidation = this.validateMarkers(modifiedConfig);
+		if (!markerValidation.valid) {
+			console.error('❌ Config modification failed: Missing markers:', markerValidation.missing);
+			console.error('Please ensure all CONFIG markers are present in your config.ts file');
+			return currentConfig; // Return original config if markers are missing
+		}
 		
 		// Validate the modified config has proper syntax
 		try {
@@ -633,6 +640,77 @@ export class ConfigManager {
 		}
 		
 		return modifiedConfig;
+	}
+
+	private validateMarkers(config: string): { valid: boolean; missing: string[] } {
+		const requiredMarkers = [
+			'CONFIG:THEME',
+			'CONFIG:FONT_SOURCE',
+			'CONFIG:FONT_BODY',
+			'CONFIG:FONT_HEADING',
+			'CONFIG:FONT_MONO',
+			'CONFIG:LAYOUT_CONTENT_WIDTH',
+			'CONFIG:FOOTER_ENABLED',
+			'CONFIG:FOOTER_SHOW_SOCIAL_ICONS',
+			'CONFIG:SCROLL_TO_TOP',
+			'CONFIG:DARK_MODE_TOGGLE_BUTTON',
+			'CONFIG:DEPLOYMENT_PLATFORM',
+			'CONFIG:COMMAND_PALETTE_ENABLED',
+			'CONFIG:COMMAND_PALETTE_SHORTCUT',
+			'CONFIG:COMMAND_PALETTE_PLACEHOLDER',
+			'CONFIG:COMMAND_PALETTE_SEARCH_POSTS',
+			'CONFIG:COMMAND_PALETTE_SEARCH_PAGES',
+			'CONFIG:COMMAND_PALETTE_SEARCH_PROJECTS',
+			'CONFIG:COMMAND_PALETTE_SEARCH_DOCS',
+			'CONFIG:COMMAND_PALETTE_SECTIONS_QUICK_ACTIONS',
+			'CONFIG:COMMAND_PALETTE_SECTIONS_PAGES',
+			'CONFIG:COMMAND_PALETTE_SECTIONS_SOCIAL',
+			'CONFIG:PROFILE_PICTURE_ENABLED',
+			'CONFIG:PROFILE_PICTURE_IMAGE',
+			'CONFIG:PROFILE_PICTURE_ALT',
+			'CONFIG:PROFILE_PICTURE_SIZE',
+			'CONFIG:PROFILE_PICTURE_URL',
+			'CONFIG:PROFILE_PICTURE_PLACEMENT',
+			'CONFIG:PROFILE_PICTURE_STYLE',
+			'CONFIG:NAVIGATION_SHOW_NAVIGATION',
+			'CONFIG:NAVIGATION_STYLE',
+			'CONFIG:NAVIGATION_SHOW_MOBILE_MENU',
+			'CONFIG:OPTIONAL_CONTENT_TYPES_PROJECTS',
+			'CONFIG:OPTIONAL_CONTENT_TYPES_DOCS',
+			'CONFIG:HOME_OPTIONS_FEATURED_POST_ENABLED',
+			'CONFIG:HOME_OPTIONS_FEATURED_POST_TYPE',
+			'CONFIG:HOME_OPTIONS_FEATURED_POST_SLUG',
+			'CONFIG:HOME_OPTIONS_RECENT_POSTS_ENABLED',
+			'CONFIG:HOME_OPTIONS_RECENT_POSTS_COUNT',
+			'CONFIG:HOME_OPTIONS_PROJECTS_ENABLED',
+			'CONFIG:HOME_OPTIONS_PROJECTS_COUNT',
+			'CONFIG:HOME_OPTIONS_DOCS_ENABLED',
+			'CONFIG:HOME_OPTIONS_DOCS_COUNT',
+			'CONFIG:HOME_OPTIONS_BLURB_PLACEMENT',
+			'CONFIG:POST_OPTIONS_POSTS_PER_PAGE',
+			'CONFIG:POST_OPTIONS_READING_TIME',
+			'CONFIG:POST_OPTIONS_WORD_COUNT',
+			'CONFIG:POST_OPTIONS_TABLE_OF_CONTENTS',
+			'CONFIG:POST_OPTIONS_TAGS',
+			'CONFIG:POST_OPTIONS_LINKED_MENTIONS_ENABLED',
+			'CONFIG:POST_OPTIONS_LINKED_MENTIONS_COMPACT',
+			'CONFIG:POST_OPTIONS_GRAPH_VIEW_ENABLED',
+			'CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_IN_SIDEBAR',
+			'CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_IN_COMMAND_PALETTE',
+			'CONFIG:POST_OPTIONS_GRAPH_VIEW_MAX_NODES',
+			'CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_ORPHANED_POSTS',
+			'CONFIG:POST_OPTIONS_POST_NAVIGATION',
+			'CONFIG:POST_OPTIONS_SHOW_POST_CARD_COVER_IMAGES',
+			'CONFIG:POST_OPTIONS_POST_CARD_ASPECT_RATIO',
+			'CONFIG:POST_OPTIONS_CUSTOM_POST_CARD_ASPECT_RATIO',
+			'CONFIG:POST_OPTIONS_COMMENTS_ENABLED'
+		];
+		
+		const missing = requiredMarkers.filter(marker => 
+			!config.includes(`// [${marker}]`)
+		);
+		
+		return { valid: missing.length === 0, missing };
 	}
 
 	private interpolateTemplate(template: string, settings: AstroModularSettings, templateName: string): string {

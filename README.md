@@ -124,6 +124,14 @@ The plugin automatically configures these Obsidian plugins:
 
 The plugin reads and writes to your `astro.config.ts` file. It preserves your existing configuration while applying the selected template and theme settings.
 
+#### Config Marker System
+
+The plugin uses a reliable marker-based system to update configuration values. Special comment markers like `// [CONFIG:THEME]` are placed before each configurable value in your `config.ts` file.
+
+**Important**: Do not remove these markers! They are essential for the plugin to function correctly. If markers are missing, the plugin will show an error and refuse to update your configuration.
+
+For a complete list of markers and troubleshooting, see [CONFIG_MARKERS.md](CONFIG_MARKERS.md).
+
 ## Troubleshooting
 
 ### Plugin Not Loading
@@ -150,6 +158,12 @@ The plugin reads and writes to your `astro.config.ts` file. It preserves your ex
 - Ensure your Astro dev server is running
 - Check that the theme name is correct in your config
 - Try restarting your Astro dev server after configuration changes
+
+### Missing Config Markers Error
+- Check that all `// [CONFIG:KEY]` markers are present in your `config.ts`
+- Verify marker format is exactly `// [CONFIG:KEY]` (no typos)
+- See [CONFIG_MARKERS.md](CONFIG_MARKERS.md) for complete marker list
+- Restore from git if markers were accidentally removed
 
 ## Development
 
