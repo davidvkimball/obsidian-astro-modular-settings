@@ -6,7 +6,7 @@ import { PluginManager } from '../utils/PluginManager';
 export class SetupWizardModal extends Modal {
 	private settings: AstroModularSettings;
 	private currentStep: number = 1;
-	private totalSteps: number = 9;
+	private totalSteps: number = 10;
 	private configManager: ConfigManager;
 	private pluginManager: PluginManager;
 	private onComplete: (settings: AstroModularSettings) => void;
@@ -15,6 +15,8 @@ export class SetupWizardModal extends Modal {
 	private selectedTemplate: TemplateType;
 	private selectedTheme: ThemeType;
 	private selectedContentOrg: ContentOrganizationType;
+	private selectedSiteInfo: any;
+	private selectedNavigation: any;
 	private selectedFeatures: any = {};
 	private selectedTypography: any;
 	private selectedOptionalFeatures: any;
@@ -49,6 +51,26 @@ export class SetupWizardModal extends Modal {
 		this.selectedTemplate = this.settings.currentTemplate || 'standard';
 		this.selectedTheme = this.settings.currentTheme || 'oxygen';
 		this.selectedContentOrg = this.settings.contentOrganization || 'file-based';
+		this.selectedSiteInfo = { ...this.settings.siteInfo } || {
+			site: 'https://astro-modular.netlify.app',
+			title: 'Astro Modular',
+			description: 'A flexible blog theme designed for Obsidian users.',
+			author: 'David V. Kimball',
+			language: 'en'
+		};
+		this.selectedNavigation = { ...this.settings.navigation } || {
+			pages: [
+				{ title: 'Posts', url: '/posts' },
+				{ title: 'Projects', url: '/projects' },
+				{ title: 'Docs', url: '/docs' },
+				{ title: 'About', url: '/about' },
+				{ title: 'GitHub', url: 'https://github.com/davidvkimball/astro-modular' }
+			],
+			social: [
+				{ title: 'X', url: 'https://x.com/davidvkimball', icon: 'x-twitter' },
+				{ title: 'GitHub', url: 'https://github.com/davidvkimball', icon: 'github' }
+			]
+		};
 		this.selectedFeatures = { ...this.settings.features } || {};
 		this.selectedTypography = { ...this.settings.typography } || {
 			headingFont: 'Inter',
@@ -146,15 +168,18 @@ export class SetupWizardModal extends Modal {
 				this.renderContentOrgStep(container);
 				break;
 			case 6:
-				this.renderOptionalFeaturesStep(container);
+				this.renderNavigationStep(container);
 				break;
 			case 7:
-				this.renderDeploymentStep(container);
+				this.renderOptionalFeaturesStep(container);
 				break;
 			case 8:
-				this.renderPluginConfigStep(container);
+				this.renderDeploymentStep(container);
 				break;
 			case 9:
+				this.renderPluginConfigStep(container);
+				break;
+			case 10:
 				this.renderFinalizeStep(container);
 				break;
 		}
@@ -165,11 +190,49 @@ export class SetupWizardModal extends Modal {
 			<div class="welcome-content">
 				<h2>Welcome to Astro Modular!</h2>
 				<p>This wizard will help you set up your Astro Modular theme with the perfect configuration for your needs.</p>
-				<p class="welcome-note">
-					<a href="https://github.com/astro-modular/docs" target="_blank">View documentation</a>
-				</p>
+				
+				<div class="site-info-form">
+					<h3>Site Information</h3>
+					<div class="form-group">
+						<label for="site-url">URL</label>
+						<input type="text" id="site-url" value="${this.selectedSiteInfo.site}" placeholder="https://astro-modular.netlify.app">
+					</div>
+					<div class="form-group">
+						<label for="site-title">Title</label>
+						<input type="text" id="site-title" value="${this.selectedSiteInfo.title}" placeholder="Astro Modular">
+					</div>
+					<div class="form-group">
+						<label for="site-description">Description</label>
+						<input type="text" id="site-description" value="${this.selectedSiteInfo.description}" placeholder="A flexible blog theme designed for Obsidian users.">
+					</div>
+					<div class="form-group">
+						<label for="site-author">Author Name</label>
+						<input type="text" id="site-author" value="${this.selectedSiteInfo.author}" placeholder="David V. Kimball">
+					</div>
+					<div class="form-group">
+						<label for="site-language">Language</label>
+						<input type="text" id="site-language" value="${this.selectedSiteInfo.language}" placeholder="en">
+					</div>
+				</div>
 			</div>
 		`;
+
+		// Add change handlers
+		container.querySelector('#site-url')?.addEventListener('input', (e) => {
+			this.selectedSiteInfo.site = (e.target as HTMLInputElement).value;
+		});
+		container.querySelector('#site-title')?.addEventListener('input', (e) => {
+			this.selectedSiteInfo.title = (e.target as HTMLInputElement).value;
+		});
+		container.querySelector('#site-description')?.addEventListener('input', (e) => {
+			this.selectedSiteInfo.description = (e.target as HTMLInputElement).value;
+		});
+		container.querySelector('#site-author')?.addEventListener('input', (e) => {
+			this.selectedSiteInfo.author = (e.target as HTMLInputElement).value;
+		});
+		container.querySelector('#site-language')?.addEventListener('input', (e) => {
+			this.selectedSiteInfo.language = (e.target as HTMLInputElement).value;
+		});
 	}
 
 	private renderTemplateStep(container: HTMLElement) {
@@ -309,6 +372,202 @@ export class SetupWizardModal extends Modal {
 				}
 			});
 		});
+	}
+
+	private renderNavigationStep(container: HTMLElement) {
+		container.innerHTML = `
+			<div class="navigation-config">
+				<h2>Navigation</h2>
+				<p>Configure your site's navigation menu and social links.</p>
+				
+				<div class="navigation-sections">
+					<div class="nav-section">
+						<h3>Pages</h3>
+						<p>Add and arrange navigation pages</p>
+						<div class="nav-items" id="pages-list">
+							${this.selectedNavigation.pages.map((page: any, index: number) => `
+								<div class="nav-item" data-index="${index}" draggable="true">
+									<div class="nav-item-content">
+										<div class="nav-item-fields">
+											<input type="text" class="nav-title" value="${page.title}" placeholder="Page Title">
+											<input type="text" class="nav-url" value="${page.url}" placeholder="/page-url">
+										</div>
+										<button class="nav-remove mod-warning" type="button">Remove</button>
+									</div>
+								</div>
+							`).join('')}
+						</div>
+						<button class="nav-add" id="add-page" type="button">Add Page</button>
+					</div>
+					
+					<div class="nav-section">
+						<h3>Social Links</h3>
+						<p>Add social media and external links</p>
+						<div class="nav-items" id="social-list">
+							${this.selectedNavigation.social.map((social: any, index: number) => `
+								<div class="nav-item" data-index="${index}" draggable="true">
+									<div class="nav-item-content">
+										<div class="nav-item-fields">
+											<input type="text" class="nav-title" value="${social.title}" placeholder="Social Title">
+											<input type="text" class="nav-url" value="${social.url}" placeholder="https://example.com">
+										</div>
+										<button class="nav-remove mod-warning" type="button">Remove</button>
+									</div>
+									<div class="nav-icon-row">
+										<input type="text" class="nav-icon" value="${social.icon}" placeholder="icon-name">
+										<div class="nav-icon-help">
+											<small>Icon names from <a href="https://fontawesome.com/search?ic=brands&o=r" target="_blank">FontAwesome Brands</a></small>
+										</div>
+									</div>
+								</div>
+							`).join('')}
+						</div>
+						<button class="nav-add" id="add-social" type="button">Add Social Link</button>
+					</div>
+				</div>
+			</div>
+		`;
+
+		// Add event handlers for pages
+		container.querySelector('#add-page')?.addEventListener('click', () => {
+			this.addNavigationItem('pages');
+		});
+
+		container.querySelector('#add-social')?.addEventListener('click', () => {
+			this.addNavigationItem('social');
+		});
+
+		// Add event handlers for existing items
+		container.querySelectorAll('#pages-list .nav-remove').forEach(button => {
+			button.addEventListener('click', (e) => {
+				const item = (e.target as HTMLElement).closest('.nav-item');
+				const index = parseInt(item?.getAttribute('data-index') || '0');
+				this.removeNavigationItem('pages', index);
+				this.renderCurrentStep();
+			});
+		});
+
+		container.querySelectorAll('#social-list .nav-remove').forEach(button => {
+			button.addEventListener('click', (e) => {
+				const item = (e.target as HTMLElement).closest('.nav-item');
+				const index = parseInt(item?.getAttribute('data-index') || '0');
+				this.removeNavigationItem('social', index);
+				this.renderCurrentStep();
+			});
+		});
+
+		// Add input change handlers
+		container.querySelectorAll('#pages-list .nav-title, #pages-list .nav-url').forEach(input => {
+			input.addEventListener('input', (e) => {
+				const item = (e.target as HTMLElement).closest('.nav-item');
+				const index = parseInt(item?.getAttribute('data-index') || '0');
+				const field = (e.target as HTMLElement).classList.contains('nav-title') ? 'title' : 'url';
+				this.updateNavigationItem('pages', index, field, (e.target as HTMLInputElement).value);
+			});
+		});
+
+		container.querySelectorAll('#social-list .nav-title, #social-list .nav-url').forEach(input => {
+			input.addEventListener('input', (e) => {
+				const item = (e.target as HTMLElement).closest('.nav-item');
+				const index = parseInt(item?.getAttribute('data-index') || '0');
+				const field = (e.target as HTMLElement).classList.contains('nav-title') ? 'title' : 'url';
+				this.updateNavigationItem('social', index, field, (e.target as HTMLInputElement).value);
+			});
+		});
+
+		container.querySelectorAll('#social-list .nav-icon').forEach(input => {
+			input.addEventListener('input', (e) => {
+				const item = (e.target as HTMLElement).closest('.nav-item');
+				const index = parseInt(item?.getAttribute('data-index') || '0');
+				this.updateNavigationItem('social', index, 'icon', (e.target as HTMLInputElement).value);
+			});
+		});
+
+		// Add drag and drop functionality
+		this.setupDragAndDrop(container);
+	}
+
+	private setupDragAndDrop(container: HTMLElement) {
+		let draggedElement: HTMLElement | null = null;
+		let draggedIndex: number = -1;
+		let draggedType: 'pages' | 'social' | null = null;
+
+		// Add drag event listeners to all nav items
+		container.querySelectorAll('.nav-item').forEach((item: HTMLElement) => {
+			item.addEventListener('dragstart', (e) => {
+				draggedElement = item;
+				draggedIndex = parseInt(item.getAttribute('data-index') || '0');
+				draggedType = item.closest('#pages-list') ? 'pages' : 'social';
+				item.classList.add('dragging');
+				e.dataTransfer?.setData('text/plain', '');
+			});
+
+			item.addEventListener('dragend', (e) => {
+				item.classList.remove('dragging');
+				draggedElement = null;
+				draggedIndex = -1;
+				draggedType = null;
+			});
+
+			item.addEventListener('dragover', (e) => {
+				e.preventDefault();
+				item.classList.add('drag-over');
+			});
+
+			item.addEventListener('dragleave', (e) => {
+				item.classList.remove('drag-over');
+			});
+
+			item.addEventListener('drop', (e) => {
+				e.preventDefault();
+				item.classList.remove('drag-over');
+				
+				if (draggedElement && draggedType) {
+					const targetIndex = parseInt(item.getAttribute('data-index') || '0');
+					this.reorderNavigationItems(draggedType, draggedIndex, targetIndex);
+					this.renderCurrentStep(); // Re-render to update the UI
+				}
+			});
+		});
+	}
+
+	private reorderNavigationItems(type: 'pages' | 'social', fromIndex: number, toIndex: number) {
+		const items = type === 'pages' ? this.selectedNavigation.pages : this.selectedNavigation.social;
+		
+		if (fromIndex === toIndex) return;
+		
+		// Remove the item from its current position
+		const [movedItem] = items.splice(fromIndex, 1);
+		
+		// Insert it at the new position
+		items.splice(toIndex, 0, movedItem);
+		
+		console.log(`🔄 Reordered ${type}: moved item from ${fromIndex} to ${toIndex}`);
+	}
+
+	private addNavigationItem(type: 'pages' | 'social') {
+		if (type === 'pages') {
+			this.selectedNavigation.pages.push({ title: '', url: '' });
+		} else {
+			this.selectedNavigation.social.push({ title: '', url: '', icon: '' });
+		}
+		this.renderCurrentStep();
+	}
+
+	private removeNavigationItem(type: 'pages' | 'social', index: number) {
+		if (type === 'pages') {
+			this.selectedNavigation.pages.splice(index, 1);
+		} else {
+			this.selectedNavigation.social.splice(index, 1);
+		}
+	}
+
+	private updateNavigationItem(type: 'pages' | 'social', index: number, field: string, value: string) {
+		if (type === 'pages') {
+			(this.selectedNavigation.pages[index] as any)[field] = value;
+		} else {
+			(this.selectedNavigation.social[index] as any)[field] = value;
+		}
 	}
 
 	private renderFontStep(container: HTMLElement) {
@@ -828,6 +1087,8 @@ export class SetupWizardModal extends Modal {
 		this.settings.currentTemplate = this.selectedTemplate;
 		this.settings.currentTheme = this.selectedTheme;
 		this.settings.contentOrganization = this.selectedContentOrg;
+		this.settings.siteInfo = this.selectedSiteInfo;
+		this.settings.navigation = this.selectedNavigation;
 		this.settings.runWizardOnStartup = this.runWizardOnStartup;
 		this.settings.typography = this.selectedTypography;
 		this.settings.optionalFeatures = this.selectedOptionalFeatures;

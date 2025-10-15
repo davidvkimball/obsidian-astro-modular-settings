@@ -639,11 +639,56 @@ export class ConfigManager {
 			return currentConfig; // Return original config if validation fails
 		}
 		
+		// Update site information
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:SITE_URL\]\s*\n\s*site:\s*"[^"]*"/,
+			`// [CONFIG:SITE_URL]\n  site: "${settings.siteInfo.site}"`
+		);
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:SITE_TITLE\]\s*\n\s*title:\s*"[^"]*"/,
+			`// [CONFIG:SITE_TITLE]\n  title: "${settings.siteInfo.title}"`
+		);
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:SITE_DESCRIPTION\]\s*\n\s*description:\s*"[^"]*"/,
+			`// [CONFIG:SITE_DESCRIPTION]\n  description: "${settings.siteInfo.description}"`
+		);
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:SITE_AUTHOR\]\s*\n\s*author:\s*"[^"]*"/,
+			`// [CONFIG:SITE_AUTHOR]\n  author: "${settings.siteInfo.author}"`
+		);
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:SITE_LANGUAGE\]\s*\n\s*language:\s*"[^"]*"/,
+			`// [CONFIG:SITE_LANGUAGE]\n  language: "${settings.siteInfo.language}"`
+		);
+		
+		// Update navigation pages
+		const pagesArray = settings.navigation.pages.map(page => 
+			`      { title: "${page.title}", url: "${page.url}" }`
+		).join(',\n');
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:NAVIGATION_PAGES\]\s*\n\s*pages:\s*\[[\s\S]*?\]/,
+			`// [CONFIG:NAVIGATION_PAGES]\n    pages: [\n${pagesArray},\n    ]`
+		);
+		
+		// Update navigation social
+		const socialArray = settings.navigation.social.map(social => 
+			`      {\n        title: "${social.title}",\n        url: "${social.url}",\n        icon: "${social.icon}",\n      }`
+		).join(',\n');
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:NAVIGATION_SOCIAL\]\s*\n\s*social:\s*\[[\s\S]*?\]/,
+			`// [CONFIG:NAVIGATION_SOCIAL]\n    social: [\n${socialArray},\n    ]`
+		);
+		
 		return modifiedConfig;
 	}
 
 	private validateMarkers(config: string): { valid: boolean; missing: string[] } {
 		const requiredMarkers = [
+			'CONFIG:SITE_URL',
+			'CONFIG:SITE_TITLE',
+			'CONFIG:SITE_DESCRIPTION',
+			'CONFIG:SITE_AUTHOR',
+			'CONFIG:SITE_LANGUAGE',
 			'CONFIG:THEME',
 			'CONFIG:FONT_SOURCE',
 			'CONFIG:FONT_BODY',
@@ -675,6 +720,8 @@ export class ConfigManager {
 			'CONFIG:NAVIGATION_SHOW_NAVIGATION',
 			'CONFIG:NAVIGATION_STYLE',
 			'CONFIG:NAVIGATION_SHOW_MOBILE_MENU',
+			'CONFIG:NAVIGATION_PAGES',
+			'CONFIG:NAVIGATION_SOCIAL',
 			'CONFIG:OPTIONAL_CONTENT_TYPES_PROJECTS',
 			'CONFIG:OPTIONAL_CONTENT_TYPES_DOCS',
 			'CONFIG:HOME_OPTIONS_FEATURED_POST_ENABLED',

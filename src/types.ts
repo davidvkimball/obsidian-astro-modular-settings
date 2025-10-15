@@ -7,6 +7,12 @@ export interface AstroModularSettings {
 	currentTheme: ThemeType;
 	contentOrganization: ContentOrganizationType;
 	
+	// Site information
+	siteInfo: SiteInformation;
+	
+	// Navigation settings
+	navigation: NavigationSettings;
+	
 	// Features (for custom template)
 	features: FeatureSettings;
 	
@@ -21,6 +27,19 @@ export interface AstroModularSettings {
 	
 	// Plugin configuration
 	pluginConfig: PluginConfiguration;
+}
+
+export interface SiteInformation {
+	site: string;
+	title: string;
+	description: string;
+	author: string;
+	language: string;
+}
+
+export interface NavigationSettings {
+	pages: Array<{ title: string; url: string }>;
+	social: Array<{ title: string; url: string; icon: string }>;
 }
 
 export interface FeatureSettings {
@@ -177,6 +196,26 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 	currentTemplate: 'standard',
 	currentTheme: 'oxygen',
 	contentOrganization: 'file-based',
+	siteInfo: {
+		site: 'https://astro-modular.netlify.app',
+		title: 'Astro Modular',
+		description: 'A flexible blog theme designed for Obsidian users.',
+		author: 'David V. Kimball',
+		language: 'en',
+	},
+	navigation: {
+		pages: [
+			{ title: 'Posts', url: '/posts' },
+			{ title: 'Projects', url: '/projects' },
+			{ title: 'Docs', url: '/docs' },
+			{ title: 'About', url: '/about' },
+			{ title: 'GitHub', url: 'https://github.com/davidvkimball/astro-modular' },
+		],
+		social: [
+			{ title: 'X', url: 'https://x.com/davidvkimball', icon: 'x-twitter' },
+			{ title: 'GitHub', url: 'https://github.com/davidvkimball', icon: 'github' },
+		],
+	},
 	features: {
 		commandPalette: true,
 		tableOfContents: true,
@@ -209,6 +248,7 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 			image: '/profile.jpg',
 			alt: 'Profile picture',
 			size: 'md',
+			url: '',
 			placement: 'footer',
 			style: 'circle',
 		},

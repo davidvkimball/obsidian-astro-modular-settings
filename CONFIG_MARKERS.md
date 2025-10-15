@@ -22,6 +22,13 @@ These markers allow the plugin to find and update specific configuration values 
 
 ## Complete List of Markers
 
+### Site Information
+- `CONFIG:SITE_URL` - Site URL
+- `CONFIG:SITE_TITLE` - Site title
+- `CONFIG:SITE_DESCRIPTION` - Site description
+- `CONFIG:SITE_AUTHOR` - Author name
+- `CONFIG:SITE_LANGUAGE` - Site language
+
 ### Global Settings
 - `CONFIG:THEME` - Theme selection
 - `CONFIG:FONT_SOURCE` - Font source (local/cdn)
@@ -60,6 +67,8 @@ These markers allow the plugin to find and update specific configuration values 
 - `CONFIG:NAVIGATION_SHOW_NAVIGATION` - Show/hide navigation
 - `CONFIG:NAVIGATION_STYLE` - Navigation style (minimal/traditional)
 - `CONFIG:NAVIGATION_SHOW_MOBILE_MENU` - Show/hide mobile menu
+- `CONFIG:NAVIGATION_PAGES` - Navigation pages array
+- `CONFIG:NAVIGATION_SOCIAL` - Social links array
 
 ### Optional Content Types
 - `CONFIG:OPTIONAL_CONTENT_TYPES_PROJECTS` - Enable/disable projects
