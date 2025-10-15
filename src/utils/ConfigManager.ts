@@ -275,62 +275,43 @@ export class ConfigManager {
 				);
 			}
 			
-		// Update search settings - use context-specific replacement
+		// Update search settings - SIMPLE EXACT MATCH
 		if (templateConfig.commandPalette.search) {
 			console.log('🔍 Template search config:', templateConfig.commandPalette.search);
 			
-			// Replace each field individually with context-specific regex
-			if (templateConfig.commandPalette.search.posts !== undefined) {
-				modifiedConfig = modifiedConfig.replace(
-					/search:\s*\{[\s\S]*?posts:\s*(true|false),/,
-					(match) => match.replace(/posts:\s*(true|false),/, `posts: ${templateConfig.commandPalette.search.posts},`)
-				);
-			}
-			if (templateConfig.commandPalette.search.pages !== undefined) {
-				modifiedConfig = modifiedConfig.replace(
-					/search:\s*\{[\s\S]*?pages:\s*(true|false),/,
-					(match) => match.replace(/pages:\s*(true|false),/, `pages: ${templateConfig.commandPalette.search.pages},`)
-				);
-			}
-			if (templateConfig.commandPalette.search.projects !== undefined) {
-				modifiedConfig = modifiedConfig.replace(
-					/search:\s*\{[\s\S]*?projects:\s*(true|false),/,
-					(match) => match.replace(/projects:\s*(true|false),/, `projects: ${templateConfig.commandPalette.search.projects},`)
-				);
-			}
-			if (templateConfig.commandPalette.search.docs !== undefined) {
-				modifiedConfig = modifiedConfig.replace(
-					/search:\s*\{[\s\S]*?docs:\s*(true|false),/,
-					(match) => match.replace(/docs:\s*(true|false),/, `docs: ${templateConfig.commandPalette.search.docs},`)
-				);
-			}
+			// Replace the exact search object in siteConfig
+			const searchObject = `search: {
+      posts: ${templateConfig.commandPalette.search.posts},
+      pages: ${templateConfig.commandPalette.search.pages},
+      projects: ${templateConfig.commandPalette.search.projects},
+      docs: ${templateConfig.commandPalette.search.docs},
+    }`;
+			
+			// Find and replace the search object in the actual siteConfig (not interface)
+			modifiedConfig = modifiedConfig.replace(
+				/search: \{\s*posts: (true|false),\s*pages: (true|false),\s*projects: (true|false),\s*docs: (true|false),\s*\}/,
+				searchObject
+			);
 			
 			console.log('🔍 Search replacement completed');
 		}
 			
-			// Update sections settings - use simple line-by-line replacement
+			// Update sections settings - SIMPLE EXACT MATCH
 			if (templateConfig.commandPalette.sections) {
 				console.log('🔍 Template sections config:', templateConfig.commandPalette.sections);
 				
-				// Replace each field individually with very specific regex
-				if (templateConfig.commandPalette.sections.quickActions !== undefined) {
-					modifiedConfig = modifiedConfig.replace(
-						/quickActions:\s*(true|false),/,
-						`quickActions: ${templateConfig.commandPalette.sections.quickActions},`
-					);
-				}
-				if (templateConfig.commandPalette.sections.pages !== undefined) {
-					modifiedConfig = modifiedConfig.replace(
-						/pages:\s*(true|false),/,
-						`pages: ${templateConfig.commandPalette.sections.pages},`
-					);
-				}
-				if (templateConfig.commandPalette.sections.social !== undefined) {
-					modifiedConfig = modifiedConfig.replace(
-						/social:\s*(true|false),/,
-						`social: ${templateConfig.commandPalette.sections.social},`
-					);
-				}
+				// Replace the exact sections object in siteConfig
+				const sectionsObject = `sections: {
+      quickActions: ${templateConfig.commandPalette.sections.quickActions},
+      pages: ${templateConfig.commandPalette.sections.pages},
+      social: ${templateConfig.commandPalette.sections.social},
+    }`;
+				
+				// Find and replace the sections object in the actual siteConfig (not interface)
+				modifiedConfig = modifiedConfig.replace(
+					/sections: \{\s*quickActions: (true|false),\s*pages: (true|false),\s*social: (true|false),\s*\}/,
+					sectionsObject
+				);
 				
 				console.log('🔍 Sections replacement completed');
 			}
