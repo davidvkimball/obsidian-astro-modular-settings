@@ -15,7 +15,6 @@
 	text-align: center;
 	padding: 20px 0;
 	border-bottom: 1px solid var(--background-modifier-border);
-	margin-bottom: 20px;
 }
 
 .wizard-logo {
@@ -70,13 +69,11 @@
 }
 
 .wizard-content {
-	padding: 20px 0;
 	min-height: 400px;
 }
 
 .wizard-footer {
 	padding: 20px 0;
-	border-top: 1px solid var(--background-modifier-border);
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
@@ -87,38 +84,9 @@
 	gap: 10px;
 }
 
+/* Use Obsidian's native button styles - remove custom overrides */
 .wizard-button {
-	padding: 8px 16px;
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 6px;
-	background: var(--background-primary);
-	color: var(--text-normal);
-	transition: all 0.2s ease;
-	font-size: 14px;
-}
-
-.wizard-button:hover {
-	background: var(--background-modifier-hover);
-}
-
-.wizard-button.primary {
-	background: var(--interactive-accent);
-	color: var(--text-on-accent);
-	border-color: var(--interactive-accent);
-}
-
-.wizard-button.primary:hover {
-	background: var(--interactive-accent-hover);
-}
-
-.wizard-button.secondary {
-	background: var(--background-secondary);
-}
-
-.wizard-button.tertiary {
-	background: transparent;
-	border-color: transparent;
-	color: var(--text-muted);
+	/* Let Obsidian handle all button styling */
 }
 
 /* Welcome Step */
@@ -282,6 +250,51 @@
 .theme-option.selected {
 	border-color: var(--interactive-accent);
 	background: var(--interactive-accent-2);
+}
+
+/* Override text colors based on background brightness */
+.theme-option[style*="background: #"] h3,
+.theme-option[style*="background: #"] p {
+	/* Use CSS to automatically determine text color based on background brightness */
+	color: var(--text-normal);
+}
+
+/* For dark backgrounds, use light text */
+.theme-option[style*="background: #020617"] h3,
+.theme-option[style*="background: #020617"] p,
+.theme-option[style*="background: #1a1a1a"] h3,
+.theme-option[style*="background: #1a1a1a"] p,
+.theme-option[style*="background: #181a1f"] h3,
+.theme-option[style*="background: #181a1f"] p,
+.theme-option[style*="background: #0f1419"] h3,
+.theme-option[style*="background: #0f1419"] p,
+.theme-option[style*="background: #181825"] h3,
+.theme-option[style*="background: #181825"] p,
+.theme-option[style*="background: #000000"] h3,
+.theme-option[style*="background: #000000"] p,
+.theme-option[style*="background: #191a21"] h3,
+.theme-option[style*="background: #191a21"] p,
+.theme-option[style*="background: #2d353b"] h3,
+.theme-option[style*="background: #2d353b"] p,
+.theme-option[style*="background: #100f0f"] h3,
+.theme-option[style*="background: #100f0f"] p,
+.theme-option[style*="background: #1d2021"] h3,
+.theme-option[style*="background: #1d2021"] p,
+.theme-option[style*="background: #141414"] h3,
+.theme-option[style*="background: #141414"] p,
+.theme-option[style*="background: #2e3440"] h3,
+.theme-option[style*="background: #2e3440"] p,
+.theme-option[style*="background: #0a0a0a"] h3,
+.theme-option[style*="background: #0a0a0a"] p,
+.theme-option[style*="background: #191724"] h3,
+.theme-option[style*="background: #191724"] p,
+.theme-option[style*="background: #232729"] h3,
+.theme-option[style*="background: #232729"] p,
+.theme-option[style*="background: #002b36"] h3,
+.theme-option[style*="background: #002b36"] p,
+.theme-option[style*="background: #17191c"] h3,
+.theme-option[style*="background: #17191c"] p {
+	color: white !important;
 }
 
 .theme-preview {
@@ -476,7 +489,18 @@
 }
 
 .plugin-icon {
-	font-size: 20px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-right: 15px;
+}
+
+.plugin-item.installed .plugin-icon {
+	color: var(--text-success);
+}
+
+.plugin-item.missing .plugin-icon {
+	color: var(--text-error);
 }
 
 .plugin-info h3 {
@@ -817,25 +841,8 @@
 
 .font-setting select,
 .font-setting input {
-	padding: 0.5rem;
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 4px;
-	background-color: var(--background-primary);
-	color: var(--text-normal);
-	font-size: 0.875rem;
-	transition: border-color 0.2s ease, background-color 0.2s ease;
-}
-
-.font-setting select:focus,
-.font-setting input:focus {
-	outline: none;
-	border-color: var(--interactive-accent);
-	background-color: var(--background-primary);
-}
-
-.font-setting select:hover,
-.font-setting input:hover {
-	border-color: var(--text-muted);
+	/* Use Obsidian's native form control styling */
+	width: 100%;
 }
 
 /* Optional features improvements - better layout */
@@ -878,19 +885,8 @@
 
 .setting-group input,
 .setting-group select {
-	padding: 0.5rem;
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 4px;
-	background-color: var(--background-primary);
-	color: var(--text-normal);
-	font-size: 0.875rem;
-	transition: border-color 0.2s ease;
-}
-
-.setting-group input:focus,
-.setting-group select:focus {
-	outline: none;
-	border-color: var(--interactive-accent);
+	/* Use Obsidian's native form control styling */
+	width: 100%;
 }
 
 /* File input group removed - browse button no longer needed */
@@ -1164,17 +1160,7 @@
 }
 
 .nav-add {
-	padding: 8px 16px;
-	background: var(--interactive-accent);
-	color: var(--text-on-accent);
-	border: none;
-	border-radius: 4px;
-	font-size: 14px;
-	transition: all 0.2s ease;
-}
-
-.nav-add:hover {
-	background: var(--interactive-accent-hover);
+	/* Use Obsidian's native button styling */
 }
 
 .nav-icon-help {

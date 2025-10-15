@@ -562,13 +562,15 @@ export class ConfigManager {
 			}
 		}
 		
-		// Update profile picture settings - only update if profile picture is enabled
+		// Update profile picture settings - always update enabled state, other settings only if enabled
+		// Update enabled state (always update this)
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:PROFILE_PICTURE_ENABLED\]\s*enabled:\s*(true|false)/,
+			`// [CONFIG:PROFILE_PICTURE_ENABLED]\n    enabled: ${settings.optionalFeatures.profilePicture.enabled}`
+		);
+		
+		// Update other profile picture settings only if enabled
 		if (settings.optionalFeatures.profilePicture.enabled) {
-			// Update enabled state
-			modifiedConfig = modifiedConfig.replace(
-				/\/\/ \[CONFIG:PROFILE_PICTURE_ENABLED\]\s*enabled:\s*(true|false)/,
-				`// [CONFIG:PROFILE_PICTURE_ENABLED]\n    enabled: ${settings.optionalFeatures.profilePicture.enabled}`
-			);
 			// Update image
 			modifiedConfig = modifiedConfig.replace(
 				/\/\/ \[CONFIG:PROFILE_PICTURE_IMAGE\]\s*image:\s*"[^"]*"/,

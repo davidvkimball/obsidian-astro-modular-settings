@@ -51,14 +51,14 @@ export class SetupWizardModal extends Modal {
 		this.selectedTemplate = this.settings.currentTemplate || 'standard';
 		this.selectedTheme = this.settings.currentTheme || 'oxygen';
 		this.selectedContentOrg = this.settings.contentOrganization || 'file-based';
-		this.selectedSiteInfo = { ...this.settings.siteInfo } || {
+		this.selectedSiteInfo = this.settings.siteInfo || {
 			site: 'https://astro-modular.netlify.app',
 			title: 'Astro Modular',
 			description: 'A flexible blog theme designed for Obsidian users.',
 			author: 'David V. Kimball',
 			language: 'en'
 		};
-		this.selectedNavigation = { ...this.settings.navigation } || {
+		this.selectedNavigation = this.settings.navigation || {
 			pages: [
 				{ title: 'Posts', url: '/posts' },
 				{ title: 'Projects', url: '/projects' },
@@ -71,8 +71,8 @@ export class SetupWizardModal extends Modal {
 				{ title: 'GitHub', url: 'https://github.com/davidvkimball', icon: 'github' }
 			]
 		};
-		this.selectedFeatures = { ...this.settings.features } || {};
-		this.selectedTypography = { ...this.settings.typography } || {
+		this.selectedFeatures = this.settings.features || {};
+		this.selectedTypography = this.settings.typography || {
 			headingFont: 'Inter',
 			proseFont: 'Inter',
 			monoFont: 'JetBrains Mono',
@@ -83,7 +83,7 @@ export class SetupWizardModal extends Modal {
 				mono: ''
 			}
 		};
-		this.selectedOptionalFeatures = { ...this.settings.optionalFeatures } || {
+		this.selectedOptionalFeatures = this.settings.optionalFeatures || {
 			profilePicture: {
 				enabled: false,
 				image: '/profile.jpg',
@@ -286,6 +286,8 @@ export class SetupWizardModal extends Modal {
 	}
 
 	private renderThemeStep(container: HTMLElement) {
+		const isDarkMode = this.isObsidianDarkMode();
+		
 		container.innerHTML = `
 			<div class="theme-selection">
 				<h2>Choose your theme</h2>
@@ -293,7 +295,8 @@ export class SetupWizardModal extends Modal {
 				<div class="theme-options">
 					${THEME_OPTIONS.map(theme => `
 						<div class="theme-option ${this.selectedTheme === theme.id ? 'selected' : ''}" 
-							 data-theme="${theme.id}">
+							 data-theme="${theme.id}" 
+							 style="background: ${isDarkMode ? theme.backgroundColorDark : theme.backgroundColorLight};">
 							<div class="theme-preview" style="background: linear-gradient(135deg, ${theme.previewColors.join(', ')});">
 								<div class="theme-preview-content">
 									<div class="preview-text">Sample Text</div>
@@ -397,7 +400,7 @@ export class SetupWizardModal extends Modal {
 								</div>
 							`).join('')}
 						</div>
-						<button class="nav-add" id="add-page" type="button">Add Page</button>
+						<button class="nav-add mod-button" id="add-page" type="button">Add Page</button>
 					</div>
 					
 					<div class="nav-section">
@@ -422,7 +425,7 @@ export class SetupWizardModal extends Modal {
 								</div>
 							`).join('')}
 						</div>
-						<button class="nav-add" id="add-social" type="button">Add Social Link</button>
+						<button class="nav-add mod-button" id="add-social" type="button">Add Social Link</button>
 					</div>
 				</div>
 			</div>
@@ -865,7 +868,11 @@ export class SetupWizardModal extends Modal {
 				<div class="plugin-status">
 					${pluginStatus.map(plugin => `
 						<div class="plugin-item ${plugin.installed ? 'installed' : 'missing'}">
-							<div class="plugin-icon">${plugin.installed ? '✅' : '❌'}</div>
+							<div class="plugin-icon">
+								<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									${plugin.installed ? '<path d="M20 6L9 17l-5-5"/>' : '<path d="M18 6L6 18M6 6l12 12"/>'}
+								</svg>
+							</div>
 							<div class="plugin-info">
 								<h3>${plugin.name}</h3>
 								<p>${plugin.installed ? 'Ready to configure' : 'Not installed'}</p>
@@ -874,8 +881,8 @@ export class SetupWizardModal extends Modal {
 					`).join('')}
 				</div>
 				<div class="config-options">
-					<button class="config-button primary" id="auto-configure">Configure automatically</button>
-					<button class="config-button secondary" id="manual-configure">Show manual instructions</button>
+					<button class="mod-button mod-cta" id="auto-configure">Configure automatically</button>
+					<button class="mod-button" id="manual-configure">Show manual instructions</button>
 				</div>
 			</div>
 		`;
@@ -928,7 +935,7 @@ export class SetupWizardModal extends Modal {
 		if (this.currentStep > 1) {
 			const prevButton = buttonContainer.createEl('button', {
 				text: 'Previous',
-				cls: 'wizard-button secondary'
+				cls: 'mod-button'
 			});
 			prevButton.addEventListener('click', () => {
 				this.currentStep--;
@@ -939,7 +946,7 @@ export class SetupWizardModal extends Modal {
 		// Next/Complete button
 		const nextButton = buttonContainer.createEl('button', {
 			text: this.currentStep === this.totalSteps ? 'Complete Setup' : 'Next',
-			cls: 'wizard-button primary'
+			cls: 'mod-button mod-cta'
 		});
 
 		nextButton.addEventListener('click', () => {
@@ -955,8 +962,9 @@ export class SetupWizardModal extends Modal {
 		if (this.currentStep < this.totalSteps && this.currentStep > 1) {
 			const skipButton = buttonContainer.createEl('button', {
 				text: 'Skip',
-				cls: 'wizard-button tertiary'
+				cls: 'mod-button'
 			});
+			skipButton.style.opacity = '0.6';
 			skipButton.addEventListener('click', () => {
 				this.applyDefaultValues();
 				this.currentStep++;
@@ -969,7 +977,7 @@ export class SetupWizardModal extends Modal {
 		// Apply default values based on current step, using current settings as defaults
 		switch (this.currentStep) {
 			case 4: // Font step
-				this.selectedTypography = { ...this.settings.typography } || {
+				this.selectedTypography = this.settings.typography || {
 					headingFont: 'Inter',
 					proseFont: 'Inter',
 					monoFont: 'JetBrains Mono',
@@ -985,7 +993,7 @@ export class SetupWizardModal extends Modal {
 				this.selectedContentOrg = this.settings.contentOrganization || 'file-based';
 				break;
 			case 6: // Optional features step
-				this.selectedOptionalFeatures = { ...this.settings.optionalFeatures } || {
+				this.selectedOptionalFeatures = this.settings.optionalFeatures || {
 					profilePicture: {
 						enabled: false,
 						image: '/profile.jpg',
@@ -1075,6 +1083,27 @@ export class SetupWizardModal extends Modal {
 			</div>
 		`;
 		instructionModal.open();
+	}
+
+	private isObsidianDarkMode(): boolean {
+		// Check if Obsidian is in dark mode by looking at the body class or CSS custom properties
+		const body = document.body;
+		const isDarkClass = body.classList.contains('theme-dark') || body.classList.contains('dark');
+		
+		// Also check CSS custom properties as a fallback
+		const computedStyle = getComputedStyle(document.documentElement);
+		const colorScheme = computedStyle.getPropertyValue('color-scheme').trim();
+		const isDarkProperty = colorScheme === 'dark';
+		
+		// Check if the background is dark by looking at the primary background color
+		const bgColor = computedStyle.getPropertyValue('--background-primary').trim();
+		const isDarkBackground = Boolean(bgColor && (
+			bgColor.includes('#') && parseInt(bgColor.slice(1, 3), 16) < 128 ||
+			bgColor.includes('rgb') && bgColor.includes('0, 0, 0') ||
+			bgColor.includes('hsl') && bgColor.includes('0, 0%, 0%')
+		));
+		
+		return isDarkClass || isDarkProperty || isDarkBackground;
 	}
 
 	private async completeSetup() {
