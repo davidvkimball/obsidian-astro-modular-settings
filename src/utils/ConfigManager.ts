@@ -257,12 +257,31 @@ export class ConfigManager {
 			}
 		}
 		
-		// Update navigation style if specified in template
-		if (templateConfig.navigation?.style) {
-			modifiedConfig = modifiedConfig.replace(
-				/style:\s*"[^"]*",?\s*\/\/ 'minimal' or 'traditional'/,
-				`style: "${templateConfig.navigation.style}", // 'minimal' or 'traditional'`
-			);
+		// Update navigation settings if specified in template
+		if (templateConfig.navigation) {
+			// Update navigation style
+			if (templateConfig.navigation.style) {
+				modifiedConfig = modifiedConfig.replace(
+					/style:\s*"[^"]*",?\s*\/\/ 'minimal' or 'traditional'/,
+					`style: "${templateConfig.navigation.style}", // 'minimal' or 'traditional'`
+				);
+			}
+			
+			// Update showNavigation
+			if (templateConfig.navigation.showNavigation !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/showNavigation:\s*(true|false),/,
+					`showNavigation: ${templateConfig.navigation.showNavigation},`
+				);
+			}
+			
+			// Update showMobileMenu
+			if (templateConfig.navigation.showMobileMenu !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/showMobileMenu:\s*(true|false),/,
+					`showMobileMenu: ${templateConfig.navigation.showMobileMenu},`
+				);
+			}
 		}
 		
 		// Update command palette settings if specified in template
@@ -272,6 +291,22 @@ export class ConfigManager {
 				modifiedConfig = modifiedConfig.replace(
 					/enabled:\s*(true|false)(,\s*shortcut:)/,
 					`enabled: ${templateConfig.commandPalette.enabled}$2`
+				);
+			}
+			
+			// Update shortcut
+			if (templateConfig.commandPalette.shortcut !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/shortcut:\s*"[^"]*"/,
+					`shortcut: "${templateConfig.commandPalette.shortcut}"`
+				);
+			}
+			
+			// Update placeholder
+			if (templateConfig.commandPalette.placeholder !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/placeholder:\s*"[^"]*"/,
+					`placeholder: "${templateConfig.commandPalette.placeholder}"`
 				);
 			}
 			
@@ -409,21 +444,21 @@ export class ConfigManager {
 					// Use highly specific regex that targets each feature individually with context
 					let regex;
 					if (feature === 'readingTime') {
-						regex = /readingTime:\s*(true|false),?\s*\/\/ Show estimated reading time/;
+						regex = /readingTime:\s*(true|false),/;
 					} else if (feature === 'wordCount') {
-						regex = /wordCount:\s*(true|false),?\s*\/\/ Show word count/;
+						regex = /wordCount:\s*(true|false),/;
 					} else if (feature === 'tableOfContents') {
-						regex = /tableOfContents:\s*(true|false),?\s*\/\/ Show table of contents/;
+						regex = /tableOfContents:\s*(true|false),/;
 					} else if (feature === 'tags') {
-						regex = /tags:\s*(true|false),?\s*\/\/ Show tags/;
+						regex = /tags:\s*(true|false),/;
 					} else if (feature === 'postNavigation') {
-						regex = /postNavigation:\s*(true|false),?\s*\/\/ Show post navigation/;
+						regex = /postNavigation:\s*(true|false),/;
 					}
 					
 					if (regex) {
 						modifiedConfig = modifiedConfig.replace(
 							regex,
-							`${feature}: ${templateConfig.postOptions[feature]}, // Show ${feature}`
+							`${feature}: ${templateConfig.postOptions[feature]},`
 						);
 					}
 				}
@@ -433,8 +468,8 @@ export class ConfigManager {
 			if (templateConfig.postOptions.linkedMentions) {
 				if (templateConfig.postOptions.linkedMentions.enabled !== undefined) {
 					modifiedConfig = modifiedConfig.replace(
-						/enabled:\s*(true|false),?\s*\/\/ Enable linked mentions/,
-						`enabled: ${templateConfig.postOptions.linkedMentions.enabled}, // Enable linked mentions`
+						/linkedMentions:\s*\{\s*enabled:\s*(true|false),/,
+						`linkedMentions: {\n      enabled: ${templateConfig.postOptions.linkedMentions.enabled},`
 					);
 				}
 				if (templateConfig.postOptions.linkedMentions.linkedMentionsCompact !== undefined) {
@@ -496,8 +531,8 @@ export class ConfigManager {
 			// Update post card settings
 			if (templateConfig.postOptions.showPostCardCoverImages) {
 				modifiedConfig = modifiedConfig.replace(
-					/showPostCardCoverImages:\s*"[^"]*",?\s*\/\/ "all" \| "featured" \| "home" \| "posts" \| "featured-and-posts" \| "none"/,
-					`showPostCardCoverImages: "${templateConfig.postOptions.showPostCardCoverImages}", // "all" | "featured" | "home" | "posts" | "featured-and-posts" | "none"`
+					/showPostCardCoverImages:\s*"[^"]*",/,
+					`showPostCardCoverImages: "${templateConfig.postOptions.showPostCardCoverImages}",`
 				);
 			}
 			if (templateConfig.postOptions.postCardAspectRatio) {
@@ -649,6 +684,8 @@ export class ConfigManager {
         darkModeToggleButton: 'both',
         commandPalette: {
           enabled: true,
+          shortcut: "ctrl+K",
+          placeholder: "Search posts",
 						search: {
 							posts: true,
 							pages: false,
@@ -707,6 +744,8 @@ export class ConfigManager {
           postCardAspectRatio: 'og',
         },
         navigation: {
+          showNavigation: true,
+          showMobileMenu: true,
           style: 'traditional',
         },
       };
@@ -725,6 +764,8 @@ export class ConfigManager {
         darkModeToggleButton: 'commandPalette',
         commandPalette: {
           enabled: true,
+          shortcut: "ctrl+K",
+          placeholder: "Search posts",
 						search: {
 							posts: true,
 							pages: false,
@@ -769,6 +810,8 @@ export class ConfigManager {
           customPostCardAspectRatio: '2.5/1',
         },
         navigation: {
+          showNavigation: true,
+          showMobileMenu: true,
           style: 'minimal',
         },
       };
@@ -782,11 +825,13 @@ export class ConfigManager {
           docs: false,
         },
         footer: {
-          showSocialIconsInFooter: true,
+          showSocialIconsInFooter: false,
         },
         darkModeToggleButton: 'commandPalette',
         commandPalette: {
           enabled: true,
+          shortcut: "",
+          placeholder: "Search content",
 						search: {
 							posts: true,
 							pages: true,
@@ -795,8 +840,8 @@ export class ConfigManager {
 						},
           sections: {
             quickActions: false,
-            pages: true,
-            social: true,
+            pages: false,
+            social: false,
           },
         },
         homeOptions: {
@@ -809,7 +854,7 @@ export class ConfigManager {
             count: 7,
           },
           blurb: {
-            placement: 'below',
+            placement: 'none',
           },
         },
         postOptions: {
@@ -830,6 +875,8 @@ export class ConfigManager {
           postCardAspectRatio: 'og',
         },
         navigation: {
+          showNavigation: false,
+          showMobileMenu: false,
           style: 'minimal',
         },
       };
