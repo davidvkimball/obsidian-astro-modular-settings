@@ -77,47 +77,112 @@ export class PluginManager {
 	}
 
 	async configurePlugins(config: PluginConfiguration): Promise<boolean> {
+		console.log('Starting plugin configuration...');
+		let successCount = 0;
+		let totalConfigurations = 0;
+		
 		try {
 			// Configure Obsidian settings
+			totalConfigurations++;
+			console.log('Configuring Obsidian settings...');
 			await this.configureObsidianSettings(config.obsidianSettings);
+			successCount++;
+			console.log('Obsidian settings configured');
 			
 			// Configure Astro Composer settings
+			totalConfigurations++;
+			console.log('Configuring Astro Composer...');
 			await this.configureAstroComposerSettings(config.astroComposerSettings);
+			successCount++;
 			
 			// Configure Image Inserter settings
+			totalConfigurations++;
+			console.log('Configuring Image Inserter...');
 			await this.configureImageInserterSettings(config.imageInserterSettings);
+			successCount++;
 			
-			return true;
+			console.log(`Plugin configuration complete! ${successCount}/${totalConfigurations} configurations successful`);
+			return successCount > 0; // Return true if at least one configuration succeeded
 		} catch (error) {
+			console.error('Plugin configuration failed:', error);
 			return false;
 		}
 	}
 
 	private async configureObsidianSettings(settings: any): Promise<void> {
-		// Configure Obsidian's attachment settings
-		const obsidianSettings = (this.app.vault as any).config;
-		
+		try {
+			// Configure Obsidian's attachment settings
+			const obsidianSettings = (this.app.vault as any).config;
+			
 		if (settings.attachmentLocation === 'subfolder') {
-			// File-based: attachments in subfolder, keep relative links
+			// File-based: attachments in subfolder
 			obsidianSettings.newLinkFormat = 'relative';
 			obsidianSettings.attachmentFolderPath = `./${settings.subfolderName}`;
+			console.log(`Set attachment location to subfolder: ${settings.subfolderName}`);
 		} else {
 			// Folder-based: attachments in same folder, keep relative links
 			obsidianSettings.newLinkFormat = 'relative';
-			obsidianSettings.attachmentFolderPath = '';
+			obsidianSettings.attachmentFolderPath = './';
+			console.log('Set attachment location to same folder as current file');
 		}
-		
-		await (this.app.vault as any).saveConfig();
+			
+			// Also try to set the setting through the app's settings manager
+			const appSettings = (this.app as any).settings;
+			if (appSettings) {
+				appSettings.set('attachmentFolderPath', obsidianSettings.attachmentFolderPath);
+				appSettings.set('newLinkFormat', obsidianSettings.newLinkFormat);
+			}
+			
+			await (this.app.vault as any).saveConfig();
+			console.log('Obsidian settings saved');
+		} catch (error) {
+			console.error('Failed to configure Obsidian settings:', error);
+			throw error;
+		}
 	}
 
 	private async configureAstroComposerSettings(settings: any): Promise<void> {
-		// This would need to be implemented based on Astro Composer's API
-		// For now, we'll just log the configuration
+		try {
+			const plugins = (this.app as any).plugins;
+			const astroComposerPlugin = plugins?.plugins?.['astro-composer'];
+			
+			if (astroComposerPlugin && astroComposerPlugin.settings) {
+				// Update Astro Composer settings
+				astroComposerPlugin.settings.creationMode = settings.creationMode;
+				astroComposerPlugin.settings.indexFileName = settings.indexFileName;
+				
+				// Save the settings
+				await astroComposerPlugin.saveSettings();
+				console.log('Astro Composer configured successfully');
+			} else {
+				console.log('Astro Composer plugin not found or not enabled');
+			}
+		} catch (error) {
+			console.error('Failed to configure Astro Composer:', error);
+		}
 	}
 
 	private async configureImageInserterSettings(settings: any): Promise<void> {
-		// This would need to be implemented based on Image Inserter's API
-		// For now, we'll just log the configuration
+		try {
+			const plugins = (this.app as any).plugins;
+			const imageInserterPlugin = plugins?.plugins?.['insert-unsplash-image'];
+			
+			if (imageInserterPlugin && imageInserterPlugin.settings) {
+				// Update Image Inserter settings
+				// Only update the frontmatter.valueFormat (this is the main setting)
+				if (imageInserterPlugin.settings.frontmatter) {
+					imageInserterPlugin.settings.frontmatter.valueFormat = settings.valueFormat;
+				}
+				
+				// Save the settings
+				await imageInserterPlugin.saveSettings();
+				console.log('Image Inserter configured successfully');
+			} else {
+				console.log('Image Inserter plugin not found or not enabled');
+			}
+		} catch (error) {
+			console.error('Failed to configure Image Inserter:', error);
+		}
 	}
 
 	async getManualConfigurationInstructions(config: PluginConfiguration): Promise<string> {
@@ -127,25 +192,24 @@ export class PluginManager {
 		instructions += `1. Go to **Settings → Files & Links**\n`;
 		instructions += `2. Set **Default location for new attachments** to: `;
 		instructions += config.obsidianSettings.attachmentLocation === 'subfolder' 
-			? `"In subfolder under current folder"` 
-			: `"Same folder as current file"`;
-		instructions += `\n`;
+			? `**"In subfolder under current folder"**\n` 
+			: `**"Same folder as current file"**\n`;
 		if (config.obsidianSettings.attachmentLocation === 'subfolder') {
-			instructions += `3. Set **Subfolder name** to: "${config.obsidianSettings.subfolderName}"\n`;
+			instructions += `3. Set **Subfolder name** to: **"${config.obsidianSettings.subfolderName}"**\n`;
 		}
 		instructions += '\n';
 		
 		instructions += '## Astro Composer Plugin\n';
 		instructions += `1. Go to **Settings → Community plugins → Astro Composer**\n`;
 		instructions += `2. Set **Creation mode** to: "${config.astroComposerSettings.creationMode}"\n`;
-		if (config.astroComposerSettings.creationMode === 'folder-based') {
+		if (config.astroComposerSettings.creationMode === 'folder') {
 			instructions += `3. Set **Index file name** to: "${config.astroComposerSettings.indexFileName}"\n`;
 		}
 		instructions += '\n';
 		
 		instructions += '## Image Inserter Plugin\n';
 		instructions += `1. Go to **Settings → Community plugins → Image Inserter**\n`;
-		instructions += `2. Set **Insert to Frontmatter Value Format** to: "${config.imageInserterSettings.insertFormat}"\n`;
+		instructions += `2. Set **Frontmatter → Value Format** to: "${config.imageInserterSettings.valueFormat}"\n`;
 		
 		return instructions;
 	}

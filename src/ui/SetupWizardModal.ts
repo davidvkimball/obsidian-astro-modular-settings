@@ -1016,24 +1016,63 @@ export class SetupWizardModal extends Modal {
 	}
 
 	private async configurePlugins(): Promise<boolean> {
-		const config: any = {
-			obsidianSettings: {
-				attachmentLocation: this.selectedContentOrg === 'file-based' ? 'subfolder' : 'same-folder',
-				subfolderName: 'attachments'
-			},
-			astroComposerSettings: {
-				creationMode: this.selectedContentOrg,
-				indexFileName: 'index'
-			},
-			imageInserterSettings: {
-				insertFormat: this.selectedContentOrg === 'file-based' 
-					? '[[attachments/{image-url}]]' 
-					: '[[{image-url}]]'
-			}
-		};
+		// Show loading state
+		const button = document.querySelector('#auto-configure') as HTMLButtonElement;
+		if (button) {
+			button.textContent = 'Configuring...';
+			button.disabled = true;
+		}
 
-		const success = await this.pluginManager.configurePlugins(config);
-		return success;
+		try {
+			const config: any = {
+				obsidianSettings: {
+					attachmentLocation: this.selectedContentOrg === 'file-based' ? 'subfolder' : 'same-folder',
+					subfolderName: 'attachments'
+				},
+				astroComposerSettings: {
+					creationMode: this.selectedContentOrg === 'file-based' ? 'file' : 'folder',
+					indexFileName: 'index'
+				},
+				imageInserterSettings: {
+					valueFormat: this.selectedContentOrg === 'file-based' 
+						? '[[attachments/{image-url}]]' 
+						: '[[{image-url}]]',
+					insertFormat: this.selectedContentOrg === 'file-based' 
+						? '[[attachments/{image-url}]]' 
+						: '[[{image-url}]]'
+				}
+			};
+
+			console.log('🔧 Configuring plugins with settings:', config);
+			const success = await this.pluginManager.configurePlugins(config);
+			
+			// Show result
+			if (success) {
+				new Notice('Plugins configured successfully!', 3000);
+				if (button) {
+					button.textContent = 'Configured';
+					button.style.background = 'var(--color-green)';
+				}
+			} else {
+				new Notice('Some plugins could not be configured. Check console for details.', 5000);
+				if (button) {
+					button.textContent = 'Partial Success';
+					button.style.background = 'var(--color-orange)';
+				}
+			}
+			
+			return success;
+		} catch (error) {
+			console.error('Plugin configuration failed:', error);
+			new Notice('Plugin configuration failed. Check console for details.', 5000);
+			
+			if (button) {
+				button.textContent = 'Failed';
+				button.style.background = 'var(--color-red)';
+			}
+			
+			return false;
+		}
 	}
 
 	private async showManualInstructions() {
@@ -1043,10 +1082,13 @@ export class SetupWizardModal extends Modal {
 				subfolderName: 'attachments'
 			},
 			astroComposerSettings: {
-				creationMode: this.selectedContentOrg,
+				creationMode: this.selectedContentOrg === 'file-based' ? 'file' : 'folder',
 				indexFileName: 'index'
 			},
 			imageInserterSettings: {
+				valueFormat: this.selectedContentOrg === 'file-based' 
+					? '[[attachments/{image-url}]]' 
+					: '[[{image-url}]]',
 				insertFormat: this.selectedContentOrg === 'file-based' 
 					? '[[attachments/{image-url}]]' 
 					: '[[{image-url}]]'

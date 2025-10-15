@@ -119,11 +119,12 @@ export interface ObsidianSettings {
 }
 
 export interface AstroComposerSettings {
-	creationMode: 'file-based' | 'folder-based';
+	creationMode: 'file' | 'folder';
 	indexFileName: string;
 }
 
 export interface ImageInserterSettings {
+	valueFormat: string;
 	insertFormat: string;
 }
 
@@ -268,10 +269,11 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 			subfolderName: 'attachments',
 		},
 		astroComposerSettings: {
-			creationMode: 'file-based',
+			creationMode: 'file',
 			indexFileName: 'index',
 		},
 		imageInserterSettings: {
+			valueFormat: '[[attachments/{image-url}]]',
 			insertFormat: '[[attachments/{image-url}]]',
 		},
 	},
