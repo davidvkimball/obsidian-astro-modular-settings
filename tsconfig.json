@@ -19,5 +19,11 @@
       "ES6",
       "ES7"
     ]
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "main.js",
+    "esbuild.config.mjs",
+    "version-bump.mjs"
+  ]
 }

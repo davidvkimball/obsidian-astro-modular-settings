@@ -57,6 +57,7 @@ export interface FeatureSettings {
 	postCardAspectRatio: 'og' | '16:9' | '4:3' | '3:2' | 'square' | 'golden' | 'custom';
 	customPostCardAspectRatio?: string;
 	linkedMentionsCompact: boolean;
+	profilePicture: boolean;
 }
 
 export interface TypographySettings {
@@ -131,9 +132,8 @@ export interface ImageInserterSettings {
 export type TemplateType = 'standard' | 'minimal' | 'compact' | 'documentation' | 'custom';
 
 export type ThemeType = 
-	| 'oxygen' | 'minimal' | 'atom' | 'ayu-light' | 'ayu-mirage' | 'ayu-dark'
-	| 'catppuccin' | 'charcoal' | 'dracula' | 'everforest' | 'flexoki' | 'gruvbox'
-	| 'macos' | 'nord' | 'obsidian' | 'rose-pine' | 'sky' | 'solarized' | 'things';
+	| 'oxygen' | 'minimal' | 'atom' | 'ayu' | 'catppuccin' | 'charcoal' | 'dracula' | 'everforest' | 'flexoki' | 'gruvbox'
+	| 'macos' | 'nord' | 'obsidian' | 'rose-pine' | 'sky' | 'solarized' | 'things' | 'custom';
 
 export type ContentOrganizationType = 'file-based' | 'folder-based';
 
@@ -233,6 +233,7 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 		showPostCardCoverImages: 'featured-and-posts',
 		postCardAspectRatio: 'og',
 		linkedMentionsCompact: false,
+		profilePicture: false,
 	},
 	typography: {
 		headingFont: 'Inter',
@@ -305,25 +306,9 @@ export const THEME_OPTIONS: ThemeOption[] = [
 		backgroundColorDark: '#181a1f',
 	},
 	{
-		id: 'ayu-light',
-		name: 'Ayu Light',
-		description: 'Clean light theme',
-		previewColors: ['#99521a', '#ff9933'],
-		backgroundColorLight: '#f8f8f0',
-		backgroundColorDark: '#0f1419',
-	},
-	{
-		id: 'ayu-mirage',
-		name: 'Ayu Mirage',
-		description: 'Soft dark theme',
-		previewColors: ['#99521a', '#ff9933'],
-		backgroundColorLight: '#f8f8f0',
-		backgroundColorDark: '#0f1419',
-	},
-	{
-		id: 'ayu-dark',
-		name: 'Ayu Dark',
-		description: 'Deep dark theme',
+		id: 'ayu',
+		name: 'Ayu',
+		description: 'Clean theme with warm colors',
 		previewColors: ['#99521a', '#ff9933'],
 		backgroundColorLight: '#f8f8f0',
 		backgroundColorDark: '#0f1419',

@@ -265,19 +265,31 @@ export class SetupWizardModal extends Modal {
 				if (template) {
 					this.selectedTemplate = template as TemplateType;
 					if (template === 'custom') {
-						// Open config.ts file
-						const configPath = '../../../config.ts';
-						const file = this.app.vault.getAbstractFileByPath(configPath);
-						if (file) {
-							this.app.workspace.openLinkText('', configPath);
-						} else {
-							// Create the file if it doesn't exist
-							this.app.vault.create(configPath, '// Astro Modular Configuration\n// Customize your settings here\n\nexport const siteConfig = {\n  // Add your configuration here\n};\n');
-							this.app.workspace.openLinkText('', configPath);
+						// Open config.ts file - it's one level up from the vault
+						try {
+							const fs = require('fs');
+							const path = require('path');
+							const { shell } = require('electron');
+							
+							// Get the actual vault path string from the adapter
+							const vaultPath = (this.app.vault.adapter as any).basePath || (this.app.vault.adapter as any).path;
+							const vaultPathString = typeof vaultPath === 'string' ? vaultPath : vaultPath.toString();
+							const configPath = path.join(vaultPathString, '..', 'config.ts');
+							
+							if (fs.existsSync(configPath)) {
+								// Use Electron's shell to open the file with the default editor
+								shell.openPath(configPath);
+							} else {
+								// Create the file if it doesn't exist
+								fs.writeFileSync(configPath, '// Astro Modular Configuration\n// Customize your settings here\n\nexport const siteConfig = {\n  // Add your configuration here\n};\n');
+								shell.openPath(configPath);
+							}
+							new Notice('Opening config.ts for custom configuration');
+							this.close();
+							return;
+						} catch (error) {
+							new Notice(`Error opening config file: ${error.message}`);
 						}
-						new Notice('Opening config.ts for custom configuration');
-						this.close();
-						return;
 					}
 					this.renderCurrentStep();
 				}

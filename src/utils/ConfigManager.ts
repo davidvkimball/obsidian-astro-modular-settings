@@ -33,6 +33,11 @@ export class ConfigManager {
 			const configPath = path.join(vaultPathString, '..', 'config.ts');
 			console.log('🔍 Trying to read config from:', configPath);
 			
+			// Check if the parent directory exists
+			const parentDir = path.dirname(configPath);
+			console.log('🔍 Parent directory:', parentDir);
+			console.log('🔍 Parent directory exists:', fs.existsSync(parentDir));
+			
 			if (fs.existsSync(configPath)) {
 				console.log('✅ Found config file outside vault at:', configPath);
 				const content = fs.readFileSync(configPath, 'utf8');
@@ -47,6 +52,7 @@ export class ConfigManager {
 				};
 			} else {
 				console.log('❌ Config file not found at:', configPath);
+				console.log('❌ Parent directory contents:', fs.existsSync(parentDir) ? fs.readdirSync(parentDir) : 'Parent directory does not exist');
 				return {
 					exists: false,
 					path: configPath,
@@ -58,6 +64,7 @@ export class ConfigManager {
 			}
 		} catch (error) {
 			console.log('❌ Error accessing file outside vault:', error.message);
+			console.log('❌ Error stack:', error.stack);
 			return {
 				exists: false,
 				path: this.configPath,
@@ -139,6 +146,9 @@ export class ConfigManager {
 		console.log('🔍 Current config contains style:', currentConfig.includes('style: "circle"'));
 		console.log('🔍 Current config contains pages:', currentConfig.includes('pages: false'));
 		
+		// First apply individual features to ensure they're not overridden by template
+		let modifiedConfig = this.modifyConfigFromFeatures(settings, currentConfig);
+		
 		// Debug: Check if the regex patterns will match
 		const searchRegex = /search:\s*\{\s*posts:\s*(true|false),\s*pages:\s*(true|false),\s*projects:\s*(true|false),\s*docs:\s*(true|false),\s*\}/;
 		const styleRegex = /url:\s*"[^"]*",?\s*\/\/ Optional\s*,\s*placement:\s*"[^"]*",?\s*\/\/ "footer" or "header"\s*,\s*style:\s*"[^"]*",?\s*\/\/ "circle", "square", or "none"/;
@@ -171,16 +181,14 @@ export class ConfigManager {
 		// Get the template configuration based on the preset name
 		const templateConfig = this.getTemplateConfig(preset.name, settings);
 		
-		let modifiedConfig = currentConfig;
-		
 		// Update theme - use marker-based replacement
 		console.log('🔍 Looking for theme marker in config...');
-		const themeMarkerExists = currentConfig.includes('// [CONFIG:THEME]');
+		const themeMarkerExists = modifiedConfig.includes('// [CONFIG:THEME]');
 		console.log('🔍 Theme marker exists:', themeMarkerExists);
 		
 		if (themeMarkerExists) {
 			const themeRegex = /\/\/ \[CONFIG:THEME\]\s*\n\s*theme:\s*"[^"]*"/;
-			const themeMatch = currentConfig.match(themeRegex);
+			const themeMatch = modifiedConfig.match(themeRegex);
 			console.log('🔍 Theme regex match:', themeMatch);
 			
 			modifiedConfig = modifiedConfig.replace(
@@ -1025,6 +1033,170 @@ export class ConfigManager {
 			}
 		}
 		return false;
+	}
+
+	async updateIndividualFeatures(settings: AstroModularSettings): Promise<boolean> {
+		console.log('🔧 ConfigManager: Updating individual features');
+		console.log('⚙️ Features:', settings.features);
+		console.log('🎨 Current theme:', settings.currentTheme);
+		
+		// Read the existing config file
+		const currentConfig = await this.readConfig();
+		console.log('📖 Current config length:', currentConfig.length);
+		console.log('📖 Current config preview:', currentConfig.substring(0, 500));
+		
+		// Modify the existing config based on individual features
+		const modifiedConfig = this.modifyConfigFromFeatures(settings, currentConfig);
+		console.log('🆕 Modified config length:', modifiedConfig.length);
+		console.log('🆕 Modified config preview:', modifiedConfig.substring(0, 500));
+		
+		const writeResult = await this.writeConfig(modifiedConfig);
+		console.log('💾 Write result:', writeResult);
+		
+		return writeResult;
+	}
+
+	private modifyConfigFromFeatures(settings: AstroModularSettings, currentConfig: string): string {
+		console.log('🔄 ConfigManager: Modifying config from individual features');
+		
+		let modifiedConfig = currentConfig;
+		
+		// Update theme
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:THEME\]\s*\n\s*theme:\s*"[^"]*"/,
+			`// [CONFIG:THEME]\n  theme: "${settings.currentTheme}"`
+		);
+		
+		// Update font source
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:FONT_SOURCE\]\s*\n\s*source:\s*"[^"]*"/,
+			`// [CONFIG:FONT_SOURCE]\n    source: "${settings.typography.fontSource}"`
+		);
+		
+		// Update font families
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:FONT_BODY\]\s*\n\s*body:\s*"[^"]*"/,
+			`// [CONFIG:FONT_BODY]\n      body: "${settings.typography.fontSource === 'cdn' ? settings.typography.customFonts.prose : settings.typography.proseFont}"`
+		);
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:FONT_HEADING\]\s*\n\s*heading:\s*"[^"]*"/,
+			`// [CONFIG:FONT_HEADING]\n      heading: "${settings.typography.fontSource === 'cdn' ? settings.typography.customFonts.heading : settings.typography.headingFont}"`
+		);
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:FONT_MONO\]\s*\n\s*mono:\s*"[^"]*"/,
+			`// [CONFIG:FONT_MONO]\n      mono: "${settings.typography.fontSource === 'cdn' ? settings.typography.customFonts.mono : settings.typography.monoFont}"`
+		);
+		
+		// Update deployment platform
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:DEPLOYMENT_PLATFORM\]\s*\n\s*platform:\s*"[^"]*"/,
+			`// [CONFIG:DEPLOYMENT_PLATFORM]\n    platform: "${settings.deployment.platform}"`
+		);
+		
+		// Update command palette enabled state
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:COMMAND_PALETTE_ENABLED\]\s*enabled:\s*(true|false)/,
+			`// [CONFIG:COMMAND_PALETTE_ENABLED]\n    enabled: ${settings.features.commandPalette}`
+		);
+		
+		// Update table of contents
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:POST_OPTIONS_TABLE_OF_CONTENTS\]\s*tableOfContents:\s*(true|false)/,
+			`// [CONFIG:POST_OPTIONS_TABLE_OF_CONTENTS]\n    tableOfContents: ${settings.features.tableOfContents}`
+		);
+		
+		// Update reading time
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:POST_OPTIONS_READING_TIME\]\s*readingTime:\s*(true|false)/,
+			`// [CONFIG:POST_OPTIONS_READING_TIME]\n    readingTime: ${settings.features.readingTime}`
+		);
+		
+		// Update word count (if it exists in features)
+		if ('wordCount' in settings.features) {
+			modifiedConfig = modifiedConfig.replace(
+				/\/\/ \[CONFIG:POST_OPTIONS_WORD_COUNT\]\s*wordCount:\s*(true|false)/,
+				`// [CONFIG:POST_OPTIONS_WORD_COUNT]\n    wordCount: ${(settings.features as any).wordCount}`
+			);
+		}
+		
+		// Update tags (if it exists in features)
+		if ('tags' in settings.features) {
+			modifiedConfig = modifiedConfig.replace(
+				/\/\/ \[CONFIG:POST_OPTIONS_TAGS\]\s*tags:\s*(true|false)/,
+				`// [CONFIG:POST_OPTIONS_TAGS]\n    tags: ${(settings.features as any).tags}`
+			);
+		}
+		
+		// Update linked mentions enabled
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:POST_OPTIONS_LINKED_MENTIONS_ENABLED\]\s*enabled:\s*(true|false)/,
+			`// [CONFIG:POST_OPTIONS_LINKED_MENTIONS_ENABLED]\n      enabled: ${settings.features.linkedMentions}`
+		);
+		
+		// Update linked mentions compact
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:POST_OPTIONS_LINKED_MENTIONS_COMPACT\]\s*linkedMentionsCompact:\s*(true|false)/,
+			`// [CONFIG:POST_OPTIONS_LINKED_MENTIONS_COMPACT]\n      linkedMentionsCompact: ${settings.features.linkedMentionsCompact}`
+		);
+		
+		// Update comments enabled
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_ENABLED\]\s*enabled:\s*(true|false)/,
+			`// [CONFIG:POST_OPTIONS_COMMENTS_ENABLED]\n      enabled: ${settings.features.comments}`
+		);
+		
+		// Update graph view enabled
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:POST_OPTIONS_GRAPH_VIEW_ENABLED\]\s*enabled:\s*(true|false)/,
+			`// [CONFIG:POST_OPTIONS_GRAPH_VIEW_ENABLED]\n    enabled: ${settings.features.graphView}`
+		);
+		
+		// Update post navigation
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:POST_OPTIONS_POST_NAVIGATION\]\s*postNavigation:\s*(true|false)/,
+			`// [CONFIG:POST_OPTIONS_POST_NAVIGATION]\n    postNavigation: ${settings.features.postNavigation}`
+		);
+		
+		// Update scroll to top
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:SCROLL_TO_TOP\]\s*scrollToTop:\s*(true|false)/,
+			`// [CONFIG:SCROLL_TO_TOP]\n  scrollToTop: ${settings.features.scrollToTop}`
+		);
+		
+		// Update social icons in footer
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:FOOTER_SHOW_SOCIAL_ICONS\]\s*showSocialIconsInFooter:\s*(true|false)/,
+			`// [CONFIG:FOOTER_SHOW_SOCIAL_ICONS]\n    showSocialIconsInFooter: ${settings.features.showSocialIconsInFooter}`
+		);
+		
+		// Update dark mode toggle button
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:DARK_MODE_TOGGLE_BUTTON\]\s*darkModeToggleButton:\s*"[^"]*"/,
+			`// [CONFIG:DARK_MODE_TOGGLE_BUTTON]\n  darkModeToggleButton: "${settings.features.darkModeToggleButton}"`
+		);
+		
+		// Update post card cover images
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:POST_OPTIONS_SHOW_POST_CARD_COVER_IMAGES\]\s*showPostCardCoverImages:\s*"[^"]*"/,
+			`// [CONFIG:POST_OPTIONS_SHOW_POST_CARD_COVER_IMAGES]\n    showPostCardCoverImages: "${settings.features.showPostCardCoverImages}"`
+		);
+		
+		// Update post card aspect ratio
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:POST_OPTIONS_POST_CARD_ASPECT_RATIO\]\s*postCardAspectRatio:\s*"[^"]*"/,
+			`// [CONFIG:POST_OPTIONS_POST_CARD_ASPECT_RATIO]\n    postCardAspectRatio: "${settings.features.postCardAspectRatio}"`
+		);
+		
+		// Update custom post card aspect ratio if it exists
+		if (settings.features.customPostCardAspectRatio) {
+			modifiedConfig = modifiedConfig.replace(
+				/\/\/ \[CONFIG:POST_OPTIONS_CUSTOM_POST_CARD_ASPECT_RATIO\]\s*customPostCardAspectRatio:\s*"[^"]*"/,
+				`// [CONFIG:POST_OPTIONS_CUSTOM_POST_CARD_ASPECT_RATIO]\n    customPostCardAspectRatio: "${settings.features.customPostCardAspectRatio}"`
+			);
+		}
+		
+		console.log('✅ Individual features modification complete');
+		return modifiedConfig;
 	}
 
 	async triggerRebuild(): Promise<void> {
