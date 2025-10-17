@@ -999,19 +999,13 @@ export class AstroModularSettingsTab extends PluginSettingTab {
 			const vaultPathString = typeof vaultPath === 'string' ? vaultPath : vaultPath.toString();
 			const configPath = path.join(vaultPathString, '..', 'config.ts');
 			
-			console.log('🔍 SettingsTab: Trying to open config at:', configPath);
-			console.log('🔍 SettingsTab: Config exists:', fs.existsSync(configPath));
-			
 			if (fs.existsSync(configPath)) {
 				// Use Electron's shell to open the file with the default editor
-				console.log('✅ SettingsTab: Opening config file with default editor');
 				shell.openPath(configPath);
-		} else {
-				console.log('❌ SettingsTab: Config file not found');
+			} else {
 				new Notice(`Config file not found at: ${configPath}`);
 			}
 		} catch (error) {
-			console.log('❌ SettingsTab: Error opening config file:', error);
 			new Notice(`Error opening config file: ${error.message}`);
 		}
 	}

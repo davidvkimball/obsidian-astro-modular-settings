@@ -557,7 +557,6 @@ export class SetupWizardModal extends Modal {
 		// Insert it at the new position
 		items.splice(toIndex, 0, movedItem);
 		
-		console.log(`🔄 Reordered ${type}: moved item from ${fromIndex} to ${toIndex}`);
 	}
 
 	private addNavigationItem(type: 'pages' | 'social') {
@@ -1055,7 +1054,6 @@ export class SetupWizardModal extends Modal {
 				}
 			};
 
-			console.log('🔧 Configuring plugins with settings:', config);
 			const success = await this.pluginManager.configurePlugins(config);
 			
 			// Show result
@@ -1161,10 +1159,6 @@ export class SetupWizardModal extends Modal {
 	}
 
 	private async completeSetup() {
-		console.log('🎯 SetupWizard: Starting completion process');
-		console.log('📋 Selected template:', this.selectedTemplate);
-		console.log('🎨 Selected theme:', this.selectedTheme);
-		console.log('📁 Selected content org:', this.selectedContentOrg);
 		
 		// Update settings
 		this.settings.currentTemplate = this.selectedTemplate;
@@ -1177,7 +1171,6 @@ export class SetupWizardModal extends Modal {
 		this.settings.optionalFeatures = this.selectedOptionalFeatures;
 		this.settings.deployment = { platform: this.selectedDeployment };
 
-		console.log('💾 Settings updated, calling config manager...');
 
 		// Apply configuration
 		const configResult = await this.configManager.applyPreset({
@@ -1189,7 +1182,6 @@ export class SetupWizardModal extends Modal {
 			config: this.settings
 		});
 
-		console.log('🔧 Config manager result:', configResult);
 
 		// Trigger rebuild
 		await this.configManager.triggerRebuild();

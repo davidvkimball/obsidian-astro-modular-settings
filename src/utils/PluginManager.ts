@@ -77,31 +77,25 @@ export class PluginManager {
 	}
 
 	async configurePlugins(config: PluginConfiguration): Promise<boolean> {
-		console.log('Starting plugin configuration...');
 		let successCount = 0;
 		let totalConfigurations = 0;
 		
 		try {
 			// Configure Obsidian settings
 			totalConfigurations++;
-			console.log('Configuring Obsidian settings...');
 			await this.configureObsidianSettings(config.obsidianSettings);
 			successCount++;
-			console.log('Obsidian settings configured');
 			
 			// Configure Astro Composer settings
 			totalConfigurations++;
-			console.log('Configuring Astro Composer...');
 			await this.configureAstroComposerSettings(config.astroComposerSettings);
 			successCount++;
 			
 			// Configure Image Inserter settings
 			totalConfigurations++;
-			console.log('Configuring Image Inserter...');
 			await this.configureImageInserterSettings(config.imageInserterSettings);
 			successCount++;
 			
-			console.log(`Plugin configuration complete! ${successCount}/${totalConfigurations} configurations successful`);
 			return successCount > 0; // Return true if at least one configuration succeeded
 		} catch (error) {
 			console.error('Plugin configuration failed:', error);
@@ -118,12 +112,10 @@ export class PluginManager {
 			// File-based: attachments in subfolder
 			obsidianSettings.newLinkFormat = 'relative';
 			obsidianSettings.attachmentFolderPath = `./${settings.subfolderName}`;
-			console.log(`Set attachment location to subfolder: ${settings.subfolderName}`);
 		} else {
 			// Folder-based: attachments in same folder, keep relative links
 			obsidianSettings.newLinkFormat = 'relative';
 			obsidianSettings.attachmentFolderPath = './';
-			console.log('Set attachment location to same folder as current file');
 		}
 			
 			// Also try to set the setting through the app's settings manager
@@ -134,7 +126,6 @@ export class PluginManager {
 			}
 			
 			await (this.app.vault as any).saveConfig();
-			console.log('Obsidian settings saved');
 		} catch (error) {
 			console.error('Failed to configure Obsidian settings:', error);
 			throw error;
@@ -153,9 +144,7 @@ export class PluginManager {
 				
 				// Save the settings
 				await astroComposerPlugin.saveSettings();
-				console.log('Astro Composer configured successfully');
 			} else {
-				console.log('Astro Composer plugin not found or not enabled');
 			}
 		} catch (error) {
 			console.error('Failed to configure Astro Composer:', error);
@@ -176,9 +165,7 @@ export class PluginManager {
 				
 				// Save the settings
 				await imageInserterPlugin.saveSettings();
-				console.log('Image Inserter configured successfully');
 			} else {
-				console.log('Image Inserter plugin not found or not enabled');
 			}
 		} catch (error) {
 			console.error('Failed to configure Image Inserter:', error);

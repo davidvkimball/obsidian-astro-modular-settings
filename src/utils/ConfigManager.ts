@@ -9,13 +9,10 @@ export class ConfigManager {
 		this.app = app;
 		// The main Astro config.ts file is one level up from vault (src/config.ts)
 		this.configPath = '../config.ts';
-		console.log('📁 Config path:', this.configPath);
 	}
 
 	async getConfigFileInfo(): Promise<ConfigFileInfo> {
 		// The main Astro config.ts file is one level up from vault (src/config.ts)
-		console.log('🔍 Looking for config at:', this.configPath);
-		console.log('🏠 Vault root path:', (this.app.vault.adapter as any).path);
 		
 		// Try to access the file outside the vault using Node.js fs
 		try {
@@ -23,23 +20,16 @@ export class ConfigManager {
 			const path = require('path');
 			// Get the actual vault path string from the adapter
 			const vaultPath = (this.app.vault.adapter as any).basePath || (this.app.vault.adapter as any).path;
-			console.log('🏠 Vault path object:', vaultPath);
-			console.log('🏠 Vault path type:', typeof vaultPath);
 			
 			// If vaultPath is an object, try to get the string value
 			const vaultPathString = typeof vaultPath === 'string' ? vaultPath : vaultPath.toString();
-			console.log('🏠 Vault path string:', vaultPathString);
 			
 			const configPath = path.join(vaultPathString, '..', 'config.ts');
-			console.log('🔍 Trying to read config from:', configPath);
 			
 			// Check if the parent directory exists
 			const parentDir = path.dirname(configPath);
-			console.log('🔍 Parent directory:', parentDir);
-			console.log('🔍 Parent directory exists:', fs.existsSync(parentDir));
 			
 			if (fs.existsSync(configPath)) {
-				console.log('✅ Found config file outside vault at:', configPath);
 				const content = fs.readFileSync(configPath, 'utf8');
 				const stats = fs.statSync(configPath);
 				return {
@@ -51,8 +41,6 @@ export class ConfigManager {
 					errors: []
 				};
 			} else {
-				console.log('❌ Config file not found at:', configPath);
-				console.log('❌ Parent directory contents:', fs.existsSync(parentDir) ? fs.readdirSync(parentDir) : 'Parent directory does not exist');
 				return {
 					exists: false,
 					path: configPath,
@@ -63,8 +51,6 @@ export class ConfigManager {
 				};
 			}
 		} catch (error) {
-			console.log('❌ Error accessing file outside vault:', error.message);
-			console.log('❌ Error stack:', error.stack);
 			return {
 				exists: false,
 				path: this.configPath,
@@ -89,7 +75,6 @@ export class ConfigManager {
 	}
 
 	async writeConfig(content: string): Promise<boolean> {
-		console.log('📝 ConfigManager: Attempting to write config');
 		
 		// Try to write the file outside the vault using Node.js fs
 		try {
@@ -97,42 +82,28 @@ export class ConfigManager {
 			const path = require('path');
 			// Get the actual vault path string from the adapter
 			const vaultPath = (this.app.vault.adapter as any).basePath || (this.app.vault.adapter as any).path;
-			console.log('🏠 Vault path object:', vaultPath);
-			console.log('🏠 Vault path type:', typeof vaultPath);
 			
 			// If vaultPath is an object, try to get the string value
 			const vaultPathString = typeof vaultPath === 'string' ? vaultPath : vaultPath.toString();
-			console.log('🏠 Vault path string:', vaultPathString);
 			
 			const configPath = path.join(vaultPathString, '..', 'config.ts');
-			console.log('📁 Writing config to:', configPath);
 			
 			fs.writeFileSync(configPath, content, 'utf8');
-			console.log('✅ Config file written successfully');
 			return true;
 		} catch (error) {
-			console.log('❌ Error writing config file:', error.message);
 			return false;
 		}
 	}
 
 	async applyPreset(preset: PresetTemplate): Promise<boolean> {
-		console.log('🔧 ConfigManager: Starting preset application');
-		console.log('📋 Preset:', preset.name);
-		console.log('⚙️ Settings:', preset.config);
 		
 		// Read the existing config file
 		const currentConfig = await this.readConfig();
-		console.log('📖 Current config length:', currentConfig.length);
-		console.log('📖 Current config preview:', currentConfig.substring(0, 200) + '...');
 		
 		// Modify the existing config based on the preset
 		const modifiedConfig = this.modifyConfigFromPreset(preset, currentConfig);
-		console.log('🆕 Modified config length:', modifiedConfig.length);
-		console.log('🆕 Modified config preview:', modifiedConfig.substring(0, 200) + '...');
 		
 		const writeResult = await this.writeConfig(modifiedConfig);
-		console.log('💾 Write result:', writeResult);
 		
 		return writeResult;
 	}
@@ -140,11 +111,6 @@ export class ConfigManager {
 	private modifyConfigFromPreset(preset: PresetTemplate, currentConfig: string): string {
 		const settings = preset.config as AstroModularSettings;
 		
-		console.log('🔄 ConfigManager: Modifying existing config from preset');
-		console.log('🎨 Theme:', settings.currentTheme);
-		console.log('🔤 Fonts:', settings.typography);
-		console.log('🔍 Current config contains style:', currentConfig.includes('style: "circle"'));
-		console.log('🔍 Current config contains pages:', currentConfig.includes('pages: false'));
 		
 		// First apply individual features to ensure they're not overridden by template
 		let modifiedConfig = this.modifyConfigFromFeatures(settings, currentConfig);
@@ -153,51 +119,38 @@ export class ConfigManager {
 		const searchRegex = /search:\s*\{\s*posts:\s*(true|false),\s*pages:\s*(true|false),\s*projects:\s*(true|false),\s*docs:\s*(true|false),\s*\}/;
 		const styleRegex = /url:\s*"[^"]*",?\s*\/\/ Optional\s*,\s*placement:\s*"[^"]*",?\s*\/\/ "footer" or "header"\s*,\s*style:\s*"[^"]*",?\s*\/\/ "circle", "square", or "none"/;
 		
-		console.log('🔍 Search regex will match:', searchRegex.test(currentConfig));
-		console.log('🔍 Style regex will match:', styleRegex.test(currentConfig));
 		
 		// Debug: Find all occurrences of "style:" in the config
 		const styleMatches = currentConfig.match(/style:\s*"[^"]*"/g);
-		console.log('🔍 All style matches:', styleMatches);
 		
 		// Debug: Find all occurrences of "pages:" in the config
 		const pagesMatches = currentConfig.match(/pages:\s*(true|false)/g);
-		console.log('🔍 All pages matches:', pagesMatches);
 		
 		// Debug: Check if the specific regex patterns will match
 		const styleRegexTest = /style:\s*"[^"]*",?\s*\/\/ "circle", "square", or "none"/;
 		const pagesRegexTest = /pages:\s*(true|false),/;
 		
-		console.log('🔍 Style regex test:', styleRegexTest.test(currentConfig));
-		console.log('🔍 Pages regex test:', pagesRegexTest.test(currentConfig));
 		
 		// Debug: Find the exact context around style and pages
 		const styleContext = currentConfig.match(/placement:\s*"[^"]*",?\s*\/\/ "footer" or "header"\s*,\s*style:\s*"[^"]*",?\s*\/\/ "circle", "square", or "none"/);
-		console.log('🔍 Style context match:', styleContext);
 		
 		const pagesContext = currentConfig.match(/search:\s*\{\s*posts:\s*(true|false),\s*pages:\s*(true|false),\s*projects:\s*(true|false),\s*docs:\s*(true|false),\s*\}/);
-		console.log('🔍 Pages context match:', pagesContext);
 		
 		// Get the template configuration based on the preset name
 		const templateConfig = this.getTemplateConfig(preset.name, settings);
 		
 		// Update theme - use marker-based replacement
-		console.log('🔍 Looking for theme marker in config...');
 		const themeMarkerExists = modifiedConfig.includes('// [CONFIG:THEME]');
-		console.log('🔍 Theme marker exists:', themeMarkerExists);
 		
 		if (themeMarkerExists) {
 			const themeRegex = /\/\/ \[CONFIG:THEME\]\s*\n\s*theme:\s*"[^"]*"/;
 			const themeMatch = modifiedConfig.match(themeRegex);
-			console.log('🔍 Theme regex match:', themeMatch);
 			
 			modifiedConfig = modifiedConfig.replace(
 				themeRegex,
 				`// [CONFIG:THEME]\n  theme: "${settings.currentTheme}"`
 			);
-			console.log('🔍 Theme replacement applied');
 		} else {
-			console.log('❌ Theme marker not found in config!');
 		}
 		
 		// Update font source
@@ -332,7 +285,6 @@ export class ConfigManager {
 			
 		// Update search settings - use individual markers
 		if (templateConfig.commandPalette.search) {
-			console.log('🔍 Template search config:', templateConfig.commandPalette.search);
 			
 			// Update each search setting individually
 			if (templateConfig.commandPalette.search.posts !== undefined) {
@@ -360,12 +312,10 @@ export class ConfigManager {
 				);
 			}
 			
-			console.log('🔍 Search replacement completed');
 		}
 			
 			// Update sections settings - use individual markers
 			if (templateConfig.commandPalette.sections) {
-				console.log('🔍 Template sections config:', templateConfig.commandPalette.sections);
 				
 				// Update each section setting individually
 				if (templateConfig.commandPalette.sections.quickActions !== undefined) {
@@ -387,7 +337,6 @@ export class ConfigManager {
 					);
 				}
 				
-				console.log('🔍 Sections replacement completed');
 			}
 		}
 		
@@ -643,7 +592,6 @@ export class ConfigManager {
 				return currentConfig; // Return original config if syntax is broken
 			}
 			
-			console.log('✅ Config modification complete');
 		} catch (error) {
 			console.error('❌ Config validation failed:', error);
 			return currentConfig; // Return original config if validation fails
@@ -771,11 +719,6 @@ export class ConfigManager {
 	}
 
 	private interpolateTemplate(template: string, settings: AstroModularSettings, templateName: string): string {
-		console.log('🔄 ConfigManager: Interpolating template variables');
-		console.log('🎨 Theme:', settings.currentTheme);
-		console.log('📝 Font source:', settings.typography.fontSource);
-		console.log('🔤 Prose font:', settings.typography.proseFont);
-		console.log('📋 Template name:', templateName);
 		
 		// Replace all template variables with actual values
 		const result = template
@@ -798,8 +741,6 @@ export class ConfigManager {
 			.replace(/\$\{settings\.deployment\.platform\}/g, settings.deployment.platform)
 			.replace(/\$\{templateName\}/g, templateName);
 		
-		console.log('✅ Template interpolation complete');
-		console.log('🔍 Sample of interpolated result:', result.substring(0, 300) + '...');
 		
 		return result;
 	}
@@ -1036,28 +977,19 @@ export class ConfigManager {
 	}
 
 	async updateIndividualFeatures(settings: AstroModularSettings): Promise<boolean> {
-		console.log('🔧 ConfigManager: Updating individual features');
-		console.log('⚙️ Features:', settings.features);
-		console.log('🎨 Current theme:', settings.currentTheme);
 		
 		// Read the existing config file
 		const currentConfig = await this.readConfig();
-		console.log('📖 Current config length:', currentConfig.length);
-		console.log('📖 Current config preview:', currentConfig.substring(0, 500));
 		
 		// Modify the existing config based on individual features
 		const modifiedConfig = this.modifyConfigFromFeatures(settings, currentConfig);
-		console.log('🆕 Modified config length:', modifiedConfig.length);
-		console.log('🆕 Modified config preview:', modifiedConfig.substring(0, 500));
 		
 		const writeResult = await this.writeConfig(modifiedConfig);
-		console.log('💾 Write result:', writeResult);
 		
 		return writeResult;
 	}
 
 	private modifyConfigFromFeatures(settings: AstroModularSettings, currentConfig: string): string {
-		console.log('🔄 ConfigManager: Modifying config from individual features');
 		
 		let modifiedConfig = currentConfig;
 		
@@ -1195,7 +1127,6 @@ export class ConfigManager {
 			);
 		}
 		
-		console.log('✅ Individual features modification complete');
 		return modifiedConfig;
 	}
 
