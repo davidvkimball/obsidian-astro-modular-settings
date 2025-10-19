@@ -104,7 +104,7 @@ export class ConfigPresetModifier {
 			// Update footer social icons
 			if (templateConfig.footer.showSocialIconsInFooter !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
-					/\/\/ \[CONFIG:FOOTER_SHOW_SOCIAL_ICONS\]\s*showSocialIconsInFooter:\s*(true|false)/,
+					/\/\/ \[CONFIG:FOOTER_SHOW_SOCIAL_ICONS\]\s*showSocialIconsInFooter:\s*[^,\n}]+/,
 					`// [CONFIG:FOOTER_SHOW_SOCIAL_ICONS]\n    showSocialIconsInFooter: ${templateConfig.footer.showSocialIconsInFooter}`
 				);
 			}
@@ -612,7 +612,7 @@ export class ConfigPresetModifier {
 		
 		// Update social icons in footer
 		modifiedConfig = modifiedConfig.replace(
-			/\/\/ \[CONFIG:FOOTER_SHOW_SOCIAL_ICONS\]\s*showSocialIconsInFooter:\s*(true|false)/,
+			/\/\/ \[CONFIG:FOOTER_SHOW_SOCIAL_ICONS\]\s*showSocialIconsInFooter:\s*[^,\n}]+/,
 			`// [CONFIG:FOOTER_SHOW_SOCIAL_ICONS]\n    showSocialIconsInFooter: ${settings.features.showSocialIconsInFooter}`
 		);
 		

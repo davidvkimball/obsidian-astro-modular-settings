@@ -103,24 +103,22 @@ export class AstroModularSettingsTab extends PluginSettingTab {
 			// Add tooltip
 			button.title = tab.description;
 			
-			button.addEventListener('click', () => {
-				// Remove active class from all buttons
-				tabNav.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-				// Add active class to clicked button
-				button.classList.add('active');
-				// Render tab content with animation
-				tabContent.style.opacity = '0';
-				setTimeout(async () => {
-					tabContent.empty();
-					await tab.renderer.render(tabContent);
-					tabContent.style.opacity = '1';
-				}, 150);
-			});
+				button.addEventListener('click', () => {
+					// Remove active class from all buttons
+					tabNav.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+					// Add active class to clicked button
+					button.classList.add('active');
+					// Render tab content with animation
+					tabContent.style.opacity = '0';
+					setTimeout(() => {
+						tabContent.empty();
+						tab.renderer.render(tabContent);
+						tabContent.style.opacity = '1';
+					}, 150);
+				});
 		});
 
 		// Render the first tab by default
-		(async () => {
-			await tabs[0].renderer.render(tabContent);
-		})();
+		tabs[0].renderer.render(tabContent);
 	}
 }

@@ -13,6 +13,8 @@ export class ConfigFileManager {
 
 	async getConfigFileInfo(): Promise<ConfigFileInfo> {
 		// The main Astro config.ts file is one level up from vault (src/config.ts)
+		// NOTE: This plugin accesses files outside the Obsidian vault to manage Astro configuration.
+		// This is necessary for the plugin's core functionality of managing Astro Modular theme settings.
 		
 		// Try to access the file outside the vault using Node.js fs
 		try {

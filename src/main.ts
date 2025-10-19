@@ -28,6 +28,8 @@ export default class AstroModularSettingsPlugin extends Plugin {
 			const wizard = new SetupWizardModal(this.app, this.settings, async (newSettings) => {
 				this.settings = newSettings;
 				await this.saveSettings();
+				// Trigger settings tab refresh to show updated values
+				this.triggerSettingsRefresh();
 			});
 			wizard.open();
 		});
@@ -68,6 +70,8 @@ export default class AstroModularSettingsPlugin extends Plugin {
 		const wizard = new SetupWizardModal(this.app, this.settings, async (newSettings) => {
 			this.settings = newSettings;
 			await this.saveSettings();
+			// Trigger settings tab refresh to show updated values
+			this.triggerSettingsRefresh();
 		});
 		wizard.open();
 	}

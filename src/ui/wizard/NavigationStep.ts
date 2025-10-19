@@ -14,7 +14,7 @@ export class NavigationStep extends BaseWizardStep {
 						<h3>Navigation Pages</h3>
 						<p>Add pages to your main navigation menu.</p>
 						<div class="nav-items" id="pages-list">
-							${state.originalSettings.navigation.pages.map((page: any, index: number) => `
+							${state.selectedNavigation.pages.map((page: any, index: number) => `
 								<div class="nav-item" data-index="${index}" draggable="true">
 									<div class="nav-item-content">
 										<div class="nav-item-fields">
@@ -33,7 +33,7 @@ export class NavigationStep extends BaseWizardStep {
 						<h3>Social Links</h3>
 						<p>Add social media links for your footer.</p>
 						<div class="nav-items" id="social-list">
-							${state.originalSettings.navigation.social.map((social: any, index: number) => `
+							${state.selectedNavigation.social.map((social: any, index: number) => `
 								<div class="nav-item" data-index="${index}" draggable="true">
 									<div class="nav-item-content">
 										<div class="nav-item-fields">
@@ -63,7 +63,7 @@ export class NavigationStep extends BaseWizardStep {
 	private setupEventHandlers(container: HTMLElement): void {
 		const state = this.getState();
 
-		// Page handlers - work directly with original settings
+		// Page handlers - work with selected navigation
 		container.querySelector('#pages-list')?.addEventListener('input', (e) => {
 			const target = e.target as HTMLInputElement;
 			if (target.classList.contains('nav-title') || target.classList.contains('nav-url')) {
@@ -71,11 +71,11 @@ export class NavigationStep extends BaseWizardStep {
 				const index = parseInt(item?.getAttribute('data-index') || '0');
 				const field = target.classList.contains('nav-title') ? 'title' : 'url';
 				
-				state.originalSettings.navigation.pages[index][field] = target.value;
+				state.selectedNavigation.pages[index][field] = target.value;
 			}
 		});
 
-		// Social handlers - work directly with original settings
+		// Social handlers - work with selected navigation
 		container.querySelector('#social-list')?.addEventListener('input', (e) => {
 			const target = e.target as HTMLInputElement;
 			if (target.classList.contains('nav-title') || target.classList.contains('nav-url') || target.classList.contains('nav-icon')) {
@@ -84,23 +84,23 @@ export class NavigationStep extends BaseWizardStep {
 				const field = target.classList.contains('nav-title') ? 'title' : 
 							 target.classList.contains('nav-url') ? 'url' : 'icon';
 				
-				state.originalSettings.navigation.social[index][field] = target.value;
+				state.selectedNavigation.social[index][field] = target.value;
 			}
 		});
 
 		// Add page button
 		container.querySelector('#add-page')?.addEventListener('click', () => {
-			state.originalSettings.navigation.pages.push({ title: 'New Page', url: '/new-page' });
+			state.selectedNavigation.pages.push({ title: 'New Page', url: '/new-page' });
 			this.render(container);
 		});
 
 		// Add social button
 		container.querySelector('#add-social')?.addEventListener('click', () => {
-			state.originalSettings.navigation.social.push({ title: 'New Social', url: 'https://example.com', icon: '' });
+			state.selectedNavigation.social.push({ title: 'New Social', url: 'https://example.com', icon: '' });
 			this.render(container);
 		});
 
-		// Remove buttons - work directly with original settings
+		// Remove buttons - work with selected navigation
 		container.addEventListener('click', (e) => {
 			const target = e.target as HTMLButtonElement;
 			if (target.classList.contains('nav-remove')) {
@@ -108,9 +108,9 @@ export class NavigationStep extends BaseWizardStep {
 				const isPage = target.closest('#pages-list');
 				
 				if (isPage) {
-					state.originalSettings.navigation.pages.splice(index, 1);
+					state.selectedNavigation.pages.splice(index, 1);
 				} else {
-					state.originalSettings.navigation.social.splice(index, 1);
+					state.selectedNavigation.social.splice(index, 1);
 				}
 				this.render(container);
 			}
@@ -186,11 +186,11 @@ export class NavigationStep extends BaseWizardStep {
 				
 				if (targetIndex !== draggedIndex) {
 					if (isPage) {
-						const draggedItem = state.originalSettings.navigation.pages.splice(draggedIndex, 1)[0];
-						state.originalSettings.navigation.pages.splice(targetIndex, 0, draggedItem);
+						const draggedItem = state.selectedNavigation.pages.splice(draggedIndex, 1)[0];
+						state.selectedNavigation.pages.splice(targetIndex, 0, draggedItem);
 					} else if (isSocial) {
-						const draggedItem = state.originalSettings.navigation.social.splice(draggedIndex, 1)[0];
-						state.originalSettings.navigation.social.splice(targetIndex, 0, draggedItem);
+						const draggedItem = state.selectedNavigation.social.splice(draggedIndex, 1)[0];
+						state.selectedNavigation.social.splice(targetIndex, 0, draggedItem);
 					}
 					this.render(container);
 				}

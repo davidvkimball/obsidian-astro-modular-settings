@@ -85,8 +85,7 @@ export class WizardStateManager {
 			currentTheme: this.state.selectedTheme,
 			contentOrganization: this.state.selectedContentOrg,
 			siteInfo: this.state.selectedSiteInfo,
-			// Use originalSettings.navigation since it's updated directly by NavigationStep
-			navigation: this.state.originalSettings.navigation,
+			navigation: this.state.selectedNavigation,
 			features: this.state.selectedFeatures,
 			typography: this.state.selectedTypography,
 			optionalFeatures: this.state.selectedOptionalFeatures,

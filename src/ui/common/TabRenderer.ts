@@ -43,10 +43,7 @@ export abstract class TabRenderer {
 				config: this.settings
 			});
 
-			// Also apply individual feature toggles
-			const featuresSuccess = await this.configManager.updateIndividualFeatures(this.settings);
-
-			if (presetSuccess && featuresSuccess) {
+			if (presetSuccess) {
 				if (showNotice) {
 					new Notice('Configuration applied successfully!');
 				}
@@ -147,7 +144,8 @@ export abstract class TabRenderer {
 				toggle.setValue(value);
 				toggle.onChange(async (value) => {
 					onChange(value);
-					await this.applyCurrentConfiguration();
+					await this.plugin.saveData(this.settings);
+					await this.applyCurrentConfiguration(true);
 				});
 				return toggle;
 			});
