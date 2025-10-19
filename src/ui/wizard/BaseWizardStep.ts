@@ -1,27 +1,22 @@
-import { App, Modal } from 'obsidian';
-import { ConfigManager } from '../../utils/ConfigManager';
-import { PluginManager } from '../../utils/PluginManager';
+import { App, Modal, Plugin } from 'obsidian';
 import { WizardStateManager } from './WizardState';
 
 export abstract class BaseWizardStep {
 	protected app: App;
 	protected modal: Modal;
 	protected stateManager: WizardStateManager;
-	protected configManager: ConfigManager;
-	protected pluginManager: PluginManager;
+	protected plugin: Plugin;
 
 	constructor(
 		app: App,
 		modal: Modal,
 		stateManager: WizardStateManager,
-		configManager: ConfigManager,
-		pluginManager: PluginManager
+		plugin: Plugin
 	) {
 		this.app = app;
 		this.modal = modal;
 		this.stateManager = stateManager;
-		this.configManager = configManager;
-		this.pluginManager = pluginManager;
+		this.plugin = plugin;
 	}
 
 	abstract render(container: HTMLElement): void;

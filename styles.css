@@ -84,9 +84,6 @@
 }
 
 /* Use Obsidian's native button styles - remove custom overrides */
-.wizard-button {
-	/* Let Obsidian handle all button styling */
-}
 
 /* Welcome Step */
 .welcome-content {
@@ -1160,9 +1157,7 @@
 	font-size: 12px;
 }
 
-.nav-add {
-	/* Use Obsidian's native button styling */
-}
+/* Navigation add button uses Obsidian's native styling */
 
 .nav-icon-help {
 	margin-top: 5px;
@@ -1197,4 +1192,92 @@
 
 .nav-item:active {
 	cursor: grabbing;
+}
+
+/* Profile Picture and Comments Options Styling */
+.options-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 15px;
+	margin-top: 15px;
+}
+
+.setting-group {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+}
+
+.setting-group label {
+	font-weight: 500;
+	color: var(--text-normal);
+	font-size: 13px;
+	margin-bottom: 3px;
+}
+
+.setting-group input,
+.setting-group select {
+	width: 100%;
+	padding: 6px 10px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 13px;
+	transition: border-color 0.2s ease;
+}
+
+.setting-group input:focus,
+.setting-group select:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 2px var(--interactive-accent-2);
+}
+
+/* Let Obsidian handle dropdown styling natively */
+
+/* Profile picture and comments options containers */
+.profile-picture-options,
+.comments-options {
+	margin-top: 15px;
+	padding: 15px;
+	background: var(--background-secondary);
+	border-radius: 6px;
+}
+
+/* Giscus setup link styling */
+.giscus-setup-link {
+	margin-bottom: 15px;
+	padding: 10px;
+	background: var(--background-modifier-border);
+	border-radius: 4px;
+	border-left: 3px solid var(--interactive-accent);
+}
+
+.giscus-setup-link p {
+	margin: 0;
+	font-size: 13px;
+	color: var(--text-muted);
+}
+
+.giscus-setup-link a {
+	color: var(--interactive-accent);
+	text-decoration: none;
+}
+
+.giscus-setup-link a:hover {
+	text-decoration: underline;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+	.options-grid {
+		grid-template-columns: 1fr;
+		gap: 10px;
+	}
+	
+	.profile-picture-options,
+	.comments-options {
+		padding: 10px;
+	}
 }

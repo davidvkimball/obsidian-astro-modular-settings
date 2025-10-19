@@ -6,7 +6,7 @@ import { PresetWarningModal } from '../PresetWarningModal';
 export class ConfigTab extends TabRenderer {
 	render(container: HTMLElement): void {
 		container.empty();
-		this.refreshSettings();
+		const settings = this.getSettings();
 
 		// Settings section header
 		const settingsSection = container.createDiv('settings-section');
@@ -21,7 +21,7 @@ export class ConfigTab extends TabRenderer {
 				TEMPLATE_OPTIONS.forEach(template => {
 					dropdown.addOption(template.id, template.name);
 				});
-				dropdown.setValue(this.settings.currentTemplate);
+				dropdown.setValue(settings.currentTemplate);
 				dropdown.onChange(async (value) => {
 					// Show warning modal for template changes
 					const changes = this.getTemplateChanges(value as any);
@@ -31,8 +31,8 @@ export class ConfigTab extends TabRenderer {
 							changes,
 							async () => {
 								// User confirmed - apply the template
-								this.settings.currentTemplate = value as any;
-								await this.plugin.saveData(this.settings);
+								settings.currentTemplate = value as any;
+								await this.plugin.saveData(settings);
 								
 								try {
 									await this.applyCurrentConfiguration();
@@ -43,14 +43,14 @@ export class ConfigTab extends TabRenderer {
 							},
 							() => {
 								// User cancelled - reset dropdown to current value
-								dropdown.setValue(this.settings.currentTemplate);
+								dropdown.setValue(settings.currentTemplate);
 							}
 						);
 						modal.open();
 					} else {
 						// No changes needed - apply directly
-						this.settings.currentTemplate = value as any;
-						await this.plugin.saveData(this.settings);
+						settings.currentTemplate = value as any;
+						await this.plugin.saveData(settings);
 						
 						try {
 							await this.applyCurrentConfiguration();
@@ -69,17 +69,17 @@ export class ConfigTab extends TabRenderer {
 			.addDropdown(dropdown => {
 				dropdown.addOption('file-based', 'File-based');
 				dropdown.addOption('folder-based', 'Folder-based');
-				dropdown.setValue(this.settings.contentOrganization);
+				dropdown.setValue(settings.contentOrganization);
 				dropdown.onChange(async (value) => {
-					this.settings.contentOrganization = value as any;
-					await this.plugin.saveData(this.settings);
+					settings.contentOrganization = value as any;
+					await this.plugin.saveData(settings);
 					
-					// Apply changes immediately to config.ts
+					// Configure plugins based on content organization
 					try {
-						await this.applyCurrentConfiguration();
-						new Notice(`Content organization changed to ${value} and applied to config.ts`);
+						await (this.plugin as any).pluginManager.configurePlugins(settings.pluginConfig);
+						new Notice(`Content organization changed to ${value} and plugins configured`);
 					} catch (error) {
-						new Notice(`Failed to apply content organization change: ${error instanceof Error ? error.message : String(error)}`);
+						new Notice(`Failed to configure plugins for content organization: ${error instanceof Error ? error.message : String(error)}`);
 					}
 				});
 			});
@@ -92,10 +92,10 @@ export class ConfigTab extends TabRenderer {
 				dropdown.addOption('netlify', 'Netlify');
 				dropdown.addOption('vercel', 'Vercel');
 				dropdown.addOption('github-pages', 'GitHub Pages');
-				dropdown.setValue(this.settings.deployment.platform);
+				dropdown.setValue(settings.deployment.platform);
 				dropdown.onChange(async (value) => {
-					this.settings.deployment.platform = value as any;
-					await this.plugin.saveData(this.settings);
+					settings.deployment.platform = value as any;
+					await this.plugin.saveData(settings);
 					
 					// Apply changes immediately to config.ts
 					try {
@@ -110,7 +110,7 @@ export class ConfigTab extends TabRenderer {
 		// Reset to Template button
 		new Setting(container)
 			.setName('Reset to Template')
-			.setDesc(`Reset all settings to the current template (${TEMPLATE_OPTIONS.find(t => t.id === this.settings.currentTemplate)?.name})`)
+			.setDesc(`Reset all settings to the current template (${TEMPLATE_OPTIONS.find(t => t.id === settings.currentTemplate)?.name})`)
 			.addButton(button => button
 				.setButtonText('Reset to Template')
 				.setWarning()
@@ -118,15 +118,15 @@ export class ConfigTab extends TabRenderer {
 					// Reset settings to template defaults
 					try {
 						// Load the template preset
-						const templatePreset = this.configManager.getTemplatePreset(this.settings.currentTemplate);
+						const templatePreset = (this.plugin as any).configManager.getTemplatePreset(settings.currentTemplate);
 						if (templatePreset) {
 							// Apply the template settings
-							this.settings = { ...this.settings, ...templatePreset.config };
-							await this.plugin.saveData(this.settings);
+							Object.assign(settings, templatePreset.config);
+							await this.plugin.saveData(settings);
 							
 							// Apply to config file
 							await this.applyCurrentConfiguration(true);
-							new Notice(`Reset to ${this.settings.currentTemplate} template and applied to config.ts`);
+							new Notice(`Reset to ${settings.currentTemplate} template and applied to config.ts`);
 						} else {
 							new Notice('Template not found');
 						}

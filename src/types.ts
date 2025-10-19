@@ -27,6 +27,12 @@ export interface AstroModularSettings {
 	
 	// Plugin configuration
 	pluginConfig: PluginConfiguration;
+
+	// Optional content types
+	optionalContentTypes: {
+		projects: boolean;
+		docs: boolean;
+	};
 }
 
 export interface SiteInformation {
@@ -47,6 +53,7 @@ export interface FeatureSettings {
 	tableOfContents: boolean;
 	readingTime: boolean;
 	linkedMentions: boolean;
+	linkedMentionsCompact: boolean;
 	comments: boolean;
 	graphView: boolean;
 	postNavigation: boolean;
@@ -56,7 +63,6 @@ export interface FeatureSettings {
 	showPostCardCoverImages: 'all' | 'featured' | 'home' | 'posts' | 'featured-and-posts' | 'none';
 	postCardAspectRatio: 'og' | '16:9' | '4:3' | '3:2' | 'square' | 'golden' | 'custom';
 	customPostCardAspectRatio?: string;
-	linkedMentionsCompact: boolean;
 	profilePicture: boolean;
 }
 
@@ -90,18 +96,18 @@ export interface ProfilePictureSettings {
 export interface CommentsSettings {
 	enabled: boolean;
 	provider: 'giscus';
-	repo?: string;
-	repoId?: string;
-	category?: string;
-	categoryId?: string;
-	mapping?: string;
-	strict?: string;
-	reactions?: string;
-	metadata?: string;
-	inputPosition?: string;
-	theme?: string;
-	lang?: string;
-	loading?: string;
+	repo: string;
+	repoId: string;
+	category: string;
+	categoryId: string;
+	mapping: string;
+	strict: string;
+	reactions: string;
+	metadata: string;
+	inputPosition: string;
+	theme: string;
+	lang: string;
+	loading: string;
 }
 
 export interface DeploymentSettings {
@@ -129,7 +135,7 @@ export interface ImageInserterSettings {
 	insertFormat: string;
 }
 
-export type TemplateType = 'standard' | 'minimal' | 'compact' | 'documentation' | 'custom';
+export type TemplateType = 'standard' | 'minimal' | 'compact' | 'custom';
 
 export type ThemeType = 
 	| 'oxygen' | 'minimal' | 'atom' | 'ayu' | 'catppuccin' | 'charcoal' | 'dracula' | 'everforest' | 'flexoki' | 'gruvbox'
@@ -255,6 +261,7 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 		tableOfContents: true,
 		readingTime: true,
 		linkedMentions: true,
+		linkedMentionsCompact: false,
 		comments: false,
 		graphView: true,
 		postNavigation: true,
@@ -263,7 +270,6 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 		showSocialIconsInFooter: true,
 		showPostCardCoverImages: 'featured-and-posts',
 		postCardAspectRatio: 'og',
-		linkedMentionsCompact: false,
 		profilePicture: false,
 	},
 	typography: {
@@ -290,6 +296,18 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 		comments: {
 			enabled: false,
 			provider: 'giscus',
+			repo: 'davidvkimball/astro-modular',
+			repoId: 'R_kgDOPllfKw',
+			category: 'General',
+			categoryId: 'DIC_kwDOPllfK84CvUpx',
+			mapping: 'pathname',
+			strict: '0',
+			reactions: '1',
+			metadata: '0',
+			inputPosition: 'bottom',
+			theme: 'preferred_color_scheme',
+			lang: 'en',
+			loading: 'lazy',
 		},
 	},
 	deployment: {
@@ -308,6 +326,10 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 			valueFormat: '[[attachments/{image-url}]]',
 			insertFormat: '[[attachments/{image-url}]]',
 		},
+	},
+	optionalContentTypes: {
+		projects: true, // Will be overridden based on template
+		docs: true, // Will be overridden based on template
 	},
 };
 

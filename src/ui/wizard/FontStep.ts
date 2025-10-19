@@ -1,5 +1,6 @@
 import { BaseWizardStep } from './BaseWizardStep';
 import { FONT_OPTIONS } from '../../types';
+import { Setting, DropdownComponent, TextComponent } from 'obsidian';
 
 export class FontStep extends BaseWizardStep {
 	render(container: HTMLElement): void {
@@ -9,137 +10,108 @@ export class FontStep extends BaseWizardStep {
 			<div class="font-selection">
 				<h2>Choose your fonts</h2>
 				<p>Select fonts for headings, body text, and code.</p>
-				<div class="font-options">
-					<div class="font-setting">
-						<label>Heading Font</label>
-						<select id="heading-font">
-							${FONT_OPTIONS.map(font => 
-								`<option value="${font}" ${state.selectedTypography.headingFont === font ? 'selected' : ''}>${font}</option>`
-							).join('')}
-						</select>
-					</div>
-					<div class="font-setting">
-						<label>Body Font</label>
-						<select id="prose-font">
-							${FONT_OPTIONS.map(font => 
-								`<option value="${font}" ${state.selectedTypography.proseFont === font ? 'selected' : ''}>${font}</option>`
-							).join('')}
-						</select>
-					</div>
-					<div class="font-setting">
-						<label>Monospace Font</label>
-						<select id="mono-font">
-							${FONT_OPTIONS.map(font => 
-								`<option value="${font}" ${state.selectedTypography.monoFont === font ? 'selected' : ''}>${font}</option>`
-							).join('')}
-						</select>
-					</div>
-					<div class="font-setting">
-						<label>Font Source</label>
-						<select id="font-source">
-							<option value="local" ${state.selectedTypography.fontSource === 'local' ? 'selected' : ''}>Local (Google Fonts)</option>
-							<option value="cdn" ${state.selectedTypography.fontSource === 'cdn' ? 'selected' : ''}>CDN (Custom)</option>
-						</select>
-					</div>
-					${state.selectedTypography.fontSource === 'cdn' ? `
-						<div class="font-setting">
-							<label>Custom Font URLs (comma-separated)</label>
-							<input type="text" id="custom-fonts" placeholder="https://fonts.googleapis.com/css2?family=Custom+Font:wght@400;600&display=swap">
-						</div>
-						<div class="font-setting">
-							<label>Heading Font Name</label>
-							<input type="text" id="custom-heading-font" value="${state.selectedTypography.customFonts?.heading || ''}" placeholder="Custom Heading Font">
-						</div>
-						<div class="font-setting">
-							<label>Body Font Name</label>
-							<input type="text" id="custom-prose-font" value="${state.selectedTypography.customFonts?.prose || ''}" placeholder="Custom Body Font">
-						</div>
-						<div class="font-setting">
-							<label>Monospace Font Name</label>
-							<input type="text" id="custom-mono-font" value="${state.selectedTypography.customFonts?.mono || ''}" placeholder="Custom Monospace Font">
-						</div>
-					` : ''}
-				</div>
 			</div>
 		`;
 
-		// Add change handlers
-		container.querySelector('#heading-font')?.addEventListener('change', (e) => {
-			const currentState = this.getState();
-			this.updateState({
-				selectedTypography: {
-					...currentState.selectedTypography,
-					headingFont: (e.target as HTMLSelectElement).value
-				}
-			});
-		});
-		container.querySelector('#prose-font')?.addEventListener('change', (e) => {
-			const currentState = this.getState();
-			this.updateState({
-				selectedTypography: {
-					...currentState.selectedTypography,
-					proseFont: (e.target as HTMLSelectElement).value
-				}
-			});
-		});
-		container.querySelector('#mono-font')?.addEventListener('change', (e) => {
-			const currentState = this.getState();
-			this.updateState({
-				selectedTypography: {
-					...currentState.selectedTypography,
-					monoFont: (e.target as HTMLSelectElement).value
-				}
-			});
-		});
-		container.querySelector('#font-source')?.addEventListener('change', (e) => {
-			const currentState = this.getState();
-			this.updateState({
-				selectedTypography: {
-					...currentState.selectedTypography,
-					fontSource: (e.target as HTMLSelectElement).value as 'local' | 'cdn'
-				}
-			});
-			this.render(container); // Re-render to show/hide custom input
-		});
+		// Create the font options container
+		const fontOptions = container.querySelector('.font-selection')!.createDiv('font-options');
 
-		// Custom font name handlers
-		container.querySelector('#custom-heading-font')?.addEventListener('input', (e) => {
-			const currentState = this.getState();
-			this.updateState({
-				selectedTypography: {
-					...currentState.selectedTypography,
-					customFonts: {
-						...currentState.selectedTypography.customFonts,
-						heading: (e.target as HTMLInputElement).value
-					}
-				}
-			});
-		});
+		// Helper function to create font dropdowns
+		const createFontDropdown = (name: string, desc: string, currentValue: string, onChange: (value: string) => void) => {
+			new Setting(fontOptions)
+				.setName(name)
+				.setDesc(desc)
+				.addDropdown((dropdown: DropdownComponent) => {
+					FONT_OPTIONS.forEach(font => {
+						dropdown.addOption(font, font);
+					});
+					dropdown.setValue(currentValue)
+						.onChange(onChange);
+				});
+		};
 
-		container.querySelector('#custom-prose-font')?.addEventListener('input', (e) => {
-			const currentState = this.getState();
-			this.updateState({
-				selectedTypography: {
-					...currentState.selectedTypography,
-					customFonts: {
-						...currentState.selectedTypography.customFonts,
-						prose: (e.target as HTMLInputElement).value
-					}
-				}
-			});
-		});
+		// Create font dropdowns
+		createFontDropdown('Heading Font', 'Font for headings and titles', 
+			state.selectedTypography.headingFont, 
+			(value: string) => this.updateTypographySetting('headingFont', value, state));
 
-		container.querySelector('#custom-mono-font')?.addEventListener('input', (e) => {
-			const currentState = this.getState();
-			this.updateState({
-				selectedTypography: {
-					...currentState.selectedTypography,
-					customFonts: {
-						...currentState.selectedTypography.customFonts,
-						mono: (e.target as HTMLInputElement).value
-					}
-				}
+		createFontDropdown('Body Font', 'Font for body text and paragraphs', 
+			state.selectedTypography.proseFont, 
+			(value: string) => this.updateTypographySetting('proseFont', value, state));
+
+		createFontDropdown('Monospace Font', 'Font for code blocks and inline code', 
+			state.selectedTypography.monoFont, 
+			(value: string) => this.updateTypographySetting('monoFont', value, state));
+
+		// Font source dropdown
+		new Setting(fontOptions)
+			.setName('Font Source')
+			.setDesc('Choose how fonts are loaded')
+			.addDropdown((dropdown: DropdownComponent) => {
+				dropdown.addOption('local', 'Local (Google Fonts)');
+				dropdown.addOption('cdn', 'CDN (Custom)');
+				dropdown.setValue(state.selectedTypography.fontSource)
+					.onChange((value: string) => {
+						this.updateTypographySetting('fontSource', value as 'local' | 'cdn', state);
+						// Re-render to show/hide custom inputs
+						this.render(container);
+					});
 			});
+
+		// Custom font inputs (only show when CDN is selected)
+		if (state.selectedTypography.fontSource === 'cdn') {
+			new Setting(fontOptions)
+				.setName('Custom Font URLs')
+				.setDesc('Comma-separated URLs for custom fonts')
+				.addText((text: TextComponent) => text
+					.setValue(state.selectedTypography.customFonts?.urls || '')
+					.setPlaceholder('https://fonts.googleapis.com/css2?family=Custom+Font:wght@400;600&display=swap')
+					.onChange((value: string) => this.updateCustomFontSetting('urls', value, state)));
+
+			new Setting(fontOptions)
+				.setName('Custom Heading Font Name')
+				.setDesc('Font family name for headings')
+				.addText((text: TextComponent) => text
+					.setValue(state.selectedTypography.customFonts?.heading || '')
+					.setPlaceholder('Custom Heading Font')
+					.onChange((value: string) => this.updateCustomFontSetting('heading', value, state)));
+
+			new Setting(fontOptions)
+				.setName('Custom Body Font Name')
+				.setDesc('Font family name for body text')
+				.addText((text: TextComponent) => text
+					.setValue(state.selectedTypography.customFonts?.prose || '')
+					.setPlaceholder('Custom Body Font')
+					.onChange((value: string) => this.updateCustomFontSetting('prose', value, state)));
+
+			new Setting(fontOptions)
+				.setName('Custom Monospace Font Name')
+				.setDesc('Font family name for code')
+				.addText((text: TextComponent) => text
+					.setValue(state.selectedTypography.customFonts?.mono || '')
+					.setPlaceholder('Custom Monospace Font')
+					.onChange((value: string) => this.updateCustomFontSetting('mono', value, state)));
+		}
+	}
+
+	private updateTypographySetting(key: string, value: string, state: any): void {
+		this.updateState({
+			selectedTypography: {
+				...state.selectedTypography,
+				[key]: value
+			}
+		});
+	}
+
+	private updateCustomFontSetting(key: string, value: string, state: any): void {
+		this.updateState({
+			selectedTypography: {
+				...state.selectedTypography,
+				customFonts: {
+					...state.selectedTypography.customFonts,
+					[key]: value
+				}
+			}
 		});
 	}
 }

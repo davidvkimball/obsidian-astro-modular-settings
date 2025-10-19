@@ -5,7 +5,7 @@ import { DEFAULT_SETTINGS } from '../../types';
 export class AdvancedTab extends TabRenderer {
 	render(container: HTMLElement): void {
 		container.empty();
-		this.refreshSettings();
+		const settings = this.getSettings();
 
 		// Settings section header
 		const settingsSection = container.createDiv('settings-section');
@@ -48,8 +48,9 @@ export class AdvancedTab extends TabRenderer {
 						confirmModal.close();
 						
 						// Reset only configuration settings, preserve site info and navigation
-						const preservedSiteInfo = this.settings.siteInfo;
-						const preservedNavigation = this.settings.navigation;
+						const settings = this.getSettings();
+						const preservedSiteInfo = settings.siteInfo;
+						const preservedNavigation = settings.navigation;
 						
 						// Reset to defaults
 						const resetSettings = { ...DEFAULT_SETTINGS };
@@ -60,9 +61,6 @@ export class AdvancedTab extends TabRenderer {
 						
 						// Update the plugin's main settings object
 						(this.plugin as any).settings = resetSettings;
-						
-						// Update our local reference
-						this.settings = resetSettings;
 						
 						await this.plugin.saveData(resetSettings);
 						
@@ -106,7 +104,7 @@ export class AdvancedTab extends TabRenderer {
 	}
 
 	private exportConfiguration(): void {
-		const configJson = JSON.stringify(this.settings, null, 2);
+  const configJson = JSON.stringify(this.getSettings(), null, 2);
 		const blob = new Blob([configJson], { type: 'application/json' });
 		const url = URL.createObjectURL(blob);
 		
@@ -133,8 +131,9 @@ export class AdvancedTab extends TabRenderer {
 					const importedSettings = JSON.parse(text);
 					
 					// Merge with current settings
-					this.settings = { ...this.settings, ...importedSettings };
-					await this.plugin.saveData(this.settings);
+      const settings = this.getSettings();
+      Object.assign(settings, importedSettings);
+      await this.plugin.saveData(settings);
 					
 					// Refresh the settings tab to show imported settings
 					// Note: This would need to be handled by the parent component

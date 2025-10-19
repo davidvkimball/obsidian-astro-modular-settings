@@ -3,9 +3,15 @@
 	"description": "Clean, simple blog with minimal features",
 	"features": {
 		"commandPalette": true,
-		"tableOfContents": true,
+		"tableOfContents": false,
 		"readingTime": false,
 		"linkedMentions": false,
+		"linkedMentionsCompact": false,
+		"graphView": false,
+		"postNavigation": false,
+		"scrollToTop": true,
+		"showSocialIconsInFooter": false,
+		"profilePicture": false,
 		"comments": false
 	},
 	"theme": "minimal",
@@ -16,9 +22,15 @@
 		"contentOrganization": "file-based",
 		"features": {
 			"commandPalette": true,
-			"tableOfContents": true,
+			"tableOfContents": false,
 			"readingTime": false,
 			"linkedMentions": false,
+			"linkedMentionsCompact": false,
+			"graphView": false,
+			"postNavigation": false,
+			"scrollToTop": true,
+			"showSocialIconsInFooter": false,
+			"profilePicture": false,
 			"comments": false
 		},
 		"pluginConfig": {

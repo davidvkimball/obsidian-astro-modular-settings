@@ -1,7 +1,4 @@
-import { App, Modal, Notice } from 'obsidian';
-import { AstroModularSettings } from '../types';
-import { ConfigManager } from '../utils/ConfigManager';
-import { PluginManager } from '../utils/PluginManager';
+import { App, Modal, Notice, Plugin } from 'obsidian';
 import { WizardStateManager } from './wizard/WizardState';
 import { BaseWizardStep } from './wizard/BaseWizardStep';
 import { WelcomeStep } from './wizard/WelcomeStep';
@@ -17,30 +14,26 @@ import { FinalizeStep } from './wizard/FinalizeStep';
 
 export class SetupWizardModal extends Modal {
 	private stateManager: WizardStateManager;
-	private configManager: ConfigManager;
-	private pluginManager: PluginManager;
-	private onComplete: (settings: AstroModularSettings) => void;
+	private plugin: Plugin;
 	private steps: BaseWizardStep[];
 
-	constructor(app: App, settings: AstroModularSettings, onComplete: (settings: AstroModularSettings) => void) {
+	constructor(app: App, plugin: Plugin) {
 		super(app);
-		this.stateManager = new WizardStateManager(settings);
-		this.configManager = new ConfigManager(app);
-		this.pluginManager = new PluginManager(app);
-		this.onComplete = onComplete;
+		this.plugin = plugin;
+		this.stateManager = new WizardStateManager(plugin);
 		
 		// Initialize step instances
 		this.steps = [
-			new WelcomeStep(app, this, this.stateManager, this.configManager, this.pluginManager),
-			new TemplateStep(app, this, this.stateManager, this.configManager, this.pluginManager),
-			new ThemeStep(app, this, this.stateManager, this.configManager, this.pluginManager),
-			new FontStep(app, this, this.stateManager, this.configManager, this.pluginManager),
-			new ContentOrgStep(app, this, this.stateManager, this.configManager, this.pluginManager),
-			new NavigationStep(app, this, this.stateManager, this.configManager, this.pluginManager),
-			new OptionalFeaturesStep(app, this, this.stateManager, this.configManager, this.pluginManager),
-			new DeploymentStep(app, this, this.stateManager, this.configManager, this.pluginManager),
-			new PluginConfigStep(app, this, this.stateManager, this.configManager, this.pluginManager),
-			new FinalizeStep(app, this, this.stateManager, this.configManager, this.pluginManager)
+			new WelcomeStep(app, this, this.stateManager, this.plugin),
+			new TemplateStep(app, this, this.stateManager, this.plugin),
+			new ThemeStep(app, this, this.stateManager, this.plugin),
+			new FontStep(app, this, this.stateManager, this.plugin),
+			new ContentOrgStep(app, this, this.stateManager, this.plugin),
+			new NavigationStep(app, this, this.stateManager, this.plugin),
+			new OptionalFeaturesStep(app, this, this.stateManager, this.plugin),
+			new DeploymentStep(app, this, this.stateManager, this.plugin),
+			new PluginConfigStep(app, this, this.stateManager, this.plugin),
+			new FinalizeStep(app, this, this.stateManager, this.plugin)
 		];
 	}
 
@@ -144,9 +137,12 @@ export class SetupWizardModal extends Modal {
 				const finalStep = this.steps[this.steps.length - 1] as FinalizeStep;
 				await finalStep.completeWizard();
 				
-				// Get final settings and call completion callback
-				const finalSettings = this.stateManager.buildFinalSettings();
-				this.onComplete(finalSettings);
+				// Save the final settings
+				await this.plugin.saveData((this.plugin as any).settings);
+				
+				// Trigger settings tab refresh to show updated values
+				(this.plugin as any).triggerSettingsRefresh();
+				
 				this.close();
 			});
 		}
@@ -202,7 +198,7 @@ export class SetupWizardModal extends Modal {
 				break;
 			case 6: // Optional features step
 				this.stateManager.setState({
-					selectedFeatures: {
+					selectedOptionalFeatures: {
 						profilePicture: {
 							enabled: false,
 							image: '/profile.jpg',

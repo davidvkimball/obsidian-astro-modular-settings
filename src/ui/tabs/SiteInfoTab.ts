@@ -4,7 +4,7 @@ import { TabRenderer } from '../common/TabRenderer';
 export class SiteInfoTab extends TabRenderer {
 	render(container: HTMLElement): void {
 		container.empty();
-		this.refreshSettings();
+		const settings = this.getSettings();
 
 		// Settings section header
 		const settingsSection = container.createDiv('settings-section');
@@ -16,9 +16,9 @@ export class SiteInfoTab extends TabRenderer {
 			container,
 			'Site URL',
 			'Your site\'s base URL (e.g., https://yoursite.com)',
-			this.settings.siteInfo.site,
+			settings.siteInfo.site,
 			(value) => {
-				this.settings.siteInfo.site = value;
+				settings.siteInfo.site = value;
 			}
 		);
 
@@ -27,9 +27,9 @@ export class SiteInfoTab extends TabRenderer {
 			container,
 			'Site Title',
 			'Your site\'s title',
-			this.settings.siteInfo.title,
+			settings.siteInfo.title,
 			(value) => {
-				this.settings.siteInfo.title = value;
+				settings.siteInfo.title = value;
 			}
 		);
 
@@ -38,9 +38,9 @@ export class SiteInfoTab extends TabRenderer {
 			container,
 			'Site Description',
 			'A brief description of your site',
-			this.settings.siteInfo.description,
+			settings.siteInfo.description,
 			(value) => {
-				this.settings.siteInfo.description = value;
+				settings.siteInfo.description = value;
 			}
 		);
 
@@ -49,9 +49,9 @@ export class SiteInfoTab extends TabRenderer {
 			container,
 			'Author Name',
 			'Your name or the site author\'s name',
-			this.settings.siteInfo.author,
+			settings.siteInfo.author,
 			(value) => {
-				this.settings.siteInfo.author = value;
+				settings.siteInfo.author = value;
 			}
 		);
 
@@ -60,9 +60,9 @@ export class SiteInfoTab extends TabRenderer {
 			container,
 			'Language',
 			'Your site\'s primary language (ISO 639-1 code)',
-			this.settings.siteInfo.language,
+			settings.siteInfo.language,
 			(value) => {
-				this.settings.siteInfo.language = value;
+				settings.siteInfo.language = value;
 			}
 		);
 	}

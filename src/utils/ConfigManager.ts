@@ -5,7 +5,6 @@ import { ConfigPresetModifier } from './config/ConfigPresetModifier';
 import * as standardPreset from '../presets/standard.json';
 import * as minimalPreset from '../presets/minimal.json';
 import * as compactPreset from '../presets/compact.json';
-import * as documentationPreset from '../presets/documentation.json';
 
 export class ConfigManager {
 	private app: App;
@@ -76,8 +75,6 @@ export class ConfigManager {
 					return minimalPreset as PresetTemplate;
 				case 'compact':
 					return compactPreset as PresetTemplate;
-				case 'documentation':
-					return documentationPreset as PresetTemplate;
 				default:
 					console.error(`Unknown template ID: ${templateId}`);
 					return null;

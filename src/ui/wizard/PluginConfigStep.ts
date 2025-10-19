@@ -6,7 +6,7 @@ export class PluginConfigStep extends BaseWizardStep {
 		const state = this.getState();
 		
 		// Get plugin status
-		const pluginStatus = await this.pluginManager.getPluginStatus();
+		const pluginStatus = await (this.plugin as any).pluginManager.getPluginStatus();
 		
 		container.innerHTML = `
 			<div class="plugin-config">
@@ -14,7 +14,7 @@ export class PluginConfigStep extends BaseWizardStep {
 				<p>Configure your Obsidian plugins for optimal integration.</p>
 				
 				<div class="plugin-status">
-					${pluginStatus.map(plugin => `
+      ${pluginStatus.map((plugin: any) => `
 						<div class="plugin-item ${plugin.installed ? 'installed' : 'missing'}">
 							<div class="plugin-icon">
 								${plugin.installed 
@@ -46,7 +46,7 @@ export class PluginConfigStep extends BaseWizardStep {
 		// Configure automatically button
 		container.querySelector('#configure-plugins')?.addEventListener('click', async () => {
 			try {
-				const success = await this.pluginManager.configurePlugins(state.originalSettings.pluginConfig);
+				const success = await (this.plugin as any).pluginManager.configurePlugins((this.plugin as any).settings.pluginConfig);
 				if (success) {
 					new Notice('Plugins configured successfully!');
 				} else {
@@ -60,7 +60,7 @@ export class PluginConfigStep extends BaseWizardStep {
 		// Show manual instructions button
 		container.querySelector('#show-instructions')?.addEventListener('click', async () => {
 			try {
-				const instructions = await this.pluginManager.getManualConfigurationInstructions(state.originalSettings.pluginConfig);
+				const instructions = await (this.plugin as any).pluginManager.getManualConfigurationInstructions((this.plugin as any).settings.pluginConfig);
 				
 				// Create a modal to show instructions
 				const { Modal } = require('obsidian');
@@ -76,7 +76,7 @@ export class PluginConfigStep extends BaseWizardStep {
 				const lines = instructions.split('\n');
 				let currentList: HTMLElement | null = null;
 				
-				lines.forEach(line => {
+     lines.forEach((line: string) => {
 					const trimmedLine = line.trim();
 					
 					if (trimmedLine === '') {

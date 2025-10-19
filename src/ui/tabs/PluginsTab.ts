@@ -4,7 +4,7 @@ import { TabRenderer } from '../common/TabRenderer';
 export class PluginsTab extends TabRenderer {
 	async render(container: HTMLElement): Promise<void> {
 		container.empty();
-		this.refreshSettings();
+		const settings = this.getSettings();
 
 		// Settings section header
 		const settingsSection = container.createDiv('settings-section');
@@ -12,7 +12,7 @@ export class PluginsTab extends TabRenderer {
 		const description = settingsSection.createEl('p', { text: 'Manage your Obsidian plugins and their settings.' });
 
 		// Get plugin status
-		const pluginStatus = await this.pluginManager.getPluginStatus();
+		const pluginStatus = await (this.plugin as any).pluginManager.getPluginStatus();
 
 		// Display plugin status
 		const statusContainer = container.createDiv('plugin-status-container');
@@ -39,7 +39,7 @@ export class PluginsTab extends TabRenderer {
 				.setButtonText('Configure Automatically')
 				.setCta()
 				.onClick(async () => {
-					const success = await this.pluginManager.configurePlugins(this.settings.pluginConfig);
+					const success = await (this.plugin as any).pluginManager.configurePlugins(settings.pluginConfig);
 					if (success) {
 						new Notice('Plugins configured successfully!');
 					} else {
@@ -54,7 +54,7 @@ export class PluginsTab extends TabRenderer {
 			.addButton(button => button
 				.setButtonText('Show Manual Instructions')
 				.onClick(async () => {
-					const instructions = await this.pluginManager.getManualConfigurationInstructions(this.settings.pluginConfig);
+					const instructions = await (this.plugin as any).pluginManager.getManualConfigurationInstructions(settings.pluginConfig);
 					
 					// Create a modal to show instructions
 					const instructionModal = new Modal(this.app);
@@ -69,7 +69,7 @@ export class PluginsTab extends TabRenderer {
 					const lines = instructions.split('\n');
 					let currentList: HTMLElement | null = null;
 					
-					lines.forEach(line => {
+      lines.forEach((line: string) => {
 						const trimmedLine = line.trim();
 						
 						if (trimmedLine === '') {

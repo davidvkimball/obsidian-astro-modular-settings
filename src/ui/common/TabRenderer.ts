@@ -1,53 +1,43 @@
 import { App, Setting, Notice, Plugin } from 'obsidian';
 import { AstroModularSettings } from '../../types';
-import { ConfigManager } from '../../utils/ConfigManager';
-import { PluginManager } from '../../utils/PluginManager';
 
 export abstract class TabRenderer {
 	protected app: App;
-	protected settings: AstroModularSettings;
-	protected configManager: ConfigManager;
-	protected pluginManager: PluginManager;
 	protected plugin: Plugin;
 
 	constructor(
 		app: App,
-		settings: AstroModularSettings,
-		configManager: ConfigManager,
-		pluginManager: PluginManager,
 		plugin: Plugin
 	) {
 		this.app = app;
-		this.settings = settings;
-		this.configManager = configManager;
-		this.pluginManager = pluginManager;
 		this.plugin = plugin;
 	}
 
 	abstract render(container: HTMLElement): void | Promise<void>;
 
-	protected refreshSettings(): void {
-		// Always use the plugin's current settings
-		this.settings = (this.plugin as any).settings;
+	protected getSettings(): AstroModularSettings {
+		// Always get the plugin's current settings
+		return (this.plugin as any).settings;
 	}
 
 	protected async applyCurrentConfiguration(showNotice: boolean = false): Promise<void> {
 		try {
+			const settings = this.getSettings();
 			// Apply the current settings to the config file
-			const presetSuccess = await this.configManager.applyPreset({
-				name: this.settings.currentTemplate,
+			const presetSuccess = await (this.plugin as any).configManager.applyPreset({
+				name: settings.currentTemplate,
 				description: '',
-				features: this.settings.features,
-				theme: this.settings.currentTheme,
-				contentOrganization: this.settings.contentOrganization,
-				config: this.settings
+				features: settings.features,
+				theme: settings.currentTheme,
+				contentOrganization: settings.contentOrganization,
+				config: settings
 			});
 
 			if (presetSuccess) {
 				if (showNotice) {
 					new Notice('Configuration applied successfully!');
 				}
-				await this.configManager.triggerRebuild();
+				await (this.plugin as any).configManager.triggerRebuild();
 			} else {
 				if (showNotice) {
 					new Notice('Failed to apply configuration. Check the console for errors.');
@@ -78,7 +68,7 @@ export abstract class TabRenderer {
 				dropdown.setValue(value);
 				dropdown.onChange(async (value) => {
 					onChange(value);
-					await this.plugin.saveData(this.settings);
+					await this.plugin.saveData(this.getSettings());
 					await this.applyCurrentConfiguration(true);
 				});
 				return dropdown;
@@ -110,7 +100,7 @@ export abstract class TabRenderer {
 					onChange(value);
 					
 					// Save settings immediately
-					await this.plugin.saveData(this.settings);
+					await this.plugin.saveData(this.getSettings());
 					
 					// Debounce the configuration application
 					timeoutId = window.setTimeout(async () => {
@@ -144,7 +134,7 @@ export abstract class TabRenderer {
 				toggle.setValue(value);
 				toggle.onChange(async (value) => {
 					onChange(value);
-					await this.plugin.saveData(this.settings);
+					await this.plugin.saveData(this.getSettings());
 					await this.applyCurrentConfiguration(true);
 				});
 				return toggle;

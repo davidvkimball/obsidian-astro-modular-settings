@@ -35,6 +35,21 @@ export class TemplateStep extends BaseWizardStep {
 				if (template) {
 					this.updateState({ selectedTemplate: template as TemplateType });
 					
+					// Sync optional content types based on template selection
+					const isStandardOrCustom = template === 'standard' || template === 'custom';
+					this.updateState({
+						selectedOptionalContentTypes: {
+							projects: isStandardOrCustom,
+							docs: isStandardOrCustom
+						}
+					});
+
+					// Sync all features based on template selection
+					this.syncFeaturesWithTemplate(template);
+					
+					// Update plugin settings immediately so Features tab reflects changes
+					this.updatePluginSettingsWithTemplate(template);
+					
 					if (template === 'custom') {
 						// Open config.ts file - it's one level up from the vault
 						try {
@@ -68,5 +83,151 @@ export class TemplateStep extends BaseWizardStep {
 				}
 			});
 		});
+	}
+
+	private syncFeaturesWithTemplate(template: string): void {
+		// Get the current state
+		const currentState = this.getState();
+		
+		// Define feature sets for each template
+		const templateFeatures: Record<string, any> = {
+			'standard': {
+				commandPalette: true,
+				tableOfContents: true,
+				readingTime: true,
+				linkedMentions: true,
+				linkedMentionsCompact: false,
+				graphView: true,
+				postNavigation: true,
+				scrollToTop: true,
+				showSocialIconsInFooter: true,
+				profilePicture: false,
+				comments: true
+			},
+			'compact': {
+				commandPalette: true,
+				tableOfContents: true,
+				readingTime: true,
+				linkedMentions: true,
+				linkedMentionsCompact: true,
+				graphView: false,
+				postNavigation: true,
+				scrollToTop: true,
+				showSocialIconsInFooter: false,
+				profilePicture: false,
+				comments: false
+			},
+			'minimal': {
+				commandPalette: true,
+				tableOfContents: false,
+				readingTime: false,
+				linkedMentions: false,
+				graphView: false,
+				postNavigation: false,
+				scrollToTop: true,
+				showSocialIconsInFooter: false,
+				profilePicture: false,
+				comments: false
+			},
+			'custom': {
+				// For custom, keep current settings
+				...currentState.selectedFeatures
+			}
+		};
+
+		// Update features based on template
+		const newFeatures = templateFeatures[template] || templateFeatures['standard'];
+		this.updateState({
+			selectedFeatures: newFeatures
+		});
+	}
+
+	private async updatePluginSettingsWithTemplate(template: string): Promise<void> {
+		// Get the current plugin settings
+		const settings = (this.plugin as any).settings;
+		
+		// Define feature sets for each template (same as above)
+		const templateFeatures: Record<string, any> = {
+			'standard': {
+				commandPalette: true,
+				tableOfContents: true,
+				readingTime: true,
+				linkedMentions: true,
+				linkedMentionsCompact: false,
+				graphView: true,
+				postNavigation: true,
+				scrollToTop: true,
+				showSocialIconsInFooter: true,
+				profilePicture: false,
+				comments: true
+			},
+			'compact': {
+				commandPalette: true,
+				tableOfContents: true,
+				readingTime: true,
+				linkedMentions: true,
+				linkedMentionsCompact: true,
+				graphView: false,
+				postNavigation: true,
+				scrollToTop: true,
+				showSocialIconsInFooter: false,
+				profilePicture: false,
+				comments: false
+			},
+			'minimal': {
+				commandPalette: true,
+				tableOfContents: false,
+				readingTime: false,
+				linkedMentions: false,
+				graphView: false,
+				postNavigation: false,
+				scrollToTop: true,
+				showSocialIconsInFooter: false,
+				profilePicture: false,
+				comments: false
+			},
+			'documentation': {
+				commandPalette: true,
+				tableOfContents: false,
+				readingTime: true,
+				linkedMentions: true,
+				linkedMentionsCompact: true,
+				graphView: false,
+				postNavigation: true,
+				scrollToTop: true,
+				showSocialIconsInFooter: false,
+				profilePicture: false,
+				comments: false
+			},
+			'custom': {
+				// For custom, keep current settings
+				...settings.features
+			}
+		};
+
+		// Update plugin settings immediately
+		const newFeatures = templateFeatures[template] || templateFeatures['standard'];
+		settings.features = { ...settings.features, ...newFeatures };
+		
+		// Update optional content types
+		const isStandardOrCustom = template === 'standard' || template === 'custom';
+		settings.optionalContentTypes = {
+			projects: isStandardOrCustom,
+			docs: isStandardOrCustom
+		};
+
+		// Save the updated settings
+		await this.plugin.saveData(settings);
+		
+		// Trigger a refresh of the settings tab if it's open
+		this.refreshSettingsTab();
+	}
+
+	private refreshSettingsTab(): void {
+		// Check if the settings tab is currently open and refresh it
+		const settingsTab = (this.plugin as any).settingsTab;
+		if (settingsTab && typeof settingsTab.display === 'function') {
+			settingsTab.display();
+		}
 	}
 }

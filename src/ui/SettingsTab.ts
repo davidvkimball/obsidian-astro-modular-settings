@@ -1,7 +1,4 @@
 import { App, Plugin, PluginSettingTab } from 'obsidian';
-import { AstroModularSettings } from '../types';
-import { ConfigManager } from '../utils/ConfigManager';
-import { PluginManager } from '../utils/PluginManager';
 import { SetupWizardModal } from './SetupWizardModal';
 import { PresetWarningModal } from './PresetWarningModal';
 import { GeneralTab } from './tabs/GeneralTab';
@@ -15,16 +12,10 @@ import { AdvancedTab } from './tabs/AdvancedTab';
 
 export class AstroModularSettingsTab extends PluginSettingTab {
 	plugin: Plugin;
-	settings: AstroModularSettings;
-	configManager: ConfigManager;
-	pluginManager: PluginManager;
 
-	constructor(app: App, plugin: Plugin, settings: AstroModularSettings) {
+	constructor(app: App, plugin: Plugin) {
 		super(app, plugin);
 		this.plugin = plugin;
-		this.settings = settings;
-		this.configManager = new ConfigManager(app);
-		this.pluginManager = new PluginManager(app);
 	}
 
 	display(): void {
@@ -47,49 +38,49 @@ export class AstroModularSettingsTab extends PluginSettingTab {
 				id: 'general', 
 				name: 'General', 
 				description: 'Basic settings and configuration overview',
-				renderer: new GeneralTab(this.app, this.settings, this.configManager, this.pluginManager, this.plugin)
+				renderer: new GeneralTab(this.app, this.plugin)
 			},
 			{ 
 				id: 'site-info', 
 				name: 'Site Info', 
 				description: 'Site information and metadata',
-				renderer: new SiteInfoTab(this.app, this.settings, this.configManager, this.pluginManager, this.plugin)
+				renderer: new SiteInfoTab(this.app, this.plugin)
 			},
 			{ 
 				id: 'navigation', 
 				name: 'Navigation', 
 				description: 'Navigation pages and social links',
-				renderer: new NavigationTab(this.app, this.settings, this.configManager, this.pluginManager, this.plugin)
+				renderer: new NavigationTab(this.app, this.plugin)
 			},
 			{ 
 				id: 'config', 
 				name: 'Config', 
 				description: 'Template and content organization',
-				renderer: new ConfigTab(this.app, this.settings, this.configManager, this.pluginManager, this.plugin)
+				renderer: new ConfigTab(this.app, this.plugin)
 			},
 			{ 
 				id: 'style', 
 				name: 'Style', 
 				description: 'Theme and typography settings',
-				renderer: new StyleTab(this.app, this.settings, this.configManager, this.pluginManager, this.plugin)
+				renderer: new StyleTab(this.app, this.plugin)
 			},
 			{ 
 				id: 'features', 
 				name: 'Features', 
 				description: 'Enable or disable theme features',
-				renderer: new FeaturesTab(this.app, this.settings, this.configManager, this.pluginManager, this.plugin)
+				renderer: new FeaturesTab(this.app, this.plugin)
 			},
 			{ 
 				id: 'plugins', 
 				name: 'Plugins', 
 				description: 'Configure Obsidian plugins',
-				renderer: new PluginsTab(this.app, this.settings, this.configManager, this.pluginManager, this.plugin)
+				renderer: new PluginsTab(this.app, this.plugin)
 			},
 			{ 
 				id: 'advanced', 
 				name: 'Advanced', 
 				description: 'Advanced settings and utilities',
-				renderer: new AdvancedTab(this.app, this.settings, this.configManager, this.pluginManager, this.plugin)
+				renderer: new AdvancedTab(this.app, this.plugin)
 			}
 		];
 

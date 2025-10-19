@@ -6,6 +6,12 @@
 		"tableOfContents": true,
 		"readingTime": true,
 		"linkedMentions": true,
+		"linkedMentionsCompact": false,
+		"graphView": true,
+		"postNavigation": true,
+		"scrollToTop": true,
+		"showSocialIconsInFooter": true,
+		"profilePicture": false,
 		"comments": true
 	},
 	"theme": "oxygen",
@@ -19,6 +25,12 @@
 			"tableOfContents": true,
 			"readingTime": true,
 			"linkedMentions": true,
+			"linkedMentionsCompact": false,
+			"graphView": true,
+			"postNavigation": true,
+			"scrollToTop": true,
+			"showSocialIconsInFooter": true,
+			"profilePicture": false,
 			"comments": true
 		},
 		"pluginConfig": {

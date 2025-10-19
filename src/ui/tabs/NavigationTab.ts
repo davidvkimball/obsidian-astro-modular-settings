@@ -6,7 +6,7 @@ export class NavigationTab extends TabRenderer {
 
 	render(container: HTMLElement): void {
 		container.empty();
-		this.refreshSettings();
+		const settings = this.getSettings();
 
 		// Settings section header
 		const settingsSection = container.createDiv('settings-section');
@@ -22,7 +22,7 @@ export class NavigationTab extends TabRenderer {
 		const pagesList = pagesSection.createDiv('nav-items');
 		pagesList.id = 'pages-list';
 		pagesList.innerHTML = `
-			${this.settings.navigation.pages.map((page: any, index: number) => `
+			${settings.navigation.pages.map((page: any, index: number) => `
 				<div class="nav-item" data-index="${index}" draggable="true">
 					<div class="nav-item-content">
 						<div class="nav-item-fields">
@@ -39,15 +39,15 @@ export class NavigationTab extends TabRenderer {
 		new Setting(pagesSection)
 			.setName('Add Page')
 			.setDesc('Add a new page to your navigation')
-			.addButton(button => button
-				.setButtonText('+ Add Page')
-				.setCta()
-				.onClick(async () => {
-					this.settings.navigation.pages.push({ title: 'New Page', url: '/new-page' });
-					await this.plugin.saveData(this.settings);
-					await this.applyCurrentConfiguration();
-					this.render(container); // Re-render
-				}));
+				.addButton(button => button
+					.setButtonText('+ Add Page')
+					.setCta()
+					.onClick(async () => {
+						settings.navigation.pages.push({ title: 'New Page', url: '/new-page' });
+						await this.plugin.saveData(settings);
+						await this.applyCurrentConfiguration();
+						this.render(container); // Re-render
+					}));
 
 		// Social links section
 		const socialSection = container.createDiv('settings-section');
@@ -58,7 +58,7 @@ export class NavigationTab extends TabRenderer {
 		const socialList = socialSection.createDiv('nav-items');
 		socialList.id = 'social-list';
 		socialList.innerHTML = `
-			${this.settings.navigation.social.map((social: any, index: number) => `
+			${settings.navigation.social.map((social: any, index: number) => `
 				<div class="nav-item" data-index="${index}" draggable="true">
 					<div class="nav-item-content">
 						<div class="nav-item-fields">
@@ -81,15 +81,15 @@ export class NavigationTab extends TabRenderer {
 		new Setting(socialSection)
 			.setName('Add Social Link')
 			.setDesc('Add a new social media link')
-			.addButton(button => button
-				.setButtonText('+ Add Social Link')
-				.setCta()
-				.onClick(async () => {
-					this.settings.navigation.social.push({ title: 'New Social', url: 'https://example.com', icon: '' });
-					await this.plugin.saveData(this.settings);
-					await this.applyCurrentConfiguration();
-					this.render(container); // Re-render
-				}));
+				.addButton(button => button
+					.setButtonText('+ Add Social Link')
+					.setCta()
+					.onClick(async () => {
+						settings.navigation.social.push({ title: 'New Social', url: 'https://example.com', icon: '' });
+						await this.plugin.saveData(settings);
+						await this.applyCurrentConfiguration();
+						this.render(container); // Re-render
+					}));
 
 
 		// Setup event delegation for input fields and remove buttons
@@ -163,22 +163,23 @@ export class NavigationTab extends TabRenderer {
 				target.style.borderBottom = 'none';
 				
 				if (targetIndex !== draggedIndex) {
+					const settings = this.getSettings();
 					if (isPage) {
-						const newPages = [...this.settings.navigation.pages];
+						const newPages = [...settings.navigation.pages];
 						const draggedItem = newPages.splice(draggedIndex, 1)[0];
 						newPages.splice(targetIndex, 0, draggedItem);
 						
-						this.settings.navigation.pages = newPages;
+						settings.navigation.pages = newPages;
 					} else if (isSocial) {
-						const newSocial = [...this.settings.navigation.social];
+						const newSocial = [...settings.navigation.social];
 						const draggedItem = newSocial.splice(draggedIndex, 1)[0];
 						newSocial.splice(targetIndex, 0, draggedItem);
 						
-						this.settings.navigation.social = newSocial;
+						settings.navigation.social = newSocial;
 					}
 					
 					// Save changes
-					await this.plugin.saveData(this.settings);
+					await this.plugin.saveData(settings);
 					await this.applyCurrentConfiguration();
 					
 					// Re-render to update data indices and visual order
@@ -189,6 +190,8 @@ export class NavigationTab extends TabRenderer {
 	}
 
 	private setupEventDelegation(container: HTMLElement): void {
+		const settings = this.getSettings();
+		
 		// Handle input changes for pages
 		container.querySelector('#pages-list')?.addEventListener('input', (e) => {
 			const target = e.target as HTMLInputElement;
@@ -197,7 +200,7 @@ export class NavigationTab extends TabRenderer {
 				const index = parseInt(item?.getAttribute('data-index') || '0');
 				const field = target.classList.contains('nav-title') ? 'title' : 'url';
 				
-				this.settings.navigation.pages[index][field] = target.value;
+				settings.navigation.pages[index][field] = target.value;
 				this.debouncedSave();
 			}
 		});
@@ -211,7 +214,7 @@ export class NavigationTab extends TabRenderer {
 				const field = target.classList.contains('nav-title') ? 'title' : 
 							 target.classList.contains('nav-url') ? 'url' : 'icon';
 				
-				this.settings.navigation.social[index][field] = target.value;
+				settings.navigation.social[index][field] = target.value;
 				this.debouncedSave();
 			}
 		});
@@ -225,12 +228,12 @@ export class NavigationTab extends TabRenderer {
 				const isPage = item?.closest('#pages-list');
 				
 				if (isPage) {
-					this.settings.navigation.pages.splice(index, 1);
+					settings.navigation.pages.splice(index, 1);
 				} else {
-					this.settings.navigation.social.splice(index, 1);
+					settings.navigation.social.splice(index, 1);
 				}
 				
-				await this.plugin.saveData(this.settings);
+				await this.plugin.saveData(settings);
 				await this.applyCurrentConfiguration();
 				this.render(container); // Re-render to update indices
 			}
@@ -245,7 +248,7 @@ export class NavigationTab extends TabRenderer {
 		
 		// Set new timeout
 		this.saveTimeoutId = window.setTimeout(async () => {
-			await this.plugin.saveData(this.settings);
+			await this.plugin.saveData(this.getSettings());
 			await this.applyCurrentConfiguration(false); // No notification for drag and drop
 		}, 1000); // 1 second debounce
 	}

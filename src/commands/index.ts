@@ -1,8 +1,8 @@
 import { Plugin, Notice } from 'obsidian';
-import { AstroModularSettings, ObsidianApp } from '../types';
+import { ObsidianApp } from '../types';
 import { SetupWizardModal } from '../ui/SetupWizardModal';
 
-export function registerCommands(plugin: Plugin, settings: AstroModularSettings) {
+export function registerCommands(plugin: Plugin) {
 	// Open settings command
 	plugin.addCommand({
 		id: 'open-settings',
@@ -19,10 +19,7 @@ export function registerCommands(plugin: Plugin, settings: AstroModularSettings)
 		id: 'run-setup-wizard',
 		name: 'Run Setup Wizard',
 		callback: () => {
-			const wizard = new SetupWizardModal(plugin.app, settings, async (newSettings) => {
-				settings = newSettings;
-				await plugin.saveData(settings);
-			});
+			const wizard = new SetupWizardModal(plugin.app, plugin);
 			wizard.open();
 		}
 	});
@@ -56,6 +53,7 @@ export function registerCommands(plugin: Plugin, settings: AstroModularSettings)
 		id: 'toggle-wizard-startup',
 		name: 'Toggle Wizard on Startup',
 		callback: async () => {
+			const settings = (plugin as any).settings;
 			settings.runWizardOnStartup = !settings.runWizardOnStartup;
 			await plugin.saveData(settings);
 			new Notice(`Wizard on startup ${settings.runWizardOnStartup ? 'enabled' : 'disabled'}`);

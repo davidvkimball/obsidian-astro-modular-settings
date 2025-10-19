@@ -58,6 +58,22 @@ export class ConfigPresetModifier {
 			/\/\/ \[CONFIG:DEPLOYMENT_PLATFORM\]\s*\n\s*platform:\s*"[^"]*"/,
 			`// [CONFIG:DEPLOYMENT_PLATFORM]\n    platform: "${settings.deployment.platform}"`
 		);
+
+		// Update optional content types
+		if (settings.optionalContentTypes) {
+			if (settings.optionalContentTypes.projects !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:OPTIONAL_CONTENT_TYPES_PROJECTS\]\s*\n\s*projects:\s*(true|false)/,
+					`// [CONFIG:OPTIONAL_CONTENT_TYPES_PROJECTS]\n    projects: ${settings.optionalContentTypes.projects}`
+				);
+			}
+			if (settings.optionalContentTypes.docs !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:OPTIONAL_CONTENT_TYPES_DOCS\]\s*\n\s*docs:\s*(true|false)/,
+					`// [CONFIG:OPTIONAL_CONTENT_TYPES_DOCS]\n    docs: ${settings.optionalContentTypes.docs}`
+				);
+			}
+		}
 		
 		// Update layout content width if specified in template
 		if (templateConfig.layout?.contentWidth) {
@@ -583,7 +599,7 @@ export class ConfigPresetModifier {
 		// Update linked mentions compact
 		modifiedConfig = modifiedConfig.replace(
 			/\/\/ \[CONFIG:POST_OPTIONS_LINKED_MENTIONS_COMPACT\]\s*linkedMentionsCompact:\s*(true|false)/,
-			`// [CONFIG:POST_OPTIONS_LINKED_MENTIONS_COMPACT]\n      linkedMentionsCompact: ${settings.features.linkedMentionsCompact}`
+			`// [CONFIG:POST_OPTIONS_LINKED_MENTIONS_COMPACT]\n      linkedMentionsCompact: ${settings.features.linkedMentionsCompact ?? false}`
 		);
 		
 		// Update comments enabled

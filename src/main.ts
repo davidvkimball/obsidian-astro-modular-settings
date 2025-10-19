@@ -3,21 +3,29 @@ import { AstroModularSettings, DEFAULT_SETTINGS } from './settings';
 import { registerCommands } from './commands';
 import { AstroModularSettingsTab } from './ui/SettingsTab';
 import { SetupWizardModal } from './ui/SetupWizardModal';
+import { ConfigManager } from './utils/ConfigManager';
+import { PluginManager } from './utils/PluginManager';
 import { ObsidianApp } from './types';
 
 export default class AstroModularSettingsPlugin extends Plugin {
 	settings!: AstroModularSettings;
 	private settingsTab!: AstroModularSettingsTab;
 	private startupTimeoutId?: number;
+	configManager!: ConfigManager;
+	pluginManager!: PluginManager;
 
 	async onload() {
 		await this.loadSettings();
 
+		// Initialize managers
+		this.configManager = new ConfigManager(this.app);
+		this.pluginManager = new PluginManager(this.app);
+
 		// Register commands
-		registerCommands(this, this.settings);
+		registerCommands(this);
 
 		// Add settings tab
-		this.settingsTab = new AstroModularSettingsTab(this.app, this, this.settings);
+		this.settingsTab = new AstroModularSettingsTab(this.app, this);
 		this.addSettingTab(this.settingsTab);
 
 		// Add ribbon icon
@@ -25,12 +33,7 @@ export default class AstroModularSettingsPlugin extends Plugin {
 			// Reload settings from disk to get the latest values
 			await this.loadSettings();
 			
-			const wizard = new SetupWizardModal(this.app, this.settings, async (newSettings) => {
-				this.settings = newSettings;
-				await this.saveSettings();
-				// Trigger settings tab refresh to show updated values
-				this.triggerSettingsRefresh();
-			});
+			const wizard = new SetupWizardModal(this.app, this);
 			wizard.open();
 		});
 
@@ -67,12 +70,7 @@ export default class AstroModularSettingsPlugin extends Plugin {
 		// Reload settings from disk to get the latest values
 		await this.loadSettings();
 		
-		const wizard = new SetupWizardModal(this.app, this.settings, async (newSettings) => {
-			this.settings = newSettings;
-			await this.saveSettings();
-			// Trigger settings tab refresh to show updated values
-			this.triggerSettingsRefresh();
-		});
+		const wizard = new SetupWizardModal(this.app, this);
 		wizard.open();
 	}
 

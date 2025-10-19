@@ -53,17 +53,18 @@ export class FinalizeStep extends BaseWizardStep {
 		const state = this.getState();
 		
 		try {
-			// Build final settings
-			const finalSettings = this.stateManager.buildFinalSettings();
+			// Build final settings - this now updates plugin.settings directly
+			this.stateManager.buildFinalSettings();
 			
 			// Always apply the configuration
-			const presetSuccess = await this.configManager.applyPreset({
-				name: finalSettings.currentTemplate,
+			const settings = (this.plugin as any).settings;
+			const presetSuccess = await (this.plugin as any).configManager.applyPreset({
+				name: settings.currentTemplate,
 				description: '',
-				features: finalSettings.features,
-				theme: finalSettings.currentTheme,
-				contentOrganization: finalSettings.contentOrganization,
-				config: finalSettings
+				features: settings.features,
+				theme: settings.currentTheme,
+				contentOrganization: settings.contentOrganization,
+				config: settings
 			});
 
 			if (presetSuccess) {

@@ -5,7 +5,7 @@ import { THEME_OPTIONS, FONT_OPTIONS } from '../../types';
 export class StyleTab extends TabRenderer {
 	render(container: HTMLElement): void {
 		container.empty();
-		this.refreshSettings();
+		const settings = this.getSettings();
 
 		// Settings section header
 		const settingsSection = container.createDiv('settings-section');
@@ -20,10 +20,10 @@ export class StyleTab extends TabRenderer {
 				THEME_OPTIONS.forEach(theme => {
 					dropdown.addOption(theme.id, theme.name);
 				});
-				dropdown.setValue(this.settings.currentTheme);
+				dropdown.setValue(settings.currentTheme);
 				dropdown.onChange(async (value) => {
-					this.settings.currentTheme = value as any;
-					await this.plugin.saveData(this.settings);
+					settings.currentTheme = value as any;
+					await this.plugin.saveData(settings);
 					
 					// Apply changes immediately to config.ts
 					try {
@@ -48,10 +48,10 @@ export class StyleTab extends TabRenderer {
 				FONT_OPTIONS.forEach(font => {
 					dropdown.addOption(font, font);
 				});
-				dropdown.setValue(this.settings.typography.headingFont);
+				dropdown.setValue(settings.typography.headingFont);
 				dropdown.onChange(async (value) => {
-					this.settings.typography.headingFont = value;
-					await this.plugin.saveData(this.settings);
+					settings.typography.headingFont = value;
+					await this.plugin.saveData(settings);
 					
 					// Apply changes immediately to config.ts
 					try {
@@ -71,10 +71,10 @@ export class StyleTab extends TabRenderer {
 				FONT_OPTIONS.forEach(font => {
 					dropdown.addOption(font, font);
 				});
-				dropdown.setValue(this.settings.typography.proseFont);
+				dropdown.setValue(settings.typography.proseFont);
 				dropdown.onChange(async (value) => {
-					this.settings.typography.proseFont = value;
-					await this.plugin.saveData(this.settings);
+					settings.typography.proseFont = value;
+					await this.plugin.saveData(settings);
 					
 					// Apply changes immediately to config.ts
 					try {
@@ -94,10 +94,10 @@ export class StyleTab extends TabRenderer {
 				FONT_OPTIONS.forEach(font => {
 					dropdown.addOption(font, font);
 				});
-				dropdown.setValue(this.settings.typography.monoFont);
+				dropdown.setValue(settings.typography.monoFont);
 				dropdown.onChange(async (value) => {
-					this.settings.typography.monoFont = value;
-					await this.plugin.saveData(this.settings);
+					settings.typography.monoFont = value;
+					await this.plugin.saveData(settings);
 					
 					// Apply changes immediately to config.ts
 					try {
@@ -116,10 +116,10 @@ export class StyleTab extends TabRenderer {
 			.addDropdown(dropdown => {
 				dropdown.addOption('local', 'Local (Google Fonts)');
 				dropdown.addOption('cdn', 'CDN (Custom)');
-				dropdown.setValue(this.settings.typography.fontSource);
+				dropdown.setValue(settings.typography.fontSource);
 				dropdown.onChange(async (value) => {
-					this.settings.typography.fontSource = value as any;
-					await this.plugin.saveData(this.settings);
+					settings.typography.fontSource = value as any;
+					await this.plugin.saveData(settings);
 					
 					// Re-render to show/hide custom inputs
 					this.render(container);
@@ -135,18 +135,18 @@ export class StyleTab extends TabRenderer {
 			});
 
 		// Custom font inputs (only show when CDN is selected)
-		if (this.settings.typography.fontSource === 'cdn') {
+		if (settings.typography.fontSource === 'cdn') {
 			// Custom font URLs
 			this.createTextSetting(
 				typographySection,
 				'Custom Font URLs',
 				'Comma-separated font URLs',
-				this.settings.typography.customFonts?.heading || '',
+				settings.typography.customFonts?.heading || '',
 				(value) => {
-					if (!this.settings.typography.customFonts) {
-						this.settings.typography.customFonts = { heading: '', prose: '', mono: '' };
+					if (!settings.typography.customFonts) {
+						settings.typography.customFonts = { heading: '', prose: '', mono: '' };
 					}
-					this.settings.typography.customFonts.heading = value;
+					settings.typography.customFonts.heading = value;
 				}
 			);
 
@@ -155,12 +155,12 @@ export class StyleTab extends TabRenderer {
 				typographySection,
 				'Custom Heading Font Name',
 				'Name of the custom heading font',
-				this.settings.typography.customFonts?.heading || '',
+				settings.typography.customFonts?.heading || '',
 				(value) => {
-					if (!this.settings.typography.customFonts) {
-						this.settings.typography.customFonts = { heading: '', prose: '', mono: '' };
+					if (!settings.typography.customFonts) {
+						settings.typography.customFonts = { heading: '', prose: '', mono: '' };
 					}
-					this.settings.typography.customFonts.heading = value;
+					settings.typography.customFonts.heading = value;
 				}
 			);
 
@@ -169,12 +169,12 @@ export class StyleTab extends TabRenderer {
 				typographySection,
 				'Custom Prose Font Name',
 				'Name of the custom prose font',
-				this.settings.typography.customFonts?.prose || '',
+				settings.typography.customFonts?.prose || '',
 				(value) => {
-					if (!this.settings.typography.customFonts) {
-						this.settings.typography.customFonts = { heading: '', prose: '', mono: '' };
+					if (!settings.typography.customFonts) {
+						settings.typography.customFonts = { heading: '', prose: '', mono: '' };
 					}
-					this.settings.typography.customFonts.prose = value;
+					settings.typography.customFonts.prose = value;
 				}
 			);
 
@@ -183,12 +183,12 @@ export class StyleTab extends TabRenderer {
 				typographySection,
 				'Custom Monospace Font Name',
 				'Name of the custom monospace font',
-				this.settings.typography.customFonts?.mono || '',
+				settings.typography.customFonts?.mono || '',
 				(value) => {
-					if (!this.settings.typography.customFonts) {
-						this.settings.typography.customFonts = { heading: '', prose: '', mono: '' };
+					if (!settings.typography.customFonts) {
+						settings.typography.customFonts = { heading: '', prose: '', mono: '' };
 					}
-					this.settings.typography.customFonts.mono = value;
+					settings.typography.customFonts.mono = value;
 				}
 			);
 		}
