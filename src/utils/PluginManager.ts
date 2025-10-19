@@ -1,5 +1,5 @@
 import { App, Plugin } from 'obsidian';
-import type { PluginStatus, PluginConfiguration } from '../types';
+import type { PluginStatus, PluginConfiguration, ObsidianPlugins, ObsidianVaultConfig, ObsidianAppSettings } from '../types';
 
 export class PluginManager {
 	private app: App;
@@ -9,7 +9,7 @@ export class PluginManager {
 	}
 
 	async getPluginStatus(): Promise<PluginStatus[]> {
-		const plugins = (this.app as any).plugins;
+		const plugins = (this.app as any).plugins as ObsidianPlugins;
 		const requiredPlugins = [
 			'astro-composer',
 			'insert-unsplash-image',
@@ -31,7 +31,7 @@ export class PluginManager {
 			status.push({
 				name: this.getPluginDisplayName(pluginId),
 				installed: isInstalled,
-				enabled: isInEnabledSet,
+				enabled: isInEnabledSet || false,
 				configurable: this.isPluginConfigurable(pluginId),
 				currentSettings: plugin ? await this.getPluginSettings(plugin) : undefined
 			});
@@ -43,13 +43,13 @@ export class PluginManager {
 	private isPluginInstalled(pluginId: string): boolean {
 		// Check if plugin is in the community plugins list
 		// This works even when the plugin is disabled
-		const communityPlugins = (this.app as any).plugins?.communityPlugins;
+		const communityPlugins = (this.app as any).plugins?.communityPlugins as string[] | undefined;
 		if (communityPlugins && Array.isArray(communityPlugins)) {
 			return communityPlugins.includes(pluginId);
 		}
 		
 		// Fallback: check if plugin exists in plugins object (only works when enabled)
-		const plugins = (this.app as any).plugins;
+		const plugins = (this.app as any).plugins as ObsidianPlugins;
 		return !!plugins?.plugins?.[pluginId];
 	}
 
@@ -106,7 +106,7 @@ export class PluginManager {
 	private async configureObsidianSettings(settings: any): Promise<void> {
 		try {
 			// Configure Obsidian's attachment settings
-			const obsidianSettings = (this.app.vault as any).config;
+			const obsidianSettings = (this.app.vault as any).config as ObsidianVaultConfig;
 			
 		if (settings.attachmentLocation === 'subfolder') {
 			// File-based: attachments in subfolder
@@ -119,10 +119,10 @@ export class PluginManager {
 		}
 			
 			// Also try to set the setting through the app's settings manager
-			const appSettings = (this.app as any).settings;
-			if (appSettings) {
-				appSettings.set('attachmentFolderPath', obsidianSettings.attachmentFolderPath);
-				appSettings.set('newLinkFormat', obsidianSettings.newLinkFormat);
+			const appSettings = (this.app as any).settings as ObsidianAppSettings;
+			if (appSettings && 'set' in appSettings) {
+				(appSettings as any).set('attachmentFolderPath', obsidianSettings.attachmentFolderPath);
+				(appSettings as any).set('newLinkFormat', obsidianSettings.newLinkFormat);
 			}
 			
 			await (this.app.vault as any).saveConfig();
@@ -134,7 +134,7 @@ export class PluginManager {
 
 	private async configureAstroComposerSettings(settings: any): Promise<void> {
 		try {
-			const plugins = (this.app as any).plugins;
+			const plugins = (this.app as any).plugins as ObsidianPlugins;
 			const astroComposerPlugin = plugins?.plugins?.['astro-composer'];
 			
 			if (astroComposerPlugin && astroComposerPlugin.settings) {
@@ -153,7 +153,7 @@ export class PluginManager {
 
 	private async configureImageInserterSettings(settings: any): Promise<void> {
 		try {
-			const plugins = (this.app as any).plugins;
+			const plugins = (this.app as any).plugins as ObsidianPlugins;
 			const imageInserterPlugin = plugins?.plugins?.['insert-unsplash-image'];
 			
 			if (imageInserterPlugin && imageInserterPlugin.settings) {
@@ -173,9 +173,7 @@ export class PluginManager {
 	}
 
 	async getManualConfigurationInstructions(config: PluginConfiguration): Promise<string> {
-		let instructions = '# Manual Configuration Instructions\n\n';
-		
-		instructions += '## Obsidian Settings\n';
+		let instructions = '## Obsidian Settings\n';
 		instructions += `1. Go to **Settings → Files & Links**\n`;
 		instructions += `2. Set **Default location for new attachments** to: `;
 		instructions += config.obsidianSettings.attachmentLocation === 'subfolder' 

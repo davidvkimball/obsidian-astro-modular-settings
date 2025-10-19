@@ -14,7 +14,6 @@
 .wizard-header {
 	text-align: center;
 	padding: 20px 0;
-	border-bottom: 1px solid var(--background-modifier-border);
 }
 
 .wizard-logo {
@@ -843,6 +842,8 @@
 .font-setting input {
 	/* Use Obsidian's native form control styling */
 	width: 100%;
+	background-color: var(--background-primary);
+	color: var(--text-normal);
 }
 
 /* Optional features improvements - better layout */
@@ -1179,4 +1180,21 @@
 
 .nav-icon-help a:hover {
 	text-decoration: underline;
+}
+
+.nav-item {
+	cursor: grab;
+	padding: 8px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	margin-bottom: 8px;
+	background-color: var(--background-primary);
+}
+
+.nav-item:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.nav-item:active {
+	cursor: grabbing;
 }

@@ -6,11 +6,11 @@
     "module": "ESNext",
     "target": "ES6",
     "allowJs": true,
-    "noImplicitAny": true,
+    "strict": true,
     "moduleResolution": "node",
+    "resolveJsonModule": true,
     "importHelpers": true,
     "isolatedModules": true,
-    "strictNullChecks": true,
     "skipLibCheck": true,
     "typeRoots": ["./node_modules/@types"],
     "lib": [

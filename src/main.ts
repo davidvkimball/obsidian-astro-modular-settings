@@ -3,9 +3,12 @@ import { AstroModularSettings, DEFAULT_SETTINGS } from './settings';
 import { registerCommands } from './commands';
 import { AstroModularSettingsTab } from './ui/SettingsTab';
 import { SetupWizardModal } from './ui/SetupWizardModal';
+import { ObsidianApp } from './types';
 
 export default class AstroModularSettingsPlugin extends Plugin {
-	settings: AstroModularSettings;
+	settings!: AstroModularSettings;
+	private settingsTab!: AstroModularSettingsTab;
+	private startupTimeoutId?: number;
 
 	async onload() {
 		await this.loadSettings();
@@ -14,10 +17,14 @@ export default class AstroModularSettingsPlugin extends Plugin {
 		registerCommands(this, this.settings);
 
 		// Add settings tab
-		this.addSettingTab(new AstroModularSettingsTab(this.app, this, this.settings));
+		this.settingsTab = new AstroModularSettingsTab(this.app, this, this.settings);
+		this.addSettingTab(this.settingsTab);
 
 		// Add ribbon icon
-		this.addRibbonIcon('rocket', 'Astro Modular Settings', () => {
+		this.addRibbonIcon('rocket', 'Astro Modular Settings', async () => {
+			// Reload settings from disk to get the latest values
+			await this.loadSettings();
+			
 			const wizard = new SetupWizardModal(this.app, this.settings, async (newSettings) => {
 				this.settings = newSettings;
 				await this.saveSettings();
@@ -28,7 +35,7 @@ export default class AstroModularSettingsPlugin extends Plugin {
 		// Check if we should run the wizard on startup
 		if (this.settings.runWizardOnStartup) {
 			// Delay the wizard to let Obsidian fully load
-			setTimeout(() => {
+			this.startupTimeoutId = window.setTimeout(() => {
 				this.runStartupWizard();
 			}, 2000);
 		}
@@ -37,7 +44,12 @@ export default class AstroModularSettingsPlugin extends Plugin {
 	}
 
 	onunload() {
-		// Cleanup is handled automatically by Obsidian
+		// Clear startup timeout if it exists
+		if (this.startupTimeoutId) {
+			window.clearTimeout(this.startupTimeoutId);
+			this.startupTimeoutId = undefined;
+		}
+		// Other cleanup is handled automatically by Obsidian
 	}
 
 	async loadSettings() {
@@ -50,6 +62,9 @@ export default class AstroModularSettingsPlugin extends Plugin {
 
 	private async runStartupWizard() {
 		// Run the wizard on startup if enabled
+		// Reload settings from disk to get the latest values
+		await this.loadSettings();
+		
 		const wizard = new SetupWizardModal(this.app, this.settings, async (newSettings) => {
 			this.settings = newSettings;
 			await this.saveSettings();
@@ -61,7 +76,16 @@ export default class AstroModularSettingsPlugin extends Plugin {
 	openSettings() {
 		// This will be handled by the settings tab
 		// The settings tab is already registered, so we just need to focus it
-		(this.app as any).setting.open();
-		(this.app as any).setting.openTabById(this.manifest.id);
+		(this.app as unknown as ObsidianApp).setting.open();
+		(this.app as unknown as ObsidianApp).setting.openTabById(this.manifest.id);
+	}
+
+	// Method to trigger settings refresh
+	triggerSettingsRefresh() {
+		// Force the settings tab to re-render with updated settings
+		if (this.settingsTab) {
+			// Re-render the settings tab with updated settings
+			this.settingsTab.render();
+		}
 	}
 }

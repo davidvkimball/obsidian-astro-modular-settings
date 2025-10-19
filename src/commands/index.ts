@@ -1,5 +1,5 @@
 import { Plugin, Notice } from 'obsidian';
-import { AstroModularSettings } from '../types';
+import { AstroModularSettings, ObsidianApp } from '../types';
 import { SetupWizardModal } from '../ui/SetupWizardModal';
 
 export function registerCommands(plugin: Plugin, settings: AstroModularSettings) {
@@ -9,7 +9,8 @@ export function registerCommands(plugin: Plugin, settings: AstroModularSettings)
 		name: 'Open Astro Modular Settings',
 		callback: () => {
 			// This will be handled by the settings tab
-			(plugin as any).openSettings();
+			(plugin.app as unknown as ObsidianApp).setting.open();
+			(plugin.app as unknown as ObsidianApp).setting.openTabById(plugin.manifest.id);
 		}
 	});
 

@@ -188,6 +188,37 @@ export interface ConfigFileInfo {
 	errors: string[];
 }
 
+// Obsidian internal API types
+export interface ObsidianApp {
+	setting: {
+		open(): void;
+		openTabById(id: string): void;
+	};
+}
+
+export interface ObsidianVaultAdapter {
+	basePath?: string;
+	path?: string;
+}
+
+export interface ObsidianPlugins {
+	plugins?: Record<string, any>;
+	enabledPlugins?: Set<string>;
+	communityPlugins?: string[];
+}
+
+export interface ObsidianVaultConfig {
+	attachmentFolderPath?: string;
+	newLinkFormat?: string;
+	useMarkdownLinks?: boolean;
+}
+
+export interface ObsidianAppSettings {
+	attachmentFolderPath?: string;
+	newLinkFormat?: string;
+	useMarkdownLinks?: boolean;
+}
+
 export const FONT_OPTIONS = [
 	'Inter', 'Roboto', 'Open Sans', 'Lato', 'Poppins', 'Source Sans Pro', 'Nunito', 'Montserrat',
 	'Playfair Display', 'Merriweather', 'Lora', 'Crimson Text', 'PT Serif', 'Libre Baskerville',
