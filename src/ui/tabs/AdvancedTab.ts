@@ -12,6 +12,111 @@ export class AdvancedTab extends TabRenderer {
 		const header = settingsSection.createEl('h2', { text: 'Advanced Settings' });
 		const description = settingsSection.createEl('p', { text: 'Advanced configuration options and utilities.' });
 
+		// Sync from config.ts button (at the top)
+		new Setting(container)
+			.setName('Sync from config.ts')
+			.setDesc('Read current config.ts file and update plugin settings to match')
+			.addButton(button => button
+				.setButtonText('Sync from config.ts')
+				.setCta()
+				.onClick(async () => {
+					try {
+						// Read the current config.ts file
+						const configContent = await (this.plugin as any).configManager.fileManager.readConfig();
+						
+						if (!configContent) {
+							new Notice('Could not read config.ts file');
+							return;
+						}
+						
+						// Parse the config.ts file to extract current settings
+						const currentConfig = await (this.plugin as any).configManager.fileManager.parseConfigFile(configContent);
+						
+						if (!currentConfig) {
+							new Notice('Could not parse config.ts file');
+							return;
+						}
+						
+						// Debug: Log what we found
+						console.log('Parsed config from config.ts:', currentConfig);
+						
+						// Update plugin settings to match config.ts
+						const settings = this.getSettings();
+						
+						// Update features based on config.ts
+						if (currentConfig.postOptions) {
+							settings.features.tableOfContents = currentConfig.postOptions.tableOfContents ?? false;
+							settings.features.readingTime = currentConfig.postOptions.readingTime ?? false;
+							settings.features.linkedMentions = currentConfig.postOptions.linkedMentions?.enabled ?? false;
+							settings.features.linkedMentionsCompact = currentConfig.postOptions.linkedMentions?.linkedMentionsCompact ?? false;
+							settings.features.graphView = currentConfig.postOptions.graphView?.enabled ?? false;
+							settings.features.postNavigation = currentConfig.postOptions.postNavigation ?? false;
+							settings.features.comments = currentConfig.postOptions.comments?.enabled ?? false;
+						}
+						
+						// Update optional content types
+						if (currentConfig.optionalContentTypes) {
+							settings.optionalContentTypes.projects = currentConfig.optionalContentTypes.projects ?? false;
+							settings.optionalContentTypes.docs = currentConfig.optionalContentTypes.docs ?? false;
+						}
+						
+						// Update footer settings
+						if (currentConfig.footer) {
+							settings.features.showSocialIconsInFooter = currentConfig.footer.showSocialIconsInFooter ?? false;
+						}
+						
+						// Update command palette
+						if (currentConfig.commandPalette) {
+							settings.features.commandPalette = currentConfig.commandPalette.enabled ?? false;
+						}
+						
+						// Update theme
+						if (currentConfig.theme) {
+							settings.currentTheme = currentConfig.theme as any;
+						}
+						
+						// Update site information
+						if (currentConfig.site) {
+							settings.siteInfo.site = currentConfig.site;
+							console.log('Updated site URL to:', currentConfig.site);
+						}
+						if (currentConfig.title) {
+							settings.siteInfo.title = currentConfig.title;
+							console.log('Updated site title to:', currentConfig.title);
+						}
+						if (currentConfig.description) {
+							settings.siteInfo.description = currentConfig.description;
+							console.log('Updated site description to:', currentConfig.description);
+						}
+						if (currentConfig.author) {
+							settings.siteInfo.author = currentConfig.author;
+							console.log('Updated site author to:', currentConfig.author);
+						}
+						if (currentConfig.language) {
+							settings.siteInfo.language = currentConfig.language;
+							console.log('Updated site language to:', currentConfig.language);
+						}
+						
+						// Update template based on current settings
+						// This is a bit tricky since we need to determine which template best matches
+						// For now, we'll set it to 'custom' since it's been manually modified
+						settings.currentTemplate = 'custom';
+						
+						// Save the updated settings
+						await this.plugin.saveData(settings);
+						
+						// Debug: Log final settings
+						console.log('Final settings after sync:', settings.siteInfo);
+						
+						// Refresh the settings tab to show the synced values
+						(this.plugin as any).triggerSettingsRefresh();
+						
+						new Notice('Settings synced from config.ts successfully');
+					} catch (error) {
+						new Notice(`Failed to sync from config.ts: ${error instanceof Error ? error.message : String(error)}`);
+					}
+				}));
+
 		// Reset to defaults
 		new Setting(container)
 			.setName('Reset to defaults')
