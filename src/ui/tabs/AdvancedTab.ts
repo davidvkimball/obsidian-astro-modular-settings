@@ -37,8 +37,6 @@ export class AdvancedTab extends TabRenderer {
 							return;
 						}
 						
-						// Debug: Log what we found
-						console.log('Parsed config from config.ts:', currentConfig);
 						
 						// Update plugin settings to match config.ts
 						const settings = this.getSettings();
@@ -78,23 +76,18 @@ export class AdvancedTab extends TabRenderer {
 						// Update site information
 						if (currentConfig.site) {
 							settings.siteInfo.site = currentConfig.site;
-							console.log('Updated site URL to:', currentConfig.site);
 						}
 						if (currentConfig.title) {
 							settings.siteInfo.title = currentConfig.title;
-							console.log('Updated site title to:', currentConfig.title);
 						}
 						if (currentConfig.description) {
 							settings.siteInfo.description = currentConfig.description;
-							console.log('Updated site description to:', currentConfig.description);
 						}
 						if (currentConfig.author) {
 							settings.siteInfo.author = currentConfig.author;
-							console.log('Updated site author to:', currentConfig.author);
 						}
 						if (currentConfig.language) {
 							settings.siteInfo.language = currentConfig.language;
-							console.log('Updated site language to:', currentConfig.language);
 						}
 						
 						// Update template based on current settings
@@ -104,9 +97,6 @@ export class AdvancedTab extends TabRenderer {
 						
 						// Save the updated settings
 						await this.plugin.saveData(settings);
-						
-						// Debug: Log final settings
-						console.log('Final settings after sync:', settings.siteInfo);
 						
 						// Refresh the settings tab to show the synced values
 						(this.plugin as any).triggerSettingsRefresh();
