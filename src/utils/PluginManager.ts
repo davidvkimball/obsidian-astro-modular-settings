@@ -105,27 +105,45 @@ export class PluginManager {
 
 	private async configureObsidianSettings(settings: any): Promise<void> {
 		try {
-			// Configure Obsidian's attachment settings
-			const obsidianSettings = (this.app.vault as any).config as ObsidianVaultConfig;
-			
-		if (settings.attachmentLocation === 'subfolder') {
-			// File-based: attachments in subfolder
-			obsidianSettings.newLinkFormat = 'relative';
-			obsidianSettings.attachmentFolderPath = `./${settings.subfolderName}`;
-		} else {
-			// Folder-based: attachments in same folder, keep relative links
-			obsidianSettings.newLinkFormat = 'relative';
-			obsidianSettings.attachmentFolderPath = './';
-		}
-			
-			// Also try to set the setting through the app's settings manager
-			const appSettings = (this.app as any).settings as ObsidianAppSettings;
-			if (appSettings && 'set' in appSettings) {
-				(appSettings as any).set('attachmentFolderPath', obsidianSettings.attachmentFolderPath);
-				(appSettings as any).set('newLinkFormat', obsidianSettings.newLinkFormat);
+			// Method 1: Try to use the app's settings manager if available
+			const app = this.app as any;
+			if (app.setting && typeof app.setting.set === 'function') {
+				if (settings.attachmentLocation === 'subfolder') {
+					await app.setting.set('attachmentFolderPath', `./${settings.subfolderName}`);
+					await app.setting.set('newLinkFormat', 'relative');
+				} else {
+					await app.setting.set('attachmentFolderPath', './');
+					await app.setting.set('newLinkFormat', 'relative');
+				}
+				
+				// Save the settings
+				if (typeof app.setting.save === 'function') {
+					await app.setting.save();
+				}
+			} else {
+				// Method 2: Fallback to vault config (current approach)
+				const obsidianSettings = (this.app.vault as any).config as ObsidianVaultConfig;
+				
+				if (settings.attachmentLocation === 'subfolder') {
+					obsidianSettings.newLinkFormat = 'relative';
+					obsidianSettings.attachmentFolderPath = `./${settings.subfolderName}`;
+				} else {
+					obsidianSettings.newLinkFormat = 'relative';
+					obsidianSettings.attachmentFolderPath = './';
+				}
+				
+				await (this.app.vault as any).saveConfig();
 			}
 			
-			await (this.app.vault as any).saveConfig();
+			// Method 3: Try to trigger a settings refresh
+			try {
+				if (app.setting && typeof app.setting.open === 'function') {
+					// This might trigger a refresh of the settings UI
+				}
+			} catch (refreshError) {
+				// Ignore refresh errors
+			}
+			
 		} catch (error) {
 			console.error('Failed to configure Obsidian settings:', error);
 			throw error;
@@ -144,7 +162,6 @@ export class PluginManager {
 				
 				// Save the settings
 				await astroComposerPlugin.saveSettings();
-			} else {
 			}
 		} catch (error) {
 			console.error('Failed to configure Astro Composer:', error);
@@ -165,7 +182,6 @@ export class PluginManager {
 				
 				// Save the settings
 				await imageInserterPlugin.saveSettings();
-			} else {
 			}
 		} catch (error) {
 			console.error('Failed to configure Image Inserter:', error);
@@ -182,19 +198,19 @@ export class PluginManager {
 		if (config.obsidianSettings.attachmentLocation === 'subfolder') {
 			instructions += `3. Set **Subfolder name** to: **"${config.obsidianSettings.subfolderName}"**\n`;
 		}
-		instructions += '\n';
 		
 		instructions += '## Astro Composer Plugin\n';
 		instructions += `1. Go to **Settings → Community plugins → Astro Composer**\n`;
-		instructions += `2. Set **Creation mode** to: "${config.astroComposerSettings.creationMode}"\n`;
+		instructions += `2. Set **Creation mode** to: "${config.astroComposerSettings.creationMode === 'file' ? 'File-based' : 'Folder-based'}"\n`;
 		if (config.astroComposerSettings.creationMode === 'folder') {
 			instructions += `3. Set **Index file name** to: "${config.astroComposerSettings.indexFileName}"\n`;
 		}
-		instructions += '\n';
 		
 		instructions += '## Image Inserter Plugin\n';
 		instructions += `1. Go to **Settings → Community plugins → Image Inserter**\n`;
 		instructions += `2. Set **Frontmatter → Value Format** to: "${config.imageInserterSettings.valueFormat}"\n`;
+		
+		instructions += '**Note**: After making these changes, you should see them reflected in Obsidian\'s settings interface. If the automatic configuration worked, these settings should already be applied.\n';
 		
 		return instructions;
 	}

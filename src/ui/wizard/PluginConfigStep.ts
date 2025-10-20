@@ -46,11 +46,37 @@ export class PluginConfigStep extends BaseWizardStep {
 		// Configure automatically button
 		container.querySelector('#configure-plugins')?.addEventListener('click', async () => {
 			try {
-				const success = await (this.plugin as any).pluginManager.configurePlugins((this.plugin as any).settings.pluginConfig);
+				// Create configuration based on current content organization choice
+				const contentOrg = state.selectedContentOrg;
+				const config = {
+					obsidianSettings: {
+						attachmentLocation: contentOrg === 'file-based' ? 'subfolder' : 'same-folder',
+						subfolderName: 'attachments'
+					},
+					astroComposerSettings: {
+						creationMode: contentOrg === 'file-based' ? 'file' : 'folder',
+						indexFileName: 'index'
+					},
+					imageInserterSettings: {
+						valueFormat: contentOrg === 'file-based' 
+							? '[[attachments/{image-url}]]' 
+							: '[[{image-url}]]',
+						insertFormat: contentOrg === 'file-based' 
+							? '[[attachments/{image-url}]]' 
+							: '[[{image-url}]]'
+					}
+				};
+
+				const success = await (this.plugin as any).pluginManager.configurePlugins(config);
 				if (success) {
-					new Notice('Plugins configured successfully!');
+					// Show detailed success message
+					const contentOrg = state.selectedContentOrg;
+					const attachmentLocation = contentOrg === 'file-based' ? 'subfolder (attachments/)' : 'same folder';
+					const creationMode = contentOrg === 'file-based' ? 'file' : 'folder';
+					
+					new Notice(`Plugins configured successfully!\n\n• Obsidian: Attachments → ${attachmentLocation}\n• Astro Composer: Creation mode → ${creationMode}\n• Image Inserter: Format updated for ${contentOrg}`, 8000);
 				} else {
-					new Notice('Some plugins could not be configured automatically.');
+					new Notice('⚠️ Some plugins could not be configured automatically. Check console for details.', 5000);
 				}
 			} catch (error) {
 				new Notice(`Error configuring plugins: ${error instanceof Error ? error.message : String(error)}`);
@@ -60,7 +86,28 @@ export class PluginConfigStep extends BaseWizardStep {
 		// Show manual instructions button
 		container.querySelector('#show-instructions')?.addEventListener('click', async () => {
 			try {
-				const instructions = await (this.plugin as any).pluginManager.getManualConfigurationInstructions((this.plugin as any).settings.pluginConfig);
+				// Create configuration based on current content organization choice
+				const contentOrg = state.selectedContentOrg;
+				const config = {
+					obsidianSettings: {
+						attachmentLocation: contentOrg === 'file-based' ? 'subfolder' : 'same-folder',
+						subfolderName: 'attachments'
+					},
+					astroComposerSettings: {
+						creationMode: contentOrg === 'file-based' ? 'file' : 'folder',
+						indexFileName: 'index'
+					},
+					imageInserterSettings: {
+						valueFormat: contentOrg === 'file-based' 
+							? '[[attachments/{image-url}]]' 
+							: '[[{image-url}]]',
+						insertFormat: contentOrg === 'file-based' 
+							? '[[attachments/{image-url}]]' 
+							: '[[{image-url}]]'
+					}
+				};
+
+				const instructions = await (this.plugin as any).pluginManager.getManualConfigurationInstructions(config);
 				
 				// Create a modal to show instructions
 				const { Modal } = require('obsidian');

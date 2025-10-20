@@ -39,11 +39,37 @@ export class PluginsTab extends TabRenderer {
 				.setButtonText('Configure Automatically')
 				.setCta()
 				.onClick(async () => {
-					const success = await (this.plugin as any).pluginManager.configurePlugins(settings.pluginConfig);
+					// Create configuration based on current content organization choice
+					const contentOrg = settings.contentOrganization;
+					const config = {
+						obsidianSettings: {
+							attachmentLocation: contentOrg === 'file-based' ? 'subfolder' : 'same-folder',
+							subfolderName: 'attachments'
+						},
+						astroComposerSettings: {
+							creationMode: contentOrg === 'file-based' ? 'file' : 'folder',
+							indexFileName: 'index'
+						},
+						imageInserterSettings: {
+							valueFormat: contentOrg === 'file-based' 
+								? '[[attachments/{image-url}]]' 
+								: '[[{image-url}]]',
+							insertFormat: contentOrg === 'file-based' 
+								? '[[attachments/{image-url}]]' 
+								: '[[{image-url}]]'
+						}
+					};
+
+					const success = await (this.plugin as any).pluginManager.configurePlugins(config);
 					if (success) {
-						new Notice('Plugins configured successfully!');
+						// Show detailed success message
+						const contentOrg = settings.contentOrganization;
+						const attachmentLocation = contentOrg === 'file-based' ? 'subfolder (attachments/)' : 'same folder';
+						const creationMode = contentOrg === 'file-based' ? 'file' : 'folder';
+						
+						new Notice(`Plugins configured successfully!\n\n• Obsidian: Attachments → ${attachmentLocation}\n• Astro Composer: Creation mode → ${creationMode}\n• Image Inserter: Format updated for ${contentOrg}`, 8000);
 					} else {
-						new Notice('Some plugins could not be configured automatically.');
+						new Notice('⚠️ Some plugins could not be configured automatically. Check console for details.', 5000);
 					}
 				}));
 
@@ -54,7 +80,28 @@ export class PluginsTab extends TabRenderer {
 			.addButton(button => button
 				.setButtonText('Show Manual Instructions')
 				.onClick(async () => {
-					const instructions = await (this.plugin as any).pluginManager.getManualConfigurationInstructions(settings.pluginConfig);
+					// Create configuration based on current content organization choice
+					const contentOrg = settings.contentOrganization;
+					const config = {
+						obsidianSettings: {
+							attachmentLocation: contentOrg === 'file-based' ? 'subfolder' : 'same-folder',
+							subfolderName: 'attachments'
+						},
+						astroComposerSettings: {
+							creationMode: contentOrg === 'file-based' ? 'file' : 'folder',
+							indexFileName: 'index'
+						},
+						imageInserterSettings: {
+							valueFormat: contentOrg === 'file-based' 
+								? '[[attachments/{image-url}]]' 
+								: '[[{image-url}]]',
+							insertFormat: contentOrg === 'file-based' 
+								? '[[attachments/{image-url}]]' 
+								: '[[{image-url}]]'
+						}
+					};
+
+					const instructions = await (this.plugin as any).pluginManager.getManualConfigurationInstructions(config);
 					
 					// Create a modal to show instructions
 					const instructionModal = new Modal(this.app);
