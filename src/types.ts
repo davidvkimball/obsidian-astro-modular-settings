@@ -75,6 +75,7 @@ export interface TypographySettings {
 		heading: string;
 		prose: string;
 		mono: string;
+		urls: string;
 	};
 }
 
@@ -281,6 +282,7 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 			heading: '',
 			prose: '',
 			mono: '',
+			urls: '',
 		},
 	},
 	optionalFeatures: {

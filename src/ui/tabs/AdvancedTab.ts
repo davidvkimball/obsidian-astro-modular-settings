@@ -38,24 +38,57 @@ export class AdvancedTab extends TabRenderer {
 						}
 						
 						
+						
 						// Update plugin settings to match config.ts
 						const settings = this.getSettings();
 						
+						// Update site information
+						if (currentConfig.siteInfo) {
+							settings.siteInfo.site = currentConfig.siteInfo.site ?? settings.siteInfo.site;
+							settings.siteInfo.title = currentConfig.siteInfo.title ?? settings.siteInfo.title;
+							settings.siteInfo.description = currentConfig.siteInfo.description ?? settings.siteInfo.description;
+							settings.siteInfo.author = currentConfig.siteInfo.author ?? settings.siteInfo.author;
+							settings.siteInfo.language = currentConfig.siteInfo.language ?? settings.siteInfo.language;
+						}
+						
+						// Update navigation settings
+						if (currentConfig.navigation) {
+							if (currentConfig.navigation.pages) {
+								settings.navigation.pages = currentConfig.navigation.pages;
+							}
+							if (currentConfig.navigation.social) {
+								settings.navigation.social = currentConfig.navigation.social;
+							}
+						}
+						
+						// Update theme
+						if (currentConfig.currentTheme) {
+							settings.currentTheme = currentConfig.currentTheme;
+						}
+						
+						// Update typography settings
+						if (currentConfig.typography) {
+							settings.typography.fontSource = currentConfig.typography.fontSource ?? settings.typography.fontSource;
+							settings.typography.proseFont = currentConfig.typography.proseFont ?? settings.typography.proseFont;
+							settings.typography.headingFont = currentConfig.typography.headingFont ?? settings.typography.headingFont;
+							settings.typography.monoFont = currentConfig.typography.monoFont ?? settings.typography.monoFont;
+						}
+						
 						// Update features based on config.ts
 						if (currentConfig.postOptions) {
-							settings.features.tableOfContents = currentConfig.postOptions.tableOfContents ?? false;
-							settings.features.readingTime = currentConfig.postOptions.readingTime ?? false;
-							settings.features.linkedMentions = currentConfig.postOptions.linkedMentions?.enabled ?? false;
-							settings.features.linkedMentionsCompact = currentConfig.postOptions.linkedMentions?.linkedMentionsCompact ?? false;
-							settings.features.graphView = currentConfig.postOptions.graphView?.enabled ?? false;
-							settings.features.postNavigation = currentConfig.postOptions.postNavigation ?? false;
-							settings.features.comments = currentConfig.postOptions.comments?.enabled ?? false;
+							settings.features.tableOfContents = currentConfig.postOptions.tableOfContents ?? settings.features.tableOfContents;
+							settings.features.readingTime = currentConfig.postOptions.readingTime ?? settings.features.readingTime;
+							settings.features.linkedMentions = currentConfig.postOptions.linkedMentions?.enabled ?? settings.features.linkedMentions;
+							settings.features.linkedMentionsCompact = currentConfig.postOptions.linkedMentions?.linkedMentionsCompact ?? settings.features.linkedMentionsCompact;
+							settings.features.graphView = currentConfig.postOptions.graphView?.enabled ?? settings.features.graphView;
+							settings.features.postNavigation = currentConfig.postOptions.postNavigation ?? settings.features.postNavigation;
+							settings.features.comments = currentConfig.postOptions.comments?.enabled ?? settings.features.comments;
 						}
 						
 						// Update optional content types
 						if (currentConfig.optionalContentTypes) {
-							settings.optionalContentTypes.projects = currentConfig.optionalContentTypes.projects ?? false;
-							settings.optionalContentTypes.docs = currentConfig.optionalContentTypes.docs ?? false;
+							settings.optionalContentTypes.projects = currentConfig.optionalContentTypes.projects ?? settings.optionalContentTypes.projects;
+							settings.optionalContentTypes.docs = currentConfig.optionalContentTypes.docs ?? settings.optionalContentTypes.docs;
 						}
 						
 						// Update footer settings
@@ -158,6 +191,9 @@ export class AdvancedTab extends TabRenderer {
 						(this.plugin as any).settings = resetSettings;
 						
 						await this.plugin.saveData(resetSettings);
+						
+						// Ensure settings are loaded after save
+						await (this.plugin as any).loadSettings();
 						
 						// Apply the reset configuration to config.ts
 						try {

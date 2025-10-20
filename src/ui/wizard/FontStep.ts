@@ -95,20 +95,22 @@ export class FontStep extends BaseWizardStep {
 	}
 
 	private updateTypographySetting(key: string, value: string, state: any): void {
+		const currentState = this.getState();
 		this.updateState({
 			selectedTypography: {
-				...state.selectedTypography,
+				...currentState.selectedTypography,
 				[key]: value
 			}
 		});
 	}
 
 	private updateCustomFontSetting(key: string, value: string, state: any): void {
+		const currentState = this.getState();
 		this.updateState({
 			selectedTypography: {
-				...state.selectedTypography,
+				...currentState.selectedTypography,
 				customFonts: {
-					...state.selectedTypography.customFonts,
+					...currentState.selectedTypography.customFonts,
 					[key]: value
 				}
 			}

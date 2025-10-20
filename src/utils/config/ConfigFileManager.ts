@@ -116,7 +116,7 @@ export class ConfigFileManager {
 
 	async parseConfigFile(content?: string): Promise<any> {
 		// Parse the config.ts file to extract current settings
-		// This is a basic implementation that extracts key settings from the config
+		// This extracts all key settings from the config using the marker system
 		
 		const configContent = content || await this.readConfig();
 		if (!configContent) {
@@ -124,6 +124,93 @@ export class ConfigFileManager {
 		}
 
 		const config: any = {};
+
+		// Extract site information
+		config.siteInfo = {};
+		const siteUrlMatch = configContent.match(/\/\/ \[CONFIG:SITE_URL\]\s*\n\s*site:\s*"([^"]*)"/);
+		if (siteUrlMatch) {
+			config.siteInfo.site = siteUrlMatch[1];
+		}
+		
+		const siteTitleMatch = configContent.match(/\/\/ \[CONFIG:SITE_TITLE\]\s*\n\s*title:\s*"([^"]*)"/);
+		if (siteTitleMatch) {
+			config.siteInfo.title = siteTitleMatch[1];
+		}
+		
+		const siteDescMatch = configContent.match(/\/\/ \[CONFIG:SITE_DESCRIPTION\]\s*\n\s*description:\s*"([^"]*)"/);
+		if (siteDescMatch) {
+			config.siteInfo.description = siteDescMatch[1];
+		}
+		
+		const siteAuthorMatch = configContent.match(/\/\/ \[CONFIG:SITE_AUTHOR\]\s*\n\s*author:\s*"([^"]*)"/);
+		if (siteAuthorMatch) {
+			config.siteInfo.author = siteAuthorMatch[1];
+		}
+		
+		const siteLangMatch = configContent.match(/\/\/ \[CONFIG:SITE_LANGUAGE\]\s*\n\s*language:\s*"([^"]*)"/);
+		if (siteLangMatch) {
+			config.siteInfo.language = siteLangMatch[1];
+		}
+
+		// Extract theme
+		const themeMatch = configContent.match(/\/\/ \[CONFIG:THEME\]\s*\n\s*theme:\s*"([^"]*)"/);
+		if (themeMatch) {
+			config.currentTheme = themeMatch[1];
+		}
+
+		// Extract typography settings
+		config.typography = {};
+		const fontSourceMatch = configContent.match(/\/\/ \[CONFIG:FONT_SOURCE\]\s*\n\s*source:\s*"([^"]*)"/);
+		if (fontSourceMatch) {
+			config.typography.fontSource = fontSourceMatch[1];
+		}
+		
+		const fontBodyMatch = configContent.match(/\/\/ \[CONFIG:FONT_BODY\]\s*\n\s*body:\s*"([^"]*)"/);
+		if (fontBodyMatch) {
+			config.typography.proseFont = fontBodyMatch[1];
+		}
+		
+		const fontHeadingMatch = configContent.match(/\/\/ \[CONFIG:FONT_HEADING\]\s*\n\s*heading:\s*"([^"]*)"/);
+		if (fontHeadingMatch) {
+			config.typography.headingFont = fontHeadingMatch[1];
+		}
+		
+		const fontMonoMatch = configContent.match(/\/\/ \[CONFIG:FONT_MONO\]\s*\n\s*mono:\s*"([^"]*)"/);
+		if (fontMonoMatch) {
+			config.typography.monoFont = fontMonoMatch[1];
+		}
+
+		// Extract navigation settings
+		config.navigation = { pages: [], social: [] };
+		
+		// Extract navigation pages
+		const pagesMatch = configContent.match(/\/\/ \[CONFIG:NAVIGATION_PAGES\]\s*\n\s*pages:\s*\[([\s\S]*?)\]/);
+		if (pagesMatch) {
+			const pagesContent = pagesMatch[1];
+			// Match the single-line format: { title: "...", url: "..." }
+			const pageMatches = pagesContent.matchAll(/\{\s*title:\s*"([^"]*)",\s*url:\s*"([^"]*)"\s*\}/g);
+			for (const pageMatch of pageMatches) {
+				config.navigation.pages.push({
+					title: pageMatch[1],
+					url: pageMatch[2]
+				});
+			}
+		}
+		
+		// Extract navigation social
+		const socialMatch = configContent.match(/\/\/ \[CONFIG:NAVIGATION_SOCIAL\]\s*\n\s*social:\s*\[([\s\S]*?)\]/);
+		if (socialMatch) {
+			const socialContent = socialMatch[1];
+			// Match the multi-line format: { title: "...", url: "...", icon: "..." }
+			const socialMatches = socialContent.matchAll(/\{\s*\n\s*title:\s*"([^"]*)",\s*\n\s*url:\s*"([^"]*)",\s*\n\s*icon:\s*"([^"]*)",?\s*\n\s*\}/g);
+			for (const socialMatch of socialMatches) {
+				config.navigation.social.push({
+					title: socialMatch[1],
+					url: socialMatch[2],
+					icon: socialMatch[3]
+				});
+			}
+		}
 
 		// Extract post options
 		config.postOptions = {};
@@ -200,12 +287,6 @@ export class ConfigFileManager {
 		const commandPaletteMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_ENABLED\]\s*enabled:\s*(true|false)/);
 		if (commandPaletteMatch) {
 			config.commandPalette.enabled = commandPaletteMatch[1] === 'true';
-		}
-
-		// Extract theme
-		const themeMatch = configContent.match(/\/\/ \[CONFIG:THEME\]\s*theme:\s*['"`]([^'"`]+)['"`]/);
-		if (themeMatch) {
-			config.theme = themeMatch[1];
 		}
 
 		// Extract site information

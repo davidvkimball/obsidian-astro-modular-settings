@@ -178,14 +178,15 @@ export class SetupWizardModal extends Modal {
 			case 3: // Font step - use default fonts
 				this.stateManager.setState({ 
 					selectedTypography: {
-						fontSource: 'system',
+						fontSource: 'local',
 						proseFont: 'Inter',
 						headingFont: 'Inter',
 						monoFont: 'JetBrains Mono',
 						customFonts: {
 							prose: '',
 							heading: '',
-							mono: ''
+							mono: '',
+							urls: ''
 						}
 					}
 				});

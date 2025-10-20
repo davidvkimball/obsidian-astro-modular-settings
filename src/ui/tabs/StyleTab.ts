@@ -143,9 +143,9 @@ export class StyleTab extends TabRenderer {
 				'Comma-separated font URLs',
 				settings.typography.customFonts?.heading || '',
 				(value) => {
-					if (!settings.typography.customFonts) {
-						settings.typography.customFonts = { heading: '', prose: '', mono: '' };
-					}
+				if (!settings.typography.customFonts) {
+					settings.typography.customFonts = { heading: '', prose: '', mono: '', urls: '' };
+				}
 					settings.typography.customFonts.heading = value;
 				}
 			);
@@ -157,9 +157,9 @@ export class StyleTab extends TabRenderer {
 				'Name of the custom heading font',
 				settings.typography.customFonts?.heading || '',
 				(value) => {
-					if (!settings.typography.customFonts) {
-						settings.typography.customFonts = { heading: '', prose: '', mono: '' };
-					}
+				if (!settings.typography.customFonts) {
+					settings.typography.customFonts = { heading: '', prose: '', mono: '', urls: '' };
+				}
 					settings.typography.customFonts.heading = value;
 				}
 			);
@@ -171,9 +171,9 @@ export class StyleTab extends TabRenderer {
 				'Name of the custom prose font',
 				settings.typography.customFonts?.prose || '',
 				(value) => {
-					if (!settings.typography.customFonts) {
-						settings.typography.customFonts = { heading: '', prose: '', mono: '' };
-					}
+				if (!settings.typography.customFonts) {
+					settings.typography.customFonts = { heading: '', prose: '', mono: '', urls: '' };
+				}
 					settings.typography.customFonts.prose = value;
 				}
 			);
@@ -185,9 +185,9 @@ export class StyleTab extends TabRenderer {
 				'Name of the custom monospace font',
 				settings.typography.customFonts?.mono || '',
 				(value) => {
-					if (!settings.typography.customFonts) {
-						settings.typography.customFonts = { heading: '', prose: '', mono: '' };
-					}
+				if (!settings.typography.customFonts) {
+					settings.typography.customFonts = { heading: '', prose: '', mono: '', urls: '' };
+				}
 					settings.typography.customFonts.mono = value;
 				}
 			);
