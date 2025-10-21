@@ -41,19 +41,19 @@ export class WizardStateManager {
 			selectedFeatures: (() => {
 				// Initialize features based on current template
 				const templateFeatures: Record<string, any> = {
-					'standard': {
-						commandPalette: true,
-						tableOfContents: true,
-						readingTime: true,
-						linkedMentions: true,
-						linkedMentionsCompact: false,
-						graphView: true,
-						postNavigation: true,
-						scrollToTop: true,
-						showSocialIconsInFooter: true,
-						profilePicture: false,
-						comments: true
-					},
+				'standard': {
+					commandPalette: true,
+					tableOfContents: true,
+					readingTime: true,
+					linkedMentions: true,
+					linkedMentionsCompact: false,
+					graphView: true,
+					postNavigation: true,
+					scrollToTop: true,
+					showSocialIconsInFooter: true,
+					profilePicture: false,
+					comments: false
+				},
 					'compact': {
 						commandPalette: true,
 						tableOfContents: true,
@@ -88,7 +88,33 @@ export class WizardStateManager {
 				return templateFeatures[settings.currentTemplate] || templateFeatures['standard'];
 			})(),
 			selectedTypography: settings.typography,
-			selectedOptionalFeatures: settings.optionalFeatures || {},
+			selectedOptionalFeatures: settings.optionalFeatures || {
+				profilePicture: {
+					enabled: false,
+					image: '/profile.jpg',
+					alt: 'Profile picture',
+					size: 'md',
+					url: '',
+					placement: 'footer',
+					style: 'circle',
+				},
+				comments: {
+					enabled: false,
+					provider: 'giscus',
+					repo: '',
+					repoId: '',
+					category: '',
+					categoryId: '',
+					mapping: 'pathname',
+					strict: '0',
+					reactions: '1',
+					metadata: '0',
+					inputPosition: 'bottom',
+					theme: 'preferred_color_scheme',
+					lang: 'en',
+					loading: 'lazy',
+				},
+			},
 			selectedOptionalContentTypes: (() => {
 				// Set based on current template: enabled for 'standard' and 'custom', disabled for others
 				const isStandardOrCustom = settings.currentTemplate === 'standard' || settings.currentTemplate === 'custom';

@@ -95,6 +95,7 @@ export class ConfigFileManager {
 			fs.writeFileSync(configPath, content, 'utf8');
 			return true;
 		} catch (error) {
+			console.error('Error writing config:', error);
 			return false;
 		}
 	}

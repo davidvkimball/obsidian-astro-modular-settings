@@ -99,11 +99,11 @@ export class ConfigPresetModifier {
 			}
 		}
 		
-		// Update dark mode toggle button if specified in template
-		if (templateConfig.darkModeToggleButton) {
+		// Update feature button if specified in template
+		if (templateConfig.featureButton) {
 			modifiedConfig = modifiedConfig.replace(
-				/\/\/ \[CONFIG:DARK_MODE_TOGGLE_BUTTON\]\s*\n\s*darkModeToggleButton:\s*"[^"]*"/,
-				`// [CONFIG:DARK_MODE_TOGGLE_BUTTON]\n  darkModeToggleButton: "${templateConfig.darkModeToggleButton}"`
+				/\/\/ \[CONFIG:FEATURE_BUTTON\]\s*\n\s*featureButton:\s*"[^"]*"/,
+				`// [CONFIG:FEATURE_BUTTON]\n  featureButton: "${templateConfig.featureButton}"`
 			);
 		}
 		
@@ -230,6 +230,37 @@ export class ConfigPresetModifier {
 					modifiedConfig = modifiedConfig.replace(
 						/\/\/ \[CONFIG:COMMAND_PALETTE_SECTIONS_SOCIAL\]\s*social:\s*(true|false)/,
 						`// [CONFIG:COMMAND_PALETTE_SECTIONS_SOCIAL]\n      social: ${templateConfig.commandPalette.sections.social}`
+					);
+				}
+				
+			}
+			
+			// Update quick actions settings - use individual markers
+			if (templateConfig.commandPalette.quickActions) {
+				
+				// Update each quick action setting individually
+				if (templateConfig.commandPalette.quickActions.enabled !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_ENABLED\]\s*enabled:\s*(true|false)/,
+						`// [CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_ENABLED]\n      enabled: ${templateConfig.commandPalette.quickActions.enabled}`
+					);
+				}
+				if (templateConfig.commandPalette.quickActions.toggleMode !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_TOGGLE_MODE\]\s*toggleMode:\s*(true|false)/,
+						`// [CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_TOGGLE_MODE]\n      toggleMode: ${templateConfig.commandPalette.quickActions.toggleMode}`
+					);
+				}
+				if (templateConfig.commandPalette.quickActions.graphView !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_GRAPH_VIEW\]\s*graphView:\s*(true|false)/,
+						`// [CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_GRAPH_VIEW]\n      graphView: ${templateConfig.commandPalette.quickActions.graphView}`
+					);
+				}
+				if (templateConfig.commandPalette.quickActions.changeTheme !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_CHANGE_THEME\]\s*changeTheme:\s*(true|false)/,
+						`// [CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_CHANGE_THEME]\n      changeTheme: ${templateConfig.commandPalette.quickActions.changeTheme}`
 					);
 				}
 				
@@ -415,15 +446,17 @@ export class ConfigPresetModifier {
 			}
 		}
 		
-		// Update profile picture settings - always update enabled state, other settings only if enabled
-		// Update enabled state (always update this)
+	// Update profile picture settings - always update enabled state, other settings only if enabled
+	// Update enabled state (always update this)
+	if (settings.optionalFeatures?.profilePicture?.enabled !== undefined) {
 		modifiedConfig = modifiedConfig.replace(
 			/\/\/ \[CONFIG:PROFILE_PICTURE_ENABLED\]\s*enabled:\s*(true|false)/,
 			`// [CONFIG:PROFILE_PICTURE_ENABLED]\n    enabled: ${settings.optionalFeatures.profilePicture.enabled}`
 		);
-		
-		// Update other profile picture settings only if enabled
-		if (settings.optionalFeatures.profilePicture.enabled) {
+	}
+	
+	// Update other profile picture settings only if enabled
+	if (settings.optionalFeatures?.profilePicture?.enabled) {
 			// Update image
 			modifiedConfig = modifiedConfig.replace(
 				/\/\/ \[CONFIG:PROFILE_PICTURE_IMAGE\]\s*image:\s*"[^"]*"/,
@@ -456,11 +489,13 @@ export class ConfigPresetModifier {
 			);
 		}
 		
-		// Update comments settings
+	// Update comments settings
+	if (settings.optionalFeatures?.comments?.enabled !== undefined) {
 		modifiedConfig = modifiedConfig.replace(
 			/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_ENABLED\]\s*enabled:\s*(true|false)/,
 			`// [CONFIG:POST_OPTIONS_COMMENTS_ENABLED]\n      enabled: ${settings.optionalFeatures.comments.enabled}`
 		);
+	}
 		
 		// Validate markers are present
 		const markerValidation = this.markerValidator.validateMarkers(modifiedConfig);
@@ -632,11 +667,31 @@ export class ConfigPresetModifier {
 			`// [CONFIG:FOOTER_SHOW_SOCIAL_ICONS]\n    showSocialIconsInFooter: ${settings.features.showSocialIconsInFooter}`
 		);
 		
-		// Update dark mode toggle button
+		// Update feature button
 		modifiedConfig = modifiedConfig.replace(
-			/\/\/ \[CONFIG:DARK_MODE_TOGGLE_BUTTON\]\s*darkModeToggleButton:\s*"[^"]*"/,
-			`// [CONFIG:DARK_MODE_TOGGLE_BUTTON]\n  darkModeToggleButton: "${settings.features.darkModeToggleButton}"`
+			/\/\/ \[CONFIG:FEATURE_BUTTON\]\s*featureButton:\s*"[^"]*"/,
+			`// [CONFIG:FEATURE_BUTTON]\n  featureButton: "${settings.features.featureButton}"`
 		);
+		
+	// Update quick actions settings
+	if (settings.features?.quickActions) {
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_ENABLED\]\s*enabled:\s*(true|false)/,
+			`// [CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_ENABLED]\n      enabled: ${settings.features.quickActions.enabled}`
+		);
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_TOGGLE_MODE\]\s*toggleMode:\s*(true|false)/,
+			`// [CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_TOGGLE_MODE]\n      toggleMode: ${settings.features.quickActions.toggleMode}`
+		);
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_GRAPH_VIEW\]\s*graphView:\s*(true|false)/,
+			`// [CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_GRAPH_VIEW]\n      graphView: ${settings.features.quickActions.graphView}`
+		);
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_CHANGE_THEME\]\s*changeTheme:\s*(true|false)/,
+			`// [CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_CHANGE_THEME]\n      changeTheme: ${settings.features.quickActions.changeTheme}`
+		);
+	}
 		
 		// Update post card cover images
 		modifiedConfig = modifiedConfig.replace(

@@ -86,59 +86,16 @@ export class TemplateStep extends BaseWizardStep {
 	}
 
 	private syncFeaturesWithTemplate(template: string): void {
-		// Get the current state
-		const currentState = this.getState();
-		
-		// Define feature sets for each template
-		const templateFeatures: Record<string, any> = {
-			'standard': {
-				commandPalette: true,
-				tableOfContents: true,
-				readingTime: true,
-				linkedMentions: true,
-				linkedMentionsCompact: false,
-				graphView: true,
-				postNavigation: true,
-				scrollToTop: true,
-				showSocialIconsInFooter: true,
-				profilePicture: false,
-				comments: true
-			},
-			'compact': {
-				commandPalette: true,
-				tableOfContents: true,
-				readingTime: true,
-				linkedMentions: true,
-				linkedMentionsCompact: true,
-				graphView: false,
-				postNavigation: true,
-				scrollToTop: true,
-				showSocialIconsInFooter: false,
-				profilePicture: false,
-				comments: false
-			},
-			'minimal': {
-				commandPalette: true,
-				tableOfContents: false,
-				readingTime: false,
-				linkedMentions: false,
-				graphView: false,
-				postNavigation: false,
-				scrollToTop: true,
-				showSocialIconsInFooter: false,
-				profilePicture: false,
-				comments: false
-			},
-			'custom': {
-				// For custom, keep current settings
-				...currentState.selectedFeatures
-			}
-		};
+		// Load features from preset JSON (single source of truth)
+		const templatePreset = (this.plugin as any).configManager.getTemplatePreset(template);
+		if (!templatePreset || !templatePreset.config || !templatePreset.config.features) {
+			console.error('Template preset not found:', template);
+			return;
+		}
 
-		// Update features based on template
-		const newFeatures = templateFeatures[template] || templateFeatures['standard'];
+		// Update wizard state with features from preset JSON
 		this.updateState({
-			selectedFeatures: newFeatures
+			selectedFeatures: templatePreset.config.features
 		});
 	}
 
@@ -146,68 +103,24 @@ export class TemplateStep extends BaseWizardStep {
 		// Get the current plugin settings
 		const settings = (this.plugin as any).settings;
 		
-		// Define feature sets for each template (same as above)
-		const templateFeatures: Record<string, any> = {
-			'standard': {
-				commandPalette: true,
-				tableOfContents: true,
-				readingTime: true,
-				linkedMentions: true,
-				linkedMentionsCompact: false,
-				graphView: true,
-				postNavigation: true,
-				scrollToTop: true,
-				showSocialIconsInFooter: true,
-				profilePicture: false,
-				comments: true
-			},
-			'compact': {
-				commandPalette: true,
-				tableOfContents: true,
-				readingTime: true,
-				linkedMentions: true,
-				linkedMentionsCompact: true,
-				graphView: false,
-				postNavigation: true,
-				scrollToTop: true,
-				showSocialIconsInFooter: false,
-				profilePicture: false,
-				comments: false
-			},
-			'minimal': {
-				commandPalette: true,
-				tableOfContents: false,
-				readingTime: false,
-				linkedMentions: false,
-				graphView: false,
-				postNavigation: false,
-				scrollToTop: true,
-				showSocialIconsInFooter: false,
-				profilePicture: false,
-				comments: false
-			},
-			'documentation': {
-				commandPalette: true,
-				tableOfContents: false,
-				readingTime: true,
-				linkedMentions: true,
-				linkedMentionsCompact: true,
-				graphView: false,
-				postNavigation: true,
-				scrollToTop: true,
-				showSocialIconsInFooter: false,
-				profilePicture: false,
-				comments: false
-			},
-			'custom': {
-				// For custom, keep current settings
-				...settings.features
-			}
-		};
+		// Load the template preset from JSON (single source of truth)
+		const templatePreset = (this.plugin as any).configManager.getTemplatePreset(template);
+		if (!templatePreset || !templatePreset.config) {
+			console.error('Template preset not found:', template);
+			return;
+		}
 
-		// Update plugin settings immediately
-		const newFeatures = templateFeatures[template] || templateFeatures['standard'];
-		settings.features = { ...settings.features, ...newFeatures };
+		// Update settings from the preset's config
+		// NOTE: We do NOT update theme or contentOrganization - those are separate user choices
+		
+		// Update features from preset (preserving user preferences for comments/profilePicture)
+		if (templatePreset.config.features) {
+			const currentComments = settings.features.comments;
+			const currentProfilePicture = settings.features.profilePicture;
+			settings.features = { ...settings.features, ...templatePreset.config.features };
+			settings.features.comments = currentComments;
+			settings.features.profilePicture = currentProfilePicture;
+		}
 		
 		// Update optional content types
 		const isStandardOrCustom = template === 'standard' || template === 'custom';

@@ -25,40 +25,41 @@ export class ConfigTab extends TabRenderer {
 				dropdown.onChange(async (value) => {
 					// Show warning modal for template changes
 					const changes = this.getTemplateChanges(value as any);
-					if (changes.length > 0) {
-						const modal = new PresetWarningModal(
-							this.app,
-							changes,
-							async () => {
-								// User confirmed - apply the template
-								settings.currentTemplate = value as any;
-								await this.plugin.saveData(settings);
+					const modal = new PresetWarningModal(
+						this.app,
+						changes,
+						async () => {
+							// User confirmed - apply exactly like TemplateStep does
+							try {
+								// Update template settings exactly like the wizard does
+								await this.updatePluginSettingsWithTemplate(value);
 								
-								try {
-									await this.applyCurrentConfiguration();
+								// Apply the configuration
+								const presetSuccess = await (this.plugin as any).configManager.applyPreset({
+									name: settings.currentTemplate,
+									description: '',
+									features: settings.features,
+									theme: settings.currentTheme,
+									contentOrganization: settings.contentOrganization,
+									config: settings
+								});
+								
+								if (presetSuccess) {
 									new Notice(`Template changed to ${value} and applied to config.ts`);
-								} catch (error) {
-									new Notice(`Failed to apply template change: ${error instanceof Error ? error.message : String(error)}`);
+								} else {
+									new Notice('Failed to apply template to config.ts');
 								}
-							},
-							() => {
-								// User cancelled - reset dropdown to current value
+							} catch (error) {
+								new Notice(`Failed to apply template change: ${error instanceof Error ? error.message : String(error)}`);
 								dropdown.setValue(settings.currentTemplate);
 							}
-						);
-						modal.open();
-					} else {
-						// No changes needed - apply directly
-						settings.currentTemplate = value as any;
-						await this.plugin.saveData(settings);
-						
-						try {
-							await this.applyCurrentConfiguration();
-							new Notice(`Template changed to ${value} and applied to config.ts`);
-						} catch (error) {
-							new Notice(`Failed to apply template change: ${error instanceof Error ? error.message : String(error)}`);
+						},
+						() => {
+							// User cancelled - reset dropdown to current value
+							dropdown.setValue(settings.currentTemplate);
 						}
-					}
+					);
+					modal.open();
 				});
 			});
 
@@ -168,20 +169,108 @@ export class ConfigTab extends TabRenderer {
 		}
 	}
 
+	private async updatePluginSettingsWithTemplate(template: string): Promise<void> {
+		// Get the current plugin settings
+		const settings = (this.plugin as any).settings;
+		
+		// Load the template preset from JSON (single source of truth)
+		const templatePreset = (this.plugin as any).configManager.getTemplatePreset(template);
+		if (!templatePreset || !templatePreset.config) {
+			new Notice('Template preset not found');
+			return;
+		}
+
+		// Update settings from the preset's config
+		settings.currentTemplate = template;
+		
+		// NOTE: We do NOT update theme or contentOrganization - those are separate user choices
+		
+		// Update features from preset (preserving user preferences for comments/profilePicture)
+		if (templatePreset.config.features) {
+			const currentComments = settings.features.comments;
+			const currentProfilePicture = settings.features.profilePicture;
+			settings.features = { ...settings.features, ...templatePreset.config.features };
+			settings.features.comments = currentComments;
+			settings.features.profilePicture = currentProfilePicture;
+		}
+		
+		// Update optional content types - standard has them, others don't
+		const isStandardOrCustom = template === 'standard' || template === 'custom';
+		settings.optionalContentTypes = {
+			projects: isStandardOrCustom,
+			docs: isStandardOrCustom
+		};
+
+		// Save the updated settings
+		await this.plugin.saveData(settings);
+	}
+
 	private getTemplateChanges(templateId: string): string[] {
 		const changes: string[] = [];
+		const settings = this.getSettings();
 		
-		// Get the template preset
-		const template = TEMPLATE_OPTIONS.find(t => t.id === templateId);
-		if (!template) return changes;
+		// Load the template preset from JSON
+		const templatePreset = (this.plugin as any).configManager.getTemplatePreset(templateId);
+		if (!templatePreset || !templatePreset.config) {
+			changes.push('This will apply the template settings to your configuration.');
+			return changes;
+		}
 
-		// This is a simplified version - in reality, you'd need to compare
-		// the current settings with what the template would set
-		// For now, we'll show a generic message for template changes
-		changes.push('Theme and color scheme');
-		changes.push('Feature toggles and settings');
-		changes.push('Typography and font settings');
-		changes.push('Content organization settings');
+		const newConfig = templatePreset.config;
+		const featureChanges = [];
+
+		// NOTE: We don't compare theme - that's a separate user choice
+
+		// Compare all features from the preset
+		if (newConfig.features) {
+			// Key features to highlight (excluding comments which is user-configured)
+			const keyFeatures = [
+				{ key: 'graphView', label: 'Graph view' },
+				{ key: 'tableOfContents', label: 'Table of contents' },
+				{ key: 'readingTime', label: 'Reading time' },
+				{ key: 'linkedMentions', label: 'Linked mentions' },
+				{ key: 'linkedMentionsCompact', label: 'Compact linked mentions' },
+				{ key: 'postNavigation', label: 'Post navigation' },
+				{ key: 'showSocialIconsInFooter', label: 'Social icons in footer' },
+				{ key: 'featureButton', label: 'Feature button' }
+			];
+
+			keyFeatures.forEach(({ key, label }) => {
+				const oldFeature = (settings.features as any)[key];
+				const newFeature = (newConfig.features as any)[key];
+				if (newFeature !== undefined && oldFeature !== newFeature) {
+					const oldVal = typeof oldFeature === 'boolean' 
+						? (oldFeature ? 'ON' : 'OFF')
+						: oldFeature;
+					const newVal = typeof newFeature === 'boolean'
+						? (newFeature ? 'ON' : 'OFF')
+						: newFeature;
+					featureChanges.push(`${label}: ${oldVal} → ${newVal}`);
+				}
+			});
+
+			// Check quickActions changes
+			if (newConfig.features.quickActions && settings.features.quickActions) {
+				if (newConfig.features.quickActions.enabled !== settings.features.quickActions.enabled) {
+					featureChanges.push(`Quick actions: ${settings.features.quickActions.enabled ? 'ON' : 'OFF'} → ${newConfig.features.quickActions.enabled ? 'ON' : 'OFF'}`);
+				}
+			}
+		}
+
+		// Compare optional content types
+		const isStandardOrCustom = templateId === 'standard' || templateId === 'custom';
+		if (settings.optionalContentTypes?.projects !== isStandardOrCustom) {
+			featureChanges.push(`Projects content type: ${settings.optionalContentTypes?.projects ? 'enabled' : 'disabled'} → ${isStandardOrCustom ? 'enabled' : 'disabled'}`);
+		}
+		if (settings.optionalContentTypes?.docs !== isStandardOrCustom) {
+			featureChanges.push(`Docs content type: ${settings.optionalContentTypes?.docs ? 'enabled' : 'disabled'} → ${isStandardOrCustom ? 'enabled' : 'disabled'}`);
+		}
+
+		if (featureChanges.length > 0) {
+			changes.push(...featureChanges);
+		} else {
+			changes.push('No changes needed - your settings already match this template.');
+		}
 		
 		return changes;
 	}

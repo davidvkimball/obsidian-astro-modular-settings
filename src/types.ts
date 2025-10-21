@@ -58,12 +58,20 @@ export interface FeatureSettings {
 	graphView: boolean;
 	postNavigation: boolean;
 	scrollToTop: boolean;
-	darkModeToggleButton: 'navigation' | 'commandPalette' | 'both';
+	featureButton: 'mode' | 'graph' | 'theme' | 'none';
 	showSocialIconsInFooter: boolean;
 	showPostCardCoverImages: 'all' | 'featured' | 'home' | 'posts' | 'featured-and-posts' | 'none';
 	postCardAspectRatio: 'og' | '16:9' | '4:3' | '3:2' | 'square' | 'golden' | 'custom';
 	customPostCardAspectRatio?: string;
 	profilePicture: boolean;
+	quickActions: QuickActionsSettings;
+}
+
+export interface QuickActionsSettings {
+	enabled: boolean;
+	toggleMode: boolean;
+	graphView: boolean;
+	changeTheme: boolean;
 }
 
 export interface TypographySettings {
@@ -267,11 +275,17 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 		graphView: true,
 		postNavigation: true,
 		scrollToTop: true,
-		darkModeToggleButton: 'both',
+		featureButton: 'mode',
 		showSocialIconsInFooter: true,
 		showPostCardCoverImages: 'featured-and-posts',
 		postCardAspectRatio: 'og',
 		profilePicture: false,
+		quickActions: {
+			enabled: true,
+			toggleMode: true,
+			graphView: true,
+			changeTheme: true,
+		},
 	},
 	typography: {
 		headingFont: 'Inter',

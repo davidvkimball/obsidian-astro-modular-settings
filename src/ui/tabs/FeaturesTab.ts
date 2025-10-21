@@ -92,6 +92,96 @@ export class FeaturesTab extends TabRenderer {
 			}
 		});
 
+		// Feature Button Section
+		new Setting(container)
+			.setName('Feature button')
+			.setDesc('Choose which feature button appears in the header')
+			.addDropdown(dropdown => dropdown
+				.addOption('mode', 'Mode Toggle')
+				.addOption('graph', 'Graph View')
+				.addOption('theme', 'Theme Selector')
+				.addOption('none', 'None')
+				.setValue(settings.features.featureButton)
+				.onChange(async (value) => {
+					settings.features.featureButton = value as 'mode' | 'graph' | 'theme' | 'none';
+					await this.plugin.saveData(settings);
+					
+					// Apply changes immediately to config.ts
+					try {
+						await this.applyCurrentConfiguration();
+						new Notice(`Feature button updated to "${value}" and applied to config.ts`);
+					} catch (error) {
+						new Notice(`Failed to apply feature button to config.ts: ${error instanceof Error ? error.message : String(error)}`);
+					}
+				}));
+
+		// Quick Actions Section
+		const quickActionsContainer = container.createDiv('quick-actions-section');
+		quickActionsContainer.style.marginTop = '20px';
+		quickActionsContainer.style.paddingTop = '20px';
+		quickActionsContainer.style.borderTop = '1px solid var(--background-modifier-border)';
+
+		const quickActionsHeader = quickActionsContainer.createEl('h3', { text: 'Command Palette Quick Actions' });
+		const quickActionsDesc = quickActionsContainer.createEl('p', { 
+			text: 'Control which quick actions appear in the command palette',
+			cls: 'setting-item-description'
+		});
+
+		// Master toggle for quick actions
+		new Setting(quickActionsContainer)
+			.setName('Enable Quick Actions in Command Palette')
+			.setDesc('Master toggle for all quick actions')
+			.addToggle(toggle => toggle
+				.setValue(settings.features.quickActions.enabled)
+				.onChange(async (value) => {
+					settings.features.quickActions.enabled = value;
+					await this.plugin.saveData(settings);
+					
+					// Show/hide individual quick action toggles
+					const individualToggles = quickActionsContainer.querySelectorAll('.individual-quick-action');
+					individualToggles.forEach(toggle => {
+						(toggle as HTMLElement).style.display = value ? 'block' : 'none';
+					});
+					
+					// Apply changes immediately to config.ts
+					try {
+						await this.applyCurrentConfiguration();
+						new Notice(`Quick actions ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
+					} catch (error) {
+						new Notice(`Failed to apply quick actions to config.ts: ${error instanceof Error ? error.message : String(error)}`);
+					}
+				}));
+
+		// Individual quick action toggles
+		const individualActions = [
+			{ key: 'toggleMode', name: 'Toggle Light/Dark Mode', desc: 'Show mode toggle button in command palette' },
+			{ key: 'graphView', name: 'Graph View', desc: 'Show graph view button in command palette' },
+			{ key: 'changeTheme', name: 'Change Theme', desc: 'Show theme selector button in command palette' }
+		];
+
+		individualActions.forEach(action => {
+			const settingDiv = quickActionsContainer.createDiv('individual-quick-action');
+			settingDiv.style.display = settings.features.quickActions.enabled ? 'block' : 'none';
+			
+			new Setting(settingDiv)
+				.setName(action.name)
+				.setDesc(action.desc)
+				.addToggle(toggle => toggle
+					.setValue(settings.features.quickActions[action.key as keyof typeof settings.features.quickActions] as boolean)
+					.onChange(async (value) => {
+						(settings.features.quickActions as any)[action.key] = value;
+						await this.plugin.saveData(settings);
+						
+						// Apply changes immediately to config.ts
+						try {
+							await this.applyCurrentConfiguration();
+							new Notice(`${action.name} ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
+						} catch (error) {
+							new Notice(`Failed to apply ${action.name} to config.ts: ${error instanceof Error ? error.message : String(error)}`);
+						}
+					}));
+		});
+
 		// Note about immediate application
 		const noteSection = container.createDiv('settings-section');
 		noteSection.createEl('p', { 

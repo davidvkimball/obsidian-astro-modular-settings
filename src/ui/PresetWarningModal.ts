@@ -17,12 +17,12 @@ export class PresetWarningModal extends Modal {
 		contentEl.empty();
 
 		// Modal header
-		const header = contentEl.createEl('h2', { text: 'Template Change Warning' });
+		const header = contentEl.createEl('h2', { text: 'Apply Template Preset' });
 		header.style.marginTop = '0';
 
 		// Warning message
 		const warning = contentEl.createEl('p', { 
-			text: 'This template will overwrite your current custom settings. The following settings will be changed:' 
+			text: 'Applying this template will change the following settings:' 
 		});
 		warning.style.marginBottom = '16px';
 
@@ -38,7 +38,7 @@ export class PresetWarningModal extends Modal {
 
 		// Question
 		const question = contentEl.createEl('p', { 
-			text: 'Do you want to continue? This action cannot be undone.' 
+			text: 'Do you want to apply this template?' 
 		});
 		question.style.fontWeight = 'bold';
 		question.style.marginBottom = '24px';

@@ -39,7 +39,7 @@ These markers allow the plugin to find and update specific configuration values 
 - `CONFIG:FOOTER_ENABLED` - Footer enabled state
 - `CONFIG:FOOTER_SHOW_SOCIAL_ICONS` - Footer social icons
 - `CONFIG:SCROLL_TO_TOP` - Scroll to top button
-- `CONFIG:DARK_MODE_TOGGLE_BUTTON` - Dark mode toggle location
+- `CONFIG:FEATURE_BUTTON` - Feature button type (mode/graph/theme/none)
 - `CONFIG:DEPLOYMENT_PLATFORM` - Deployment platform
 
 ### Command Palette
@@ -53,6 +53,10 @@ These markers allow the plugin to find and update specific configuration values 
 - `CONFIG:COMMAND_PALETTE_SECTIONS_QUICK_ACTIONS` - Quick actions section
 - `CONFIG:COMMAND_PALETTE_SECTIONS_PAGES` - Pages section
 - `CONFIG:COMMAND_PALETTE_SECTIONS_SOCIAL` - Social section
+- `CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_ENABLED` - Enable/disable quick actions
+- `CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_TOGGLE_MODE` - Toggle light/dark mode
+- `CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_GRAPH_VIEW` - Graph view button
+- `CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_CHANGE_THEME` - Change theme button
 
 ### Profile Picture
 - `CONFIG:PROFILE_PICTURE_ENABLED` - Enable/disable profile picture
