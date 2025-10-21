@@ -75,10 +75,33 @@ export class ConfigTab extends TabRenderer {
 					settings.contentOrganization = value as any;
 					await this.plugin.saveData(settings);
 					
-					// Configure plugins based on content organization
+					// Build plugin config dynamically based on new content organization (like wizard does)
+					const contentOrg = value as 'file-based' | 'folder-based';
+					const config = {
+						obsidianSettings: {
+							attachmentLocation: contentOrg === 'file-based' ? 'subfolder' : 'same-folder',
+							subfolderName: 'attachments'
+						},
+						astroComposerSettings: {
+							creationMode: contentOrg === 'file-based' ? 'file' : 'folder',
+							indexFileName: 'index'
+						},
+						imageInserterSettings: {
+							valueFormat: contentOrg === 'file-based' 
+								? '[[attachments/{image-url}]]' 
+								: '[[{image-url}]]',
+							insertFormat: contentOrg === 'file-based' 
+								? '[[attachments/{image-url}]]' 
+								: '[[{image-url}]]'
+						}
+					};
+					
+					// Configure plugins with the new config
 					try {
-						await (this.plugin as any).pluginManager.configurePlugins(settings.pluginConfig);
-						new Notice(`Content organization changed to ${value} and plugins configured`);
+						await (this.plugin as any).pluginManager.configurePlugins(config);
+						const attachmentLocation = contentOrg === 'file-based' ? 'subfolder (attachments/)' : 'same folder';
+						const creationMode = contentOrg === 'file-based' ? 'file' : 'folder';
+						new Notice(`Content organization changed to ${value}\n\n• Obsidian: Attachments → ${attachmentLocation}\n• Astro Composer: Creation mode → ${creationMode}\n• Image Inserter: Format updated`, 8000);
 					} catch (error) {
 						new Notice(`Failed to configure plugins for content organization: ${error instanceof Error ? error.message : String(error)}`);
 					}

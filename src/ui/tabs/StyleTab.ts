@@ -140,13 +140,13 @@ export class StyleTab extends TabRenderer {
 			this.createTextSetting(
 				typographySection,
 				'Custom Font URLs',
-				'Comma-separated font URLs',
-				settings.typography.customFonts?.heading || '',
+				'Comma-separated URLs for custom fonts (e.g., Google Fonts URL)',
+				settings.typography.customFonts?.urls || '',
 				(value) => {
-				if (!settings.typography.customFonts) {
-					settings.typography.customFonts = { heading: '', prose: '', mono: '', urls: '' };
-				}
-					settings.typography.customFonts.heading = value;
+					if (!settings.typography.customFonts) {
+						settings.typography.customFonts = { heading: '', prose: '', mono: '', urls: '' };
+					}
+					settings.typography.customFonts.urls = value;
 				}
 			);
 
@@ -154,40 +154,40 @@ export class StyleTab extends TabRenderer {
 			this.createTextSetting(
 				typographySection,
 				'Custom Heading Font Name',
-				'Name of the custom heading font',
+				'Font family name for headings',
 				settings.typography.customFonts?.heading || '',
 				(value) => {
-				if (!settings.typography.customFonts) {
-					settings.typography.customFonts = { heading: '', prose: '', mono: '', urls: '' };
-				}
+					if (!settings.typography.customFonts) {
+						settings.typography.customFonts = { heading: '', prose: '', mono: '', urls: '' };
+					}
 					settings.typography.customFonts.heading = value;
 				}
 			);
 
-			// Custom prose font name
+			// Custom Body Font Name
 			this.createTextSetting(
 				typographySection,
-				'Custom Prose Font Name',
-				'Name of the custom prose font',
+				'Custom Body Font Name',
+				'Font family name for body text',
 				settings.typography.customFonts?.prose || '',
 				(value) => {
-				if (!settings.typography.customFonts) {
-					settings.typography.customFonts = { heading: '', prose: '', mono: '', urls: '' };
-				}
+					if (!settings.typography.customFonts) {
+						settings.typography.customFonts = { heading: '', prose: '', mono: '', urls: '' };
+					}
 					settings.typography.customFonts.prose = value;
 				}
 			);
 
-			// Custom mono font name
+			// Custom Monospace Font Name
 			this.createTextSetting(
 				typographySection,
 				'Custom Monospace Font Name',
-				'Name of the custom monospace font',
+				'Font family name for code',
 				settings.typography.customFonts?.mono || '',
 				(value) => {
-				if (!settings.typography.customFonts) {
-					settings.typography.customFonts = { heading: '', prose: '', mono: '', urls: '' };
-				}
+					if (!settings.typography.customFonts) {
+						settings.typography.customFonts = { heading: '', prose: '', mono: '', urls: '' };
+					}
 					settings.typography.customFonts.mono = value;
 				}
 			);
