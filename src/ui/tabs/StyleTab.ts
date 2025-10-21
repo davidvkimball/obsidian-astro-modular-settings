@@ -3,8 +3,11 @@ import { TabRenderer } from '../common/TabRenderer';
 import { THEME_OPTIONS, FONT_OPTIONS } from '../../types';
 
 export class StyleTab extends TabRenderer {
+	private mainContainer: HTMLElement | null = null;
+
 	render(container: HTMLElement): void {
 		container.empty();
+		this.mainContainer = container; // Store reference to main container
 		const settings = this.getSettings();
 
 		// Settings section header
@@ -49,6 +52,123 @@ export class StyleTab extends TabRenderer {
 					settings.customThemeFile = value;
 				}
 			);
+		}
+
+		// Available themes customization
+		new Setting(container)
+			.setName('Customize available themes')
+			.setDesc('Control which themes are shown to users in the theme selector')
+			.addToggle(toggle => {
+				const isCustomized = Array.isArray(settings.availableThemes);
+				toggle.setValue(isCustomized);
+				toggle.onChange(async (value) => {
+					if (value) {
+						// Enable customization - set to all themes except 'custom'
+						const allThemes = THEME_OPTIONS.filter(theme => theme.id !== 'custom').map(theme => theme.id);
+						settings.availableThemes = allThemes as any;
+					} else {
+						// Disable customization - set to "all"
+						settings.availableThemes = 'all';
+					}
+					await this.plugin.saveData(settings);
+					// Reload settings to ensure the plugin has the latest values
+					await (this.plugin as any).loadSettings();
+					
+					// Re-render to show/hide theme pills
+					if (this.mainContainer) {
+						this.render(this.mainContainer);
+					}
+					
+					// Apply changes immediately to config.ts
+					try {
+						await this.applyCurrentConfiguration();
+						new Notice(`Available themes ${value ? 'customized' : 'set to all'} and applied to config.ts`);
+					} catch (error) {
+						new Notice(`Failed to apply available themes change: ${error instanceof Error ? error.message : String(error)}`);
+					}
+				});
+			});
+
+		// Show theme pills when customization is enabled
+		if (Array.isArray(settings.availableThemes)) {
+			const themePillsContainer = container.createDiv('theme-pills-container');
+			themePillsContainer.style.marginTop = '10px';
+			themePillsContainer.style.marginBottom = '20px';
+			
+			const pillsHeader = themePillsContainer.createEl('p', { 
+				text: 'Selected themes (click × to remove):',
+				cls: 'theme-pills-header'
+			});
+			pillsHeader.style.fontSize = '14px';
+			pillsHeader.style.marginBottom = '8px';
+			pillsHeader.style.color = 'var(--text-muted)';
+			
+			const pillsWrapper = themePillsContainer.createDiv('theme-pills-wrapper');
+			pillsWrapper.style.display = 'flex';
+			pillsWrapper.style.flexWrap = 'wrap';
+			pillsWrapper.style.gap = '8px';
+			
+			// Show each selected theme as a pill
+			settings.availableThemes.forEach(themeId => {
+				const theme = THEME_OPTIONS.find(t => t.id === themeId);
+				if (theme) {
+					const pill = pillsWrapper.createDiv('theme-pill');
+					pill.style.display = 'inline-flex';
+					pill.style.alignItems = 'center';
+					pill.style.padding = '4px 8px';
+					pill.style.backgroundColor = 'var(--interactive-accent)';
+					pill.style.color = 'var(--text-on-accent)';
+					pill.style.borderRadius = '12px';
+					pill.style.fontSize = '12px';
+					pill.style.gap = '6px';
+					
+					pill.createSpan({ text: theme.name });
+					
+					const removeBtn = pill.createEl('button', { text: '×' });
+					removeBtn.style.background = 'none';
+					removeBtn.style.border = 'none';
+					removeBtn.style.color = 'inherit';
+					removeBtn.style.cursor = 'pointer';
+					removeBtn.style.fontSize = '14px';
+					removeBtn.style.padding = '0';
+					removeBtn.style.width = '16px';
+					removeBtn.style.height = '16px';
+					removeBtn.style.borderRadius = '50%';
+					removeBtn.style.display = 'flex';
+					removeBtn.style.alignItems = 'center';
+					removeBtn.style.justifyContent = 'center';
+					
+					removeBtn.addEventListener('click', async () => {
+						// Remove theme from array (we know it's an array because we're in this block)
+						const currentThemes = settings.availableThemes as string[];
+						const newThemes = currentThemes.filter((id: string) => id !== themeId);
+						
+						// Ensure at least one theme remains
+						if (newThemes.length === 0) {
+							new Notice('At least one theme must be available. Adding "oxygen" as default.');
+							newThemes.push('oxygen');
+						}
+						
+						settings.availableThemes = newThemes as any;
+						await this.plugin.saveData(settings);
+						// Reload settings to ensure the plugin has the latest values
+						await (this.plugin as any).loadSettings();
+						
+						// Re-render to update pills
+						if (this.mainContainer) {
+							this.render(this.mainContainer);
+						}
+						
+						// Apply changes immediately to config.ts
+						try {
+							await this.applyCurrentConfiguration();
+							new Notice(`Theme "${theme.name}" removed from available themes`);
+						} catch (error) {
+							new Notice(`Failed to apply theme removal: ${error instanceof Error ? error.message : String(error)}`);
+						}
+					});
+				}
+			});
 		}
 
 		// Typography section

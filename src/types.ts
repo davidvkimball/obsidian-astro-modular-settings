@@ -52,6 +52,9 @@ export interface AstroModularSettings {
 		projects: boolean;
 		docs: boolean;
 	};
+
+	// Available themes customization
+	availableThemes: "all" | Array<Exclude<ThemeType, 'custom'>>;
 }
 
 export interface SiteInformation {
@@ -545,6 +548,7 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 		projects: true, // Will be overridden based on template
 		docs: true, // Will be overridden based on template
 	},
+	availableThemes: 'all',
 };
 
 export const THEME_OPTIONS: ThemeOption[] = [

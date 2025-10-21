@@ -32,6 +32,7 @@ These markers allow the plugin to find and update specific configuration values 
 ### Global Settings
 - `CONFIG:THEME` - Theme selection
 - `CONFIG:CUSTOM_THEME_FILE` - Custom theme filename (only used when theme is "custom")
+- `CONFIG:AVAILABLE_THEMES` - Control which themes users can select (all or array of theme names)
 - `CONFIG:FONT_SOURCE` - Font source (local/cdn)
 - `CONFIG:FONT_BODY` - Body font family
 - `CONFIG:FONT_HEADING` - Heading font family

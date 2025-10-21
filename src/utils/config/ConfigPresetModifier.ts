@@ -618,6 +618,28 @@ export class ConfigPresetModifier {
 			}
 		}
 		
+		// Update available themes
+		if (settings.availableThemes !== undefined) {
+			console.log('🔧 Attempting to update availableThemes to:', settings.availableThemes);
+			let availableThemesValue: string;
+			if (settings.availableThemes === 'all') {
+				availableThemesValue = '"all"';
+			} else {
+				// Convert array to string format
+				const themesArray = settings.availableThemes.map(theme => `"${theme}"`).join(', ');
+				availableThemesValue = `[${themesArray}]`;
+			}
+			
+			const availableThemesRegex = /\/\/ \[CONFIG:AVAILABLE_THEMES\]\s*\n\s*availableThemes:\s*(?:"all"|\[[^\]]*\])/;
+			const availableThemesMatch = modifiedConfig.match(availableThemesRegex);
+			console.log('🔧 AvailableThemes regex match:', availableThemesMatch);
+			
+			modifiedConfig = modifiedConfig.replace(
+				availableThemesRegex,
+				`// [CONFIG:AVAILABLE_THEMES]\n  availableThemes: ${availableThemesValue}`
+			);
+		}
+		
 		// Update font source
 		modifiedConfig = modifiedConfig.replace(
 			/\/\/ \[CONFIG:FONT_SOURCE\]\s*\n\s*source:\s*"[^"]*"/,
