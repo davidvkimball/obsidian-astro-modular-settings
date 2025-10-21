@@ -5,13 +5,32 @@ export interface AstroModularSettings {
 	// Current configuration
 	currentTemplate: TemplateType;
 	currentTheme: ThemeType;
+	customThemeFile?: string;
 	contentOrganization: ContentOrganizationType;
 	
 	// Site information
 	siteInfo: SiteInformation;
 	
+	// Layout
+	layout: LayoutSettings;
+	
+	// Footer
+	footer: FooterSettings;
+	
+	// SEO
+	seo: SeoSettings;
+	
 	// Navigation settings
 	navigation: NavigationSettings;
+	
+	// Command Palette
+	commandPalette: CommandPaletteSettings;
+	
+	// Home Options
+	homeOptions: HomeOptions;
+	
+	// Post Options
+	postOptions: PostOptions;
 	
 	// Features (for custom template)
 	features: FeatureSettings;
@@ -43,9 +62,90 @@ export interface SiteInformation {
 	language: string;
 }
 
+export interface LayoutSettings {
+	contentWidth: string;
+}
+
+export interface FooterSettings {
+	enabled: boolean;
+	content: string;
+	showSocialIconsInFooter: boolean;
+}
+
+export interface SeoSettings {
+	defaultOgImageAlt: string;
+}
+
 export interface NavigationSettings {
+	showNavigation: boolean;
+	style: 'minimal' | 'traditional';
+	showMobileMenu: boolean;
 	pages: Array<{ title: string; url: string }>;
 	social: Array<{ title: string; url: string; icon: string }>;
+}
+
+export interface CommandPaletteSettings {
+	enabled: boolean;
+	shortcut: string;
+	placeholder: string;
+	search: {
+		posts: boolean;
+		pages: boolean;
+		projects: boolean;
+		docs: boolean;
+	};
+	sections: {
+		quickActions: boolean;
+		pages: boolean;
+		social: boolean;
+	};
+	quickActions: QuickActionsSettings;
+}
+
+export interface HomeOptions {
+	featuredPost: {
+		enabled: boolean;
+		type: 'latest' | 'featured';
+		slug?: string;
+	};
+	recentPosts: {
+		enabled: boolean;
+		count: number;
+	};
+	projects: {
+		enabled: boolean;
+		count: number;
+	};
+	docs: {
+		enabled: boolean;
+		count: number;
+	};
+	blurb: {
+		placement: 'above' | 'below' | 'none';
+	};
+}
+
+export interface PostOptions {
+	postsPerPage: number;
+	readingTime: boolean;
+	wordCount: boolean;
+	tableOfContents: boolean;
+	tags: boolean;
+	linkedMentions: {
+		enabled: boolean;
+		linkedMentionsCompact: boolean;
+	};
+	graphView: {
+		enabled: boolean;
+		showInSidebar: boolean;
+		maxNodes: number;
+		showOrphanedPosts: boolean;
+	};
+	postNavigation: boolean;
+	showPostCardCoverImages: 'all' | 'featured' | 'home' | 'posts' | 'featured-and-posts' | 'none';
+	postCardAspectRatio: 'og' | '16:9' | '4:3' | '3:2' | 'square' | 'golden' | 'custom';
+	customPostCardAspectRatio?: string;
+	comments: CommentsSettings;
 }
 
 export interface FeatureSettings {
@@ -79,6 +179,7 @@ export interface TypographySettings {
 	proseFont: string;
 	monoFont: string;
 	fontSource: 'local' | 'cdn';
+	fontDisplay: 'swap' | 'fallback' | 'optional';
 	customFonts: {
 		heading: string;
 		prose: string;
@@ -244,6 +345,7 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 	runWizardOnStartup: true,
 	currentTemplate: 'standard',
 	currentTheme: 'oxygen',
+	customThemeFile: 'custom',
 	contentOrganization: 'file-based',
 	siteInfo: {
 		site: 'https://astro-modular.netlify.app',
@@ -252,7 +354,21 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 		author: 'David V. Kimball',
 		language: 'en',
 	},
+	layout: {
+		contentWidth: '45rem',
+	},
+	footer: {
+		enabled: true,
+		content: '© 2025 {author}. Built with the <a href="https://github.com/davidvkimball/astro-modular" target="_blank">Astro Modular</a> theme.',
+		showSocialIconsInFooter: true,
+	},
+	seo: {
+		defaultOgImageAlt: 'Astro Modular logo.',
+	},
 	navigation: {
+		showNavigation: true,
+		style: 'traditional',
+		showMobileMenu: true,
 		pages: [
 			{ title: 'Posts', url: '/posts' },
 			{ title: 'Projects', url: '/projects' },
@@ -264,6 +380,87 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 			{ title: 'X', url: 'https://x.com/davidvkimball', icon: 'x-twitter' },
 			{ title: 'GitHub', url: 'https://github.com/davidvkimball', icon: 'github' },
 		],
+	},
+	commandPalette: {
+		enabled: true,
+		shortcut: 'ctrl+K',
+		placeholder: 'Search posts',
+		search: {
+			posts: true,
+			pages: false,
+			projects: false,
+			docs: false,
+		},
+		sections: {
+			quickActions: true,
+			pages: true,
+			social: true,
+		},
+		quickActions: {
+			enabled: true,
+			toggleMode: true,
+			graphView: true,
+			changeTheme: true,
+		},
+	},
+	homeOptions: {
+		featuredPost: {
+			enabled: true,
+			type: 'latest',
+			slug: 'getting-started',
+		},
+		recentPosts: {
+			enabled: true,
+			count: 7,
+		},
+		projects: {
+			enabled: true,
+			count: 2,
+		},
+		docs: {
+			enabled: true,
+			count: 3,
+		},
+		blurb: {
+			placement: 'below',
+		},
+	},
+	postOptions: {
+		postsPerPage: 6,
+		readingTime: true,
+		wordCount: true,
+		tableOfContents: true,
+		tags: true,
+		linkedMentions: {
+			enabled: true,
+			linkedMentionsCompact: false,
+		},
+		graphView: {
+			enabled: true,
+			showInSidebar: true,
+			maxNodes: 100,
+			showOrphanedPosts: true,
+		},
+		postNavigation: true,
+		showPostCardCoverImages: 'featured-and-posts',
+		postCardAspectRatio: 'og',
+		customPostCardAspectRatio: '2.5/1',
+		comments: {
+			enabled: false,
+			provider: 'giscus',
+			repo: 'davidvkimball/astro-modular',
+			repoId: 'R_kgDOPllfKw',
+			category: 'General',
+			categoryId: 'DIC_kwDOPllfK84CvUpx',
+			mapping: 'pathname',
+			strict: '0',
+			reactions: '1',
+			metadata: '0',
+			inputPosition: 'bottom',
+			theme: 'preferred_color_scheme',
+			lang: 'en',
+			loading: 'lazy',
+		},
 	},
 	features: {
 		commandPalette: true,
@@ -292,6 +489,7 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 		proseFont: 'Inter',
 		monoFont: 'JetBrains Mono',
 		fontSource: 'local',
+		fontDisplay: 'swap',
 		customFonts: {
 			heading: '',
 			prose: '',
@@ -485,6 +683,14 @@ export const THEME_OPTIONS: ThemeOption[] = [
 		previewColors: ['#1e3a8a', '#4d95f7'],
 		backgroundColorLight: '#f8fafc',
 		backgroundColorDark: '#17191c',
+	},
+	{
+		id: 'custom',
+		name: 'Custom',
+		description: 'Use a custom theme file',
+		previewColors: ['#666666', '#999999'],
+		backgroundColorLight: '#ffffff',
+		backgroundColorDark: '#000000',
 	},
 ];
 

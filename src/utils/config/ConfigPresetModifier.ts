@@ -565,11 +565,27 @@ export class ConfigPresetModifier {
 			`// [CONFIG:THEME]\n  theme: "${settings.currentTheme}"`
 		);
 		
+		// Update custom theme file
+		if (settings.customThemeFile) {
+			modifiedConfig = modifiedConfig.replace(
+				/\/\/ \[CONFIG:CUSTOM_THEME_FILE\]\s*\n\s*customThemeFile:\s*"[^"]*"/,
+				`// [CONFIG:CUSTOM_THEME_FILE]\n  customThemeFile: "${settings.customThemeFile}"`
+			);
+		}
+		
 		// Update font source
 		modifiedConfig = modifiedConfig.replace(
 			/\/\/ \[CONFIG:FONT_SOURCE\]\s*\n\s*source:\s*"[^"]*"/,
 			`// [CONFIG:FONT_SOURCE]\n    source: "${settings.typography.fontSource}"`
 		);
+		
+		// Update font display
+		if (settings.typography.fontDisplay) {
+			modifiedConfig = modifiedConfig.replace(
+				/\/\/ \[CONFIG:FONT_DISPLAY\]\s*\n\s*display:\s*"[^"]*"/,
+				`// [CONFIG:FONT_DISPLAY]\n    display: "${settings.typography.fontDisplay}"`
+			);
+		}
 		
 		// Update font families
 		modifiedConfig = modifiedConfig.replace(
@@ -591,10 +607,268 @@ export class ConfigPresetModifier {
 			`// [CONFIG:DEPLOYMENT_PLATFORM]\n    platform: "${settings.deployment.platform}"`
 		);
 		
-		// Update command palette enabled state
+		// Update layout content width
+		if (settings.layout?.contentWidth) {
+			modifiedConfig = modifiedConfig.replace(
+				/\/\/ \[CONFIG:LAYOUT_CONTENT_WIDTH\]\s*\n\s*contentWidth:\s*"[^"]*"/,
+				`// [CONFIG:LAYOUT_CONTENT_WIDTH]\n    contentWidth: "${settings.layout.contentWidth}"`
+			);
+		}
+		
+		// Update footer settings
+		if (settings.footer) {
+			if (settings.footer.enabled !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:FOOTER_ENABLED\]\s*\n\s*enabled:\s*(true|false)/,
+					`// [CONFIG:FOOTER_ENABLED]\n    enabled: ${settings.footer.enabled}`
+				);
+			}
+			if (settings.footer.content) {
+				// Escape special characters in the content
+				const escapedContent = settings.footer.content.replace(/"/g, '\\"').replace(/\n/g, '\\n');
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:FOOTER_CONTENT\]\s*\n\s*content:\s*`[^`]*`/,
+					`// [CONFIG:FOOTER_CONTENT]\n    content: \`${settings.footer.content}\``
+				);
+			}
+			if (settings.footer.showSocialIconsInFooter !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:FOOTER_SHOW_SOCIAL_ICONS\]\s*\n\s*showSocialIconsInFooter:\s*(true|false)/,
+					`// [CONFIG:FOOTER_SHOW_SOCIAL_ICONS]\n    showSocialIconsInFooter: ${settings.footer.showSocialIconsInFooter}`
+				);
+			}
+		}
+		
+		// Update SEO settings
+		if (settings.seo?.defaultOgImageAlt) {
+			modifiedConfig = modifiedConfig.replace(
+				/\/\/ \[CONFIG:SEO_DEFAULT_OG_IMAGE_ALT\]\s*\n\s*defaultOgImageAlt:\s*"[^"]*"/,
+				`// [CONFIG:SEO_DEFAULT_OG_IMAGE_ALT]\n    defaultOgImageAlt: "${settings.seo.defaultOgImageAlt}"`
+			);
+		}
+		
+		// Update navigation settings
+		if (settings.navigation) {
+			if (settings.navigation.showNavigation !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:NAVIGATION_SHOW_NAVIGATION\]\s*\n\s*showNavigation:\s*(true|false)/,
+					`// [CONFIG:NAVIGATION_SHOW_NAVIGATION]\n    showNavigation: ${settings.navigation.showNavigation}`
+				);
+			}
+			if (settings.navigation.style) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:NAVIGATION_STYLE\]\s*\n\s*style:\s*"[^"]*"/,
+					`// [CONFIG:NAVIGATION_STYLE]\n    style: "${settings.navigation.style}"`
+				);
+			}
+			if (settings.navigation.showMobileMenu !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:NAVIGATION_SHOW_MOBILE_MENU\]\s*\n\s*showMobileMenu:\s*(true|false)/,
+					`// [CONFIG:NAVIGATION_SHOW_MOBILE_MENU]\n    showMobileMenu: ${settings.navigation.showMobileMenu}`
+				);
+			}
+		}
+		
+		// Update command palette settings
+		if (settings.commandPalette) {
+			if (settings.commandPalette.enabled !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:COMMAND_PALETTE_ENABLED\]\s*\n\s*enabled:\s*(true|false)/,
+					`// [CONFIG:COMMAND_PALETTE_ENABLED]\n    enabled: ${settings.commandPalette.enabled}`
+				);
+			}
+			if (settings.commandPalette.shortcut) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:COMMAND_PALETTE_SHORTCUT\]\s*\n\s*shortcut:\s*"[^"]*"/,
+					`// [CONFIG:COMMAND_PALETTE_SHORTCUT]\n    shortcut: "${settings.commandPalette.shortcut}"`
+				);
+			}
+			if (settings.commandPalette.placeholder) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:COMMAND_PALETTE_PLACEHOLDER\]\s*\n\s*placeholder:\s*"[^"]*"/,
+					`// [CONFIG:COMMAND_PALETTE_PLACEHOLDER]\n    placeholder: "${settings.commandPalette.placeholder}"`
+				);
+			}
+			if (settings.commandPalette.search) {
+				if (settings.commandPalette.search.posts !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:COMMAND_PALETTE_SEARCH_POSTS\]\s*\n\s*posts:\s*(true|false)/,
+						`// [CONFIG:COMMAND_PALETTE_SEARCH_POSTS]\n      posts: ${settings.commandPalette.search.posts}`
+					);
+				}
+				if (settings.commandPalette.search.pages !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:COMMAND_PALETTE_SEARCH_PAGES\]\s*\n\s*pages:\s*(true|false)/,
+						`// [CONFIG:COMMAND_PALETTE_SEARCH_PAGES]\n      pages: ${settings.commandPalette.search.pages}`
+					);
+				}
+				if (settings.commandPalette.search.projects !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:COMMAND_PALETTE_SEARCH_PROJECTS\]\s*\n\s*projects:\s*(true|false)/,
+						`// [CONFIG:COMMAND_PALETTE_SEARCH_PROJECTS]\n      projects: ${settings.commandPalette.search.projects}`
+					);
+				}
+				if (settings.commandPalette.search.docs !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:COMMAND_PALETTE_SEARCH_DOCS\]\s*\n\s*docs:\s*(true|false)/,
+						`// [CONFIG:COMMAND_PALETTE_SEARCH_DOCS]\n      docs: ${settings.commandPalette.search.docs}`
+					);
+				}
+			}
+			if (settings.commandPalette.sections) {
+				if (settings.commandPalette.sections.quickActions !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:COMMAND_PALETTE_SECTIONS_QUICK_ACTIONS\]\s*\n\s*quickActions:\s*(true|false)/,
+						`// [CONFIG:COMMAND_PALETTE_SECTIONS_QUICK_ACTIONS]\n      quickActions: ${settings.commandPalette.sections.quickActions}`
+					);
+				}
+				if (settings.commandPalette.sections.pages !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:COMMAND_PALETTE_SECTIONS_PAGES\]\s*\n\s*pages:\s*(true|false)/,
+						`// [CONFIG:COMMAND_PALETTE_SECTIONS_PAGES]\n      pages: ${settings.commandPalette.sections.pages}`
+					);
+				}
+				if (settings.commandPalette.sections.social !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:COMMAND_PALETTE_SECTIONS_SOCIAL\]\s*\n\s*social:\s*(true|false)/,
+						`// [CONFIG:COMMAND_PALETTE_SECTIONS_SOCIAL]\n      social: ${settings.commandPalette.sections.social}`
+					);
+				}
+			}
+		}
+		
+		// Update homeOptions
+		if (settings.homeOptions) {
+			if (settings.homeOptions.featuredPost) {
+				if (settings.homeOptions.featuredPost.enabled !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:HOME_OPTIONS_FEATURED_POST_ENABLED\]\s*\n\s*enabled:\s*(true|false)/,
+						`// [CONFIG:HOME_OPTIONS_FEATURED_POST_ENABLED]\n      enabled: ${settings.homeOptions.featuredPost.enabled}`
+					);
+				}
+				if (settings.homeOptions.featuredPost.type) {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:HOME_OPTIONS_FEATURED_POST_TYPE\]\s*\n\s*type:\s*"[^"]*"/,
+						`// [CONFIG:HOME_OPTIONS_FEATURED_POST_TYPE]\n      type: "${settings.homeOptions.featuredPost.type}"`
+					);
+				}
+				if (settings.homeOptions.featuredPost.slug) {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:HOME_OPTIONS_FEATURED_POST_SLUG\]\s*\n\s*slug:\s*"[^"]*"/,
+						`// [CONFIG:HOME_OPTIONS_FEATURED_POST_SLUG]\n      slug: "${settings.homeOptions.featuredPost.slug}"`
+					);
+				}
+			}
+			if (settings.homeOptions.recentPosts) {
+				if (settings.homeOptions.recentPosts.enabled !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:HOME_OPTIONS_RECENT_POSTS_ENABLED\]\s*\n\s*enabled:\s*(true|false)/,
+						`// [CONFIG:HOME_OPTIONS_RECENT_POSTS_ENABLED]\n      enabled: ${settings.homeOptions.recentPosts.enabled}`
+					);
+				}
+				if (settings.homeOptions.recentPosts.count) {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:HOME_OPTIONS_RECENT_POSTS_COUNT\]\s*\n\s*count:\s*\d+/,
+						`// [CONFIG:HOME_OPTIONS_RECENT_POSTS_COUNT]\n      count: ${settings.homeOptions.recentPosts.count}`
+					);
+				}
+			}
+			if (settings.homeOptions.projects) {
+				if (settings.homeOptions.projects.enabled !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:HOME_OPTIONS_PROJECTS_ENABLED\]\s*\n\s*enabled:\s*(true|false)/,
+						`// [CONFIG:HOME_OPTIONS_PROJECTS_ENABLED]\n      enabled: ${settings.homeOptions.projects.enabled}`
+					);
+				}
+				if (settings.homeOptions.projects.count) {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:HOME_OPTIONS_PROJECTS_COUNT\]\s*\n\s*count:\s*\d+/,
+						`// [CONFIG:HOME_OPTIONS_PROJECTS_COUNT]\n      count: ${settings.homeOptions.projects.count}`
+					);
+				}
+			}
+			if (settings.homeOptions.docs) {
+				if (settings.homeOptions.docs.enabled !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:HOME_OPTIONS_DOCS_ENABLED\]\s*\n\s*enabled:\s*(true|false)/,
+						`// [CONFIG:HOME_OPTIONS_DOCS_ENABLED]\n      enabled: ${settings.homeOptions.docs.enabled}`
+					);
+				}
+				if (settings.homeOptions.docs.count) {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:HOME_OPTIONS_DOCS_COUNT\]\s*\n\s*count:\s*\d+/,
+						`// [CONFIG:HOME_OPTIONS_DOCS_COUNT]\n      count: ${settings.homeOptions.docs.count}`
+					);
+				}
+			}
+			if (settings.homeOptions.blurb?.placement) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:HOME_OPTIONS_BLURB_PLACEMENT\]\s*\n\s*placement:\s*"[^"]*"/,
+					`// [CONFIG:HOME_OPTIONS_BLURB_PLACEMENT]\n      placement: "${settings.homeOptions.blurb.placement}"`
+				);
+			}
+		}
+		
+		// Update postOptions
+		if (settings.postOptions) {
+			if (settings.postOptions.postsPerPage) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:POST_OPTIONS_POSTS_PER_PAGE\]\s*\n\s*postsPerPage:\s*\d+/,
+					`// [CONFIG:POST_OPTIONS_POSTS_PER_PAGE]\n    postsPerPage: ${settings.postOptions.postsPerPage}`
+				);
+			}
+			if (settings.postOptions.wordCount !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:POST_OPTIONS_WORD_COUNT\]\s*\n\s*wordCount:\s*(true|false)/,
+					`// [CONFIG:POST_OPTIONS_WORD_COUNT]\n    wordCount: ${settings.postOptions.wordCount}`
+				);
+			}
+			if (settings.postOptions.tags !== undefined) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:POST_OPTIONS_TAGS\]\s*\n\s*tags:\s*(true|false)/,
+					`// [CONFIG:POST_OPTIONS_TAGS]\n    tags: ${settings.postOptions.tags}`
+				);
+			}
+			if (settings.postOptions.linkedMentions) {
+				if (settings.postOptions.linkedMentions.linkedMentionsCompact !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:POST_OPTIONS_LINKED_MENTIONS_COMPACT\]\s*\n\s*linkedMentionsCompact:\s*(true|false)/,
+						`// [CONFIG:POST_OPTIONS_LINKED_MENTIONS_COMPACT]\n      linkedMentionsCompact: ${settings.postOptions.linkedMentions.linkedMentionsCompact}`
+					);
+				}
+			}
+			if (settings.postOptions.graphView) {
+				if (settings.postOptions.graphView.showInSidebar !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_IN_SIDEBAR\]\s*\n\s*showInSidebar:\s*(true|false)/,
+						`// [CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_IN_SIDEBAR]\n      showInSidebar: ${settings.postOptions.graphView.showInSidebar}`
+					);
+				}
+				if (settings.postOptions.graphView.maxNodes) {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:POST_OPTIONS_GRAPH_VIEW_MAX_NODES\]\s*\n\s*maxNodes:\s*\d+/,
+						`// [CONFIG:POST_OPTIONS_GRAPH_VIEW_MAX_NODES]\n      maxNodes: ${settings.postOptions.graphView.maxNodes}`
+					);
+				}
+				if (settings.postOptions.graphView.showOrphanedPosts !== undefined) {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_ORPHANED_POSTS\]\s*\n\s*showOrphanedPosts:\s*(true|false)/,
+						`// [CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_ORPHANED_POSTS]\n      showOrphanedPosts: ${settings.postOptions.graphView.showOrphanedPosts}`
+					);
+				}
+			}
+			if (settings.postOptions.customPostCardAspectRatio) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:POST_OPTIONS_CUSTOM_POST_CARD_ASPECT_RATIO\]\s*\n\s*customPostCardAspectRatio:\s*"[^"]*"/,
+					`// [CONFIG:POST_OPTIONS_CUSTOM_POST_CARD_ASPECT_RATIO]\n    customPostCardAspectRatio: "${settings.postOptions.customPostCardAspectRatio}"`
+				);
+			}
+		}
+		
+		// Update command palette enabled state from features (backward compat)
 		modifiedConfig = modifiedConfig.replace(
-			/\/\/ \[CONFIG:COMMAND_PALETTE_ENABLED\]\s*enabled:\s*(true|false)/,
-			`// [CONFIG:COMMAND_PALETTE_ENABLED]\n    enabled: ${settings.features.commandPalette}`
+			/\/\/ \[CONFIG:COMMAND_PALETTE_ENABLED\]\s*\n\s*enabled:\s*(true|false)/,
+			`// [CONFIG:COMMAND_PALETTE_ENABLED]\n    enabled: ${settings.commandPalette?.enabled ?? settings.features.commandPalette}`
 		);
 		
 		// Update table of contents

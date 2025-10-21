@@ -25,6 +25,9 @@ export class StyleTab extends TabRenderer {
 					settings.currentTheme = value as any;
 					await this.plugin.saveData(settings);
 					
+					// Re-render to show/hide custom theme file field
+					this.render(container);
+					
 					// Apply changes immediately to config.ts
 					try {
 						await this.applyCurrentConfiguration();
@@ -34,6 +37,19 @@ export class StyleTab extends TabRenderer {
 					}
 				});
 			});
+
+		// Custom theme file (only show when theme is 'custom')
+		if (settings.currentTheme === 'custom') {
+			this.createTextSetting(
+				container,
+				'Theme file',
+				'Filename in src/themes/custom/ (without .ts extension)',
+				settings.customThemeFile || 'custom',
+				(value) => {
+					settings.customThemeFile = value;
+				}
+			);
+		}
 
 		// Typography section
 		const typographySection = container.createDiv('settings-section');
@@ -134,6 +150,29 @@ export class StyleTab extends TabRenderer {
 				});
 			});
 
+		// Font display dropdown
+		new Setting(typographySection)
+			.setName('Font Display')
+			.setDesc('Font display strategy')
+			.addDropdown(dropdown => {
+				dropdown.addOption('swap', 'Swap (recommended)');
+				dropdown.addOption('fallback', 'Fallback');
+				dropdown.addOption('optional', 'Optional');
+				dropdown.setValue(settings.typography.fontDisplay || 'swap');
+				dropdown.onChange(async (value) => {
+					settings.typography.fontDisplay = value as 'swap' | 'fallback' | 'optional';
+					await this.plugin.saveData(settings);
+					
+					// Apply changes immediately to config.ts
+					try {
+						await this.applyCurrentConfiguration();
+						new Notice('Font display updated and applied to config.ts');
+					} catch (error) {
+						new Notice(`Failed to apply font display change: ${error instanceof Error ? error.message : String(error)}`);
+					}
+				});
+			});
+
 		// Custom font inputs (only show when CDN is selected)
 		if (settings.typography.fontSource === 'cdn') {
 			// Custom font URLs
@@ -192,5 +231,19 @@ export class StyleTab extends TabRenderer {
 				}
 			);
 		}
+
+		// Content Width
+		this.createTextSetting(
+			typographySection,
+			'Content width',
+			'Maximum width for content (e.g., 45rem)',
+			settings.layout?.contentWidth || '45rem',
+			(value) => {
+				if (!settings.layout) {
+					settings.layout = { contentWidth: '45rem' };
+				}
+				settings.layout.contentWidth = value;
+			}
+		);
 	}
 }

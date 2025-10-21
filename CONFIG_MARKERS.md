@@ -31,15 +31,19 @@ These markers allow the plugin to find and update specific configuration values 
 
 ### Global Settings
 - `CONFIG:THEME` - Theme selection
+- `CONFIG:CUSTOM_THEME_FILE` - Custom theme filename (only used when theme is "custom")
 - `CONFIG:FONT_SOURCE` - Font source (local/cdn)
 - `CONFIG:FONT_BODY` - Body font family
 - `CONFIG:FONT_HEADING` - Heading font family
 - `CONFIG:FONT_MONO` - Monospace font family
+- `CONFIG:FONT_DISPLAY` - Font display strategy (swap/fallback/optional)
 - `CONFIG:LAYOUT_CONTENT_WIDTH` - Content width
 - `CONFIG:FOOTER_ENABLED` - Footer enabled state
+- `CONFIG:FOOTER_CONTENT` - Footer content HTML
 - `CONFIG:FOOTER_SHOW_SOCIAL_ICONS` - Footer social icons
 - `CONFIG:SCROLL_TO_TOP` - Scroll to top button
 - `CONFIG:FEATURE_BUTTON` - Feature button type (mode/graph/theme/none)
+- `CONFIG:SEO_DEFAULT_OG_IMAGE_ALT` - Default Open Graph image alt text
 - `CONFIG:DEPLOYMENT_PLATFORM` - Deployment platform
 
 ### Command Palette
@@ -100,7 +104,6 @@ These markers allow the plugin to find and update specific configuration values 
 - `CONFIG:POST_OPTIONS_LINKED_MENTIONS_COMPACT` - Compact linked mentions
 - `CONFIG:POST_OPTIONS_GRAPH_VIEW_ENABLED` - Enable/disable graph view
 - `CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_IN_SIDEBAR` - Show graph in sidebar
-- `CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_IN_COMMAND_PALETTE` - Show graph in command palette
 - `CONFIG:POST_OPTIONS_GRAPH_VIEW_MAX_NODES` - Maximum graph nodes
 - `CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_ORPHANED_POSTS` - Show orphaned posts
 - `CONFIG:POST_OPTIONS_POST_NAVIGATION` - Show/hide post navigation

@@ -11,188 +11,951 @@ export class FeaturesTab extends TabRenderer {
 		const header = settingsSection.createEl('h2', { text: 'Feature Configuration' });
 		const description = settingsSection.createEl('p', { text: 'Enable or disable specific features for your site. Changes are applied to your config.ts file immediately when you toggle them.' });
 
-		// Optional content types toggles (at the top)
-		new Setting(container)
+		// ═══════════════════════════════════════════════════════════════════
+		// GLOBAL OPTIONS
+		// ═══════════════════════════════════════════════════════════════════
+		const globalSection = container.createDiv('settings-section');
+		globalSection.style.marginTop = '20px';
+		globalSection.createEl('h3', { text: 'Global Options' });
+
+		// Enable Projects
+		new Setting(globalSection)
 			.setName('Enable Projects')
 			.setDesc('Enable projects as a unique content type for showcasing work and portfolios')
 			.addToggle(toggle => toggle
-				.setValue(settings.optionalContentTypes.projects)
+				.setValue(settings.optionalContentTypes?.projects ?? true)
 				.onChange(async (value) => {
+					if (!settings.optionalContentTypes) {
+						settings.optionalContentTypes = { projects: true, docs: true };
+					}
 					settings.optionalContentTypes.projects = value;
 					await this.plugin.saveData(settings);
-					// Apply changes to config.ts
-					try {
 						await this.applyCurrentConfiguration();
 						new Notice(`Projects ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
-					} catch (error) {
-						new Notice(`Failed to apply projects setting to config.ts: ${error instanceof Error ? error.message : String(error)}`);
-					}
 				}));
 
-		new Setting(container)
+		// Enable Docs
+		new Setting(globalSection)
 			.setName('Enable Docs')
 			.setDesc('Enable docs as a unique content type for documentation and knowledge base')
 			.addToggle(toggle => toggle
-				.setValue(settings.optionalContentTypes.docs)
+				.setValue(settings.optionalContentTypes?.docs ?? true)
 				.onChange(async (value) => {
+					if (!settings.optionalContentTypes) {
+						settings.optionalContentTypes = { projects: true, docs: true };
+					}
 					settings.optionalContentTypes.docs = value;
 					await this.plugin.saveData(settings);
-					// Apply changes to config.ts
-					try {
 						await this.applyCurrentConfiguration();
 						new Notice(`Docs ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
-					} catch (error) {
-						new Notice(`Failed to apply docs setting to config.ts: ${error instanceof Error ? error.message : String(error)}`);
-					}
 				}));
 
-		// Feature toggles
-		const features = [
-			{ key: 'commandPalette', name: 'Command palette', desc: 'Add a command palette to your site' },
-			{ key: 'tableOfContents', name: 'Table of contents', desc: 'Show table of contents on posts' },
-			{ key: 'readingTime', name: 'Reading time', desc: 'Display estimated reading time' },
-			{ key: 'linkedMentions', name: 'Linked mentions', desc: 'Show linked mentions and backlinks' },
-			{ key: 'graphView', name: 'Graph view', desc: 'Show graph view of post connections' },
-			{ key: 'postNavigation', name: 'Post navigation', desc: 'Show next/previous post navigation' },
-			{ key: 'scrollToTop', name: 'Scroll to top', desc: 'Show scroll to top button' },
-			{ key: 'showSocialIconsInFooter', name: 'Social icons in footer', desc: 'Show social icons in footer' },
-			{ key: 'profilePicture', name: 'Profile picture', desc: 'Show profile picture in header' },
-			{ key: 'comments', name: 'Comments', desc: 'Enable comment system' }
-		];
+		// Footer enabled
+		new Setting(globalSection)
+			.setName('Footer')
+			.setDesc('Enable footer on your site')
+			.addToggle(toggle => toggle
+				.setValue(settings.footer?.enabled ?? true)
+				.onChange(async (value) => {
+					if (!settings.footer) {
+						settings.footer = { enabled: true, content: '© 2025 {author}. Built with the <a href="https://github.com/davidvkimball/astro-modular" target="_blank">Astro Modular</a> theme.', showSocialIconsInFooter: true };
+					}
+					settings.footer.enabled = value;
+					await this.plugin.saveData(settings);
+					
+					// Show/hide footer options
+					const footerOptions = globalSection.querySelector('.footer-options') as HTMLElement;
+					if (footerOptions) {
+						footerOptions.style.display = value ? 'block' : 'none';
+					}
+					
+					await this.applyCurrentConfiguration();
+					new Notice(`Footer ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
+				}));
 
-		features.forEach(feature => {
-			const settings = this.getSettings();
-			const featureKey = feature.key as keyof typeof settings.features;
-			const currentValue = settings.features[featureKey];
-			const boolValue = typeof currentValue === 'boolean' ? currentValue : false;
-			
-			// Special handling for profile picture and comments
-			if (feature.key === 'profilePicture') {
-				this.renderProfilePictureSetting(container, settings);
-			} else if (feature.key === 'comments') {
-				this.renderCommentsSetting(container, settings);
-			} else {
-				new Setting(container)
-					.setName(feature.name)
-					.setDesc(feature.desc)
-					.addToggle(toggle => toggle
-						.setValue(boolValue)
-						.onChange(async (value) => {
-							(settings.features as any)[featureKey] = value;
-							await this.plugin.saveData(settings);
-							
-							// Apply changes immediately to config.ts
-							try {
-								await this.applyCurrentConfiguration();
-								new Notice(`${feature.name} ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
-							} catch (error) {
-								new Notice(`Failed to apply ${feature.name} to config.ts: ${error instanceof Error ? error.message : String(error)}`);
-							}
-						}));
+		// Footer options container
+		const footerOptions = globalSection.createDiv('footer-options');
+		footerOptions.style.display = (settings.footer?.enabled ?? true) ? 'block' : 'none';
+		footerOptions.style.paddingLeft = '20px';
+
+		// Footer content
+		this.createTextSetting(
+			footerOptions,
+			'Footer content',
+			'Text to display in footer. Use {author} for site author and {title} for site title',
+			settings.footer?.content || '© 2025 {author}. Built with the <a href="https://github.com/davidvkimball/astro-modular" target="_blank">Astro Modular</a> theme.',
+			(value) => {
+				if (!settings.footer) {
+					settings.footer = { enabled: true, content: '', showSocialIconsInFooter: true };
+				}
+				settings.footer.content = value;
 			}
-		});
+		);
 
-		// Feature Button Section
-		new Setting(container)
+		// Show social icons in footer
+		new Setting(footerOptions)
+			.setName('Show social icons in footer')
+			.setDesc('Display social media icons in the footer')
+					.addToggle(toggle => toggle
+				.setValue(settings.footer?.showSocialIconsInFooter ?? true)
+						.onChange(async (value) => {
+					if (!settings.footer) {
+						settings.footer = { enabled: true, content: '© 2025 {author}. Built with the <a href="https://github.com/davidvkimball/astro-modular" target="_blank">Astro Modular</a> theme.', showSocialIconsInFooter: true };
+					}
+					settings.footer.showSocialIconsInFooter = value;
+							await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+					new Notice(`Social icons in footer ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
+				}));
+
+		// Scroll to top
+		new Setting(globalSection)
+			.setName('Scroll to top')
+			.setDesc('Show scroll to top button')
+			.addToggle(toggle => toggle
+				.setValue(settings.features?.scrollToTop ?? true)
+				.onChange(async (value) => {
+					settings.features.scrollToTop = value;
+					await this.plugin.saveData(settings);
+								await this.applyCurrentConfiguration();
+					new Notice(`Scroll to top ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
+				}));
+
+		// SEO: Default OG Image Alt
+		this.createTextSetting(
+			globalSection,
+			'Default OG image alt text',
+			'Alternative text for the default Open Graph image (public/open-graph.png)',
+			settings.seo?.defaultOgImageAlt || 'Astro Modular logo.',
+			(value) => {
+				if (!settings.seo) {
+					settings.seo = { defaultOgImageAlt: '' };
+				}
+				settings.seo.defaultOgImageAlt = value;
+			}
+		);
+
+		// Feature button
+		new Setting(globalSection)
 			.setName('Feature button')
 			.setDesc('Choose which feature button appears in the header')
 			.addDropdown(dropdown => dropdown
-				.addOption('mode', 'Mode Toggle')
-				.addOption('graph', 'Graph View')
-				.addOption('theme', 'Theme Selector')
+				.addOption('mode', 'Dark/Light Mode Toggle')
+				.addOption('graph', 'View Graph')
+				.addOption('theme', 'Change Theme')
 				.addOption('none', 'None')
-				.setValue(settings.features.featureButton)
+				.setValue(settings.features?.featureButton || 'mode')
 				.onChange(async (value) => {
 					settings.features.featureButton = value as 'mode' | 'graph' | 'theme' | 'none';
 					await this.plugin.saveData(settings);
-					
-					// Apply changes immediately to config.ts
-					try {
 						await this.applyCurrentConfiguration();
 						new Notice(`Feature button updated to "${value}" and applied to config.ts`);
-					} catch (error) {
-						new Notice(`Failed to apply feature button to config.ts: ${error instanceof Error ? error.message : String(error)}`);
-					}
 				}));
 
-		// Quick Actions Section
-		const quickActionsContainer = container.createDiv('quick-actions-section');
-		quickActionsContainer.style.marginTop = '20px';
-		quickActionsContainer.style.paddingTop = '20px';
-		quickActionsContainer.style.borderTop = '1px solid var(--background-modifier-border)';
+		// ═══════════════════════════════════════════════════════════════════
+		// COMMAND PALETTE
+		// ═══════════════════════════════════════════════════════════════════
+		const commandPaletteSection = container.createDiv('settings-section');
+		commandPaletteSection.style.marginTop = '30px';
+		commandPaletteSection.style.paddingTop = '20px';
+		commandPaletteSection.style.borderTop = '2px solid var(--background-modifier-border)';
+		commandPaletteSection.createEl('h3', { text: 'Command Palette' });
 
-		const quickActionsHeader = quickActionsContainer.createEl('h3', { text: 'Command Palette Quick Actions' });
-		const quickActionsDesc = quickActionsContainer.createEl('p', { 
-			text: 'Control which quick actions appear in the command palette',
-			cls: 'setting-item-description'
-		});
-
-		// Master toggle for quick actions
-		new Setting(quickActionsContainer)
-			.setName('Enable Quick Actions in Command Palette')
-			.setDesc('Master toggle for all quick actions')
+		// Enable Command Palette
+		new Setting(commandPaletteSection)
+			.setName('Enable Command Palette')
+			.setDesc('Add a command palette to your site')
 			.addToggle(toggle => toggle
-				.setValue(settings.features.quickActions.enabled)
+				.setValue(settings.commandPalette?.enabled ?? true)
 				.onChange(async (value) => {
-					settings.features.quickActions.enabled = value;
+					if (!settings.commandPalette) {
+						settings.commandPalette = {
+							enabled: true,
+							shortcut: 'ctrl+K',
+							placeholder: 'Search posts',
+							search: { posts: true, pages: false, projects: false, docs: false },
+							sections: { quickActions: true, pages: true, social: true },
+							quickActions: { enabled: true, toggleMode: true, graphView: true, changeTheme: true }
+						};
+					}
+					settings.commandPalette.enabled = value;
+					settings.features.commandPalette = value;
 					await this.plugin.saveData(settings);
 					
-					// Show/hide individual quick action toggles
-					const individualToggles = quickActionsContainer.querySelectorAll('.individual-quick-action');
-					individualToggles.forEach(toggle => {
-						(toggle as HTMLElement).style.display = value ? 'block' : 'none';
-					});
-					
-					// Apply changes immediately to config.ts
-					try {
-						await this.applyCurrentConfiguration();
-						new Notice(`Quick actions ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
-					} catch (error) {
-						new Notice(`Failed to apply quick actions to config.ts: ${error instanceof Error ? error.message : String(error)}`);
+					// Show/hide command palette options
+					const cpOptions = commandPaletteSection.querySelector('.command-palette-options') as HTMLElement;
+					if (cpOptions) {
+						cpOptions.style.display = value ? 'block' : 'none';
 					}
+					
+					await this.applyCurrentConfiguration();
+					new Notice(`Command Palette ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
 				}));
 
-		// Individual quick action toggles
-		const individualActions = [
-			{ key: 'toggleMode', name: 'Toggle Light/Dark Mode', desc: 'Show mode toggle button in command palette' },
-			{ key: 'graphView', name: 'Graph View', desc: 'Show graph view button in command palette' },
-			{ key: 'changeTheme', name: 'Change Theme', desc: 'Show theme selector button in command palette' }
-		];
+		// Command Palette options container
+		const cpOptions = commandPaletteSection.createDiv('command-palette-options');
+		cpOptions.style.display = (settings.commandPalette?.enabled ?? true) ? 'block' : 'none';
+		cpOptions.style.paddingLeft = '20px';
 
-		individualActions.forEach(action => {
-			const settingDiv = quickActionsContainer.createDiv('individual-quick-action');
-			settingDiv.style.display = settings.features.quickActions.enabled ? 'block' : 'none';
-			
-			new Setting(settingDiv)
-				.setName(action.name)
-				.setDesc(action.desc)
+		// Shortcut
+		this.createTextSetting(
+			cpOptions,
+			'Shortcut',
+			'Keyboard shortcut to open command palette (Ctrl = Cmd on Mac)',
+			settings.commandPalette?.shortcut || 'ctrl+K',
+			(value) => {
+				if (!settings.commandPalette) {
+					settings.commandPalette = { enabled: true, shortcut: 'ctrl+K', placeholder: 'Search posts', search: { posts: true, pages: false, projects: false, docs: false }, sections: { quickActions: true, pages: true, social: true }, quickActions: { enabled: true, toggleMode: true, graphView: true, changeTheme: true } };
+				}
+				settings.commandPalette.shortcut = value;
+			}
+		);
+
+		// Placeholder
+		this.createTextSetting(
+			cpOptions,
+			'Placeholder',
+			'Placeholder text in command palette search box',
+			settings.commandPalette?.placeholder || 'Search posts',
+			(value) => {
+				if (!settings.commandPalette) {
+					settings.commandPalette = { enabled: true, shortcut: 'ctrl+K', placeholder: 'Search posts', search: { posts: true, pages: false, projects: false, docs: false }, sections: { quickActions: true, pages: true, social: true }, quickActions: { enabled: true, toggleMode: true, graphView: true, changeTheme: true } };
+				}
+				settings.commandPalette.placeholder = value;
+			}
+		);
+
+		// Search toggles
+		const searchSection = cpOptions.createDiv();
+		searchSection.createEl('h4', { text: 'Search Content Types' });
+
+		new Setting(searchSection)
+			.setName('Search posts')
+			.setDesc('Include posts in search results')
+			.addToggle(toggle => toggle
+				.setValue(settings.commandPalette?.search?.posts ?? true)
+				.onChange(async (value) => {
+					if (!settings.commandPalette) {
+						settings.commandPalette = { enabled: true, shortcut: 'ctrl+K', placeholder: 'Search posts', search: { posts: true, pages: false, projects: false, docs: false }, sections: { quickActions: true, pages: true, social: true }, quickActions: { enabled: true, toggleMode: true, graphView: true, changeTheme: true } };
+					}
+					if (!settings.commandPalette.search) {
+						settings.commandPalette.search = { posts: true, pages: false, projects: false, docs: false };
+					}
+					settings.commandPalette.search.posts = value;
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+				}));
+
+		new Setting(searchSection)
+			.setName('Search pages')
+			.setDesc('Include pages in search results')
+			.addToggle(toggle => toggle
+				.setValue(settings.commandPalette?.search?.pages ?? false)
+				.onChange(async (value) => {
+					if (!settings.commandPalette?.search) {
+						settings.commandPalette.search = { posts: true, pages: false, projects: false, docs: false };
+					}
+					settings.commandPalette.search.pages = value;
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+				}));
+
+		new Setting(searchSection)
+			.setName('Search projects')
+			.setDesc('Include projects in search results')
+			.addToggle(toggle => toggle
+				.setValue(settings.commandPalette?.search?.projects ?? false)
+				.onChange(async (value) => {
+					if (!settings.commandPalette?.search) {
+						settings.commandPalette.search = { posts: true, pages: false, projects: false, docs: false };
+					}
+					settings.commandPalette.search.projects = value;
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+				}));
+
+		new Setting(searchSection)
+			.setName('Search docs')
+			.setDesc('Include docs in search results')
+			.addToggle(toggle => toggle
+				.setValue(settings.commandPalette?.search?.docs ?? false)
+				.onChange(async (value) => {
+					if (!settings.commandPalette?.search) {
+						settings.commandPalette.search = { posts: true, pages: false, projects: false, docs: false };
+					}
+					settings.commandPalette.search.docs = value;
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+				}));
+
+		// Sections toggles
+		const sectionsSection = cpOptions.createDiv();
+		sectionsSection.style.marginTop = '15px';
+		sectionsSection.createEl('h4', { text: 'Command Palette Sections' });
+
+		new Setting(sectionsSection)
+			.setName('Show quick actions section')
+			.setDesc('Display quick actions in command palette')
+			.addToggle(toggle => toggle
+				.setValue(settings.commandPalette?.sections?.quickActions ?? true)
+				.onChange(async (value) => {
+					if (!settings.commandPalette?.sections) {
+						settings.commandPalette.sections = { quickActions: true, pages: true, social: true };
+					}
+					settings.commandPalette.sections.quickActions = value;
+					await this.plugin.saveData(settings);
+					
+					// Show/hide quick actions options
+					const qaOptions = sectionsSection.querySelector('.quick-actions-options') as HTMLElement;
+					if (qaOptions) {
+						qaOptions.style.display = value ? 'block' : 'none';
+					}
+					
+					await this.applyCurrentConfiguration();
+				}));
+
+		// Quick Actions options container
+		const qaOptions = sectionsSection.createDiv('quick-actions-options');
+		qaOptions.style.display = (settings.commandPalette?.sections?.quickActions ?? true) ? 'block' : 'none';
+		qaOptions.style.paddingLeft = '20px';
+		qaOptions.style.marginTop = '10px';
+
+		new Setting(qaOptions)
+			.setName('Toggle dark/light mode')
+			.setDesc('Show mode toggle button in command palette')
+			.addToggle(toggle => toggle
+				.setValue(settings.commandPalette?.quickActions?.toggleMode ?? true)
+				.onChange(async (value) => {
+					if (!settings.commandPalette?.quickActions) {
+						settings.commandPalette.quickActions = { enabled: true, toggleMode: true, graphView: true, changeTheme: true };
+					}
+					settings.commandPalette.quickActions.toggleMode = value;
+					settings.features.quickActions.toggleMode = value;
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+				}));
+
+		new Setting(qaOptions)
+			.setName('View graph')
+			.setDesc('Show graph view button in command palette')
+			.addToggle(toggle => toggle
+				.setValue(settings.commandPalette?.quickActions?.graphView ?? true)
+				.onChange(async (value) => {
+					if (!settings.commandPalette?.quickActions) {
+						settings.commandPalette.quickActions = { enabled: true, toggleMode: true, graphView: true, changeTheme: true };
+					}
+					settings.commandPalette.quickActions.graphView = value;
+					settings.features.quickActions.graphView = value;
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+				}));
+
+		new Setting(qaOptions)
+			.setName('Change theme')
+			.setDesc('Show theme selector button in command palette')
+			.addToggle(toggle => toggle
+				.setValue(settings.commandPalette?.quickActions?.changeTheme ?? true)
+				.onChange(async (value) => {
+					if (!settings.commandPalette?.quickActions) {
+						settings.commandPalette.quickActions = { enabled: true, toggleMode: true, graphView: true, changeTheme: true };
+					}
+					settings.commandPalette.quickActions.changeTheme = value;
+					settings.features.quickActions.changeTheme = value;
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+				}));
+
+		new Setting(sectionsSection)
+			.setName('Show pages section')
+			.setDesc('Display navigation pages in command palette')
+			.addToggle(toggle => toggle
+				.setValue(settings.commandPalette?.sections?.pages ?? true)
+				.onChange(async (value) => {
+					if (!settings.commandPalette?.sections) {
+						settings.commandPalette.sections = { quickActions: true, pages: true, social: true };
+					}
+					settings.commandPalette.sections.pages = value;
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+				}));
+
+		new Setting(sectionsSection)
+			.setName('Show social section')
+			.setDesc('Display social links in command palette')
+			.addToggle(toggle => toggle
+				.setValue(settings.commandPalette?.sections?.social ?? true)
+				.onChange(async (value) => {
+					if (!settings.commandPalette?.sections) {
+						settings.commandPalette.sections = { quickActions: true, pages: true, social: true };
+					}
+					settings.commandPalette.sections.social = value;
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+				}));
+
+		// ═══════════════════════════════════════════════════════════════════
+		// HOME OPTIONS
+		// ═══════════════════════════════════════════════════════════════════
+		const homeOptionsSection = container.createDiv('settings-section');
+		homeOptionsSection.style.marginTop = '30px';
+		homeOptionsSection.style.paddingTop = '20px';
+		homeOptionsSection.style.borderTop = '2px solid var(--background-modifier-border)';
+		homeOptionsSection.createEl('h3', { text: 'Home Options' });
+
+		// Featured Post
+		new Setting(homeOptionsSection)
+			.setName('Featured post')
+			.setDesc('Show featured post on homepage')
 				.addToggle(toggle => toggle
-					.setValue(settings.features.quickActions[action.key as keyof typeof settings.features.quickActions] as boolean)
+				.setValue(settings.homeOptions?.featuredPost?.enabled ?? true)
 					.onChange(async (value) => {
-						(settings.features.quickActions as any)[action.key] = value;
+					if (!settings.homeOptions) {
+						settings.homeOptions = {
+							featuredPost: { enabled: true, type: 'latest', slug: 'getting-started' },
+							recentPosts: { enabled: true, count: 7 },
+							projects: { enabled: true, count: 2 },
+							docs: { enabled: true, count: 3 },
+							blurb: { placement: 'below' }
+						};
+					}
+					if (!settings.homeOptions.featuredPost) {
+						settings.homeOptions.featuredPost = { enabled: true, type: 'latest', slug: 'getting-started' };
+					}
+					settings.homeOptions.featuredPost.enabled = value;
 						await this.plugin.saveData(settings);
 						
-						// Apply changes immediately to config.ts
-						try {
+					// Show/hide featured post options
+					const fpOptions = homeOptionsSection.querySelector('.featured-post-options') as HTMLElement;
+					if (fpOptions) {
+						fpOptions.style.display = value ? 'block' : 'none';
+					}
+					
 							await this.applyCurrentConfiguration();
-							new Notice(`${action.name} ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
-						} catch (error) {
-							new Notice(`Failed to apply ${action.name} to config.ts: ${error instanceof Error ? error.message : String(error)}`);
-						}
-					}));
-		});
+					new Notice(`Featured post ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
+				}));
 
-		// Note about immediate application
-		const noteSection = container.createDiv('settings-section');
-		noteSection.createEl('p', { 
-			text: 'All changes are applied to your config.ts file immediately when you toggle features.',
-			cls: 'setting-item-description'
-		});
+		// Featured Post options container
+		const fpOptions = homeOptionsSection.createDiv('featured-post-options');
+		fpOptions.style.display = (settings.homeOptions?.featuredPost?.enabled ?? true) ? 'block' : 'none';
+		fpOptions.style.paddingLeft = '20px';
+
+		new Setting(fpOptions)
+			.setName('Featured post type')
+			.setDesc('Show latest post or a specific featured post')
+			.addDropdown(dropdown => dropdown
+				.addOption('latest', 'Latest')
+				.addOption('featured', 'Featured')
+				.setValue(settings.homeOptions?.featuredPost?.type || 'latest')
+				.onChange(async (value) => {
+					if (!settings.homeOptions?.featuredPost) {
+						settings.homeOptions.featuredPost = { enabled: true, type: 'latest', slug: 'getting-started' };
+					}
+					settings.homeOptions.featuredPost.type = value as 'latest' | 'featured';
+					await this.plugin.saveData(settings);
+					
+					// Show/hide slug field
+					const fpSlug = fpOptions.querySelector('.featured-post-slug') as HTMLElement;
+					if (fpSlug) {
+						fpSlug.style.display = value === 'featured' ? 'block' : 'none';
+					}
+					
+					await this.applyCurrentConfiguration();
+				}));
+
+		// Featured post slug (only shown when type is 'featured')
+		const fpSlug = fpOptions.createDiv('featured-post-slug');
+		fpSlug.style.display = (settings.homeOptions?.featuredPost?.type === 'featured') ? 'block' : 'none';
+
+		this.createTextSetting(
+			fpSlug,
+			'Featured post slug',
+			'Slug of the post to feature (e.g., "getting-started" for /posts/getting-started)',
+			settings.homeOptions?.featuredPost?.slug || 'getting-started',
+			(value) => {
+				if (!settings.homeOptions?.featuredPost) {
+					settings.homeOptions.featuredPost = { enabled: true, type: 'featured', slug: 'getting-started' };
+				}
+				settings.homeOptions.featuredPost.slug = value;
+			}
+		);
+
+		// Recent Posts
+		new Setting(homeOptionsSection)
+			.setName('Recent posts')
+			.setDesc('Show recent posts on homepage')
+			.addToggle(toggle => toggle
+				.setValue(settings.homeOptions?.recentPosts?.enabled ?? true)
+				.onChange(async (value) => {
+					if (!settings.homeOptions?.recentPosts) {
+						settings.homeOptions.recentPosts = { enabled: true, count: 7 };
+					}
+					settings.homeOptions.recentPosts.enabled = value;
+					await this.plugin.saveData(settings);
+					
+					// Show/hide recent posts count
+					const rpCount = homeOptionsSection.querySelector('.recent-posts-count') as HTMLElement;
+					if (rpCount) {
+						rpCount.style.display = value ? 'block' : 'none';
+					}
+					
+					await this.applyCurrentConfiguration();
+				}));
+
+		// Recent Posts count container
+		const rpCount = homeOptionsSection.createDiv('recent-posts-count');
+		rpCount.style.display = (settings.homeOptions?.recentPosts?.enabled ?? true) ? 'block' : 'none';
+		rpCount.style.paddingLeft = '20px';
+
+		new Setting(rpCount)
+			.setName('Recent posts count')
+			.setDesc('Number of recent posts to show')
+			.addText(text => text
+				.setPlaceholder('7')
+				.setValue(String(settings.homeOptions?.recentPosts?.count || 7))
+				.onChange(async (value) => {
+					const num = parseInt(value) || 7;
+					if (!settings.homeOptions?.recentPosts) {
+						settings.homeOptions.recentPosts = { enabled: true, count: 7 };
+					}
+					settings.homeOptions.recentPosts.count = num;
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+				}));
+
+		// Projects
+		new Setting(homeOptionsSection)
+			.setName('Projects on homepage')
+			.setDesc('Show featured projects on homepage')
+			.addToggle(toggle => toggle
+				.setValue(settings.homeOptions?.projects?.enabled ?? true)
+				.onChange(async (value) => {
+					if (!settings.homeOptions?.projects) {
+						settings.homeOptions.projects = { enabled: true, count: 2 };
+					}
+					settings.homeOptions.projects.enabled = value;
+					await this.plugin.saveData(settings);
+					
+					// Show/hide projects count
+					const pCount = homeOptionsSection.querySelector('.projects-count') as HTMLElement;
+					if (pCount) {
+						pCount.style.display = value ? 'block' : 'none';
+					}
+					
+					await this.applyCurrentConfiguration();
+				}));
+
+		// Projects count container
+		const pCount = homeOptionsSection.createDiv('projects-count');
+		pCount.style.display = (settings.homeOptions?.projects?.enabled ?? true) ? 'block' : 'none';
+		pCount.style.paddingLeft = '20px';
+
+		new Setting(pCount)
+			.setName('Projects count')
+			.setDesc('Number of projects to show')
+			.addText(text => text
+				.setPlaceholder('2')
+				.setValue(String(settings.homeOptions?.projects?.count || 2))
+				.onChange(async (value) => {
+					const num = parseInt(value) || 2;
+					if (!settings.homeOptions?.projects) {
+						settings.homeOptions.projects = { enabled: true, count: 2 };
+					}
+					settings.homeOptions.projects.count = num;
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+				}));
+
+		// Docs
+		new Setting(homeOptionsSection)
+			.setName('Docs on homepage')
+			.setDesc('Show featured docs on homepage')
+			.addToggle(toggle => toggle
+				.setValue(settings.homeOptions?.docs?.enabled ?? true)
+				.onChange(async (value) => {
+					if (!settings.homeOptions?.docs) {
+						settings.homeOptions.docs = { enabled: true, count: 3 };
+					}
+					settings.homeOptions.docs.enabled = value;
+					await this.plugin.saveData(settings);
+					
+					// Show/hide docs count
+					const dCount = homeOptionsSection.querySelector('.docs-count') as HTMLElement;
+					if (dCount) {
+						dCount.style.display = value ? 'block' : 'none';
+					}
+					
+					await this.applyCurrentConfiguration();
+				}));
+
+		// Docs count container
+		const dCount = homeOptionsSection.createDiv('docs-count');
+		dCount.style.display = (settings.homeOptions?.docs?.enabled ?? true) ? 'block' : 'none';
+		dCount.style.paddingLeft = '20px';
+
+		new Setting(dCount)
+			.setName('Docs count')
+			.setDesc('Number of docs to show')
+			.addText(text => text
+				.setPlaceholder('3')
+				.setValue(String(settings.homeOptions?.docs?.count || 3))
+				.onChange(async (value) => {
+					const num = parseInt(value) || 3;
+					if (!settings.homeOptions?.docs) {
+						settings.homeOptions.docs = { enabled: true, count: 3 };
+					}
+					settings.homeOptions.docs.count = num;
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+				}));
+
+		// Blurb placement
+		new Setting(homeOptionsSection)
+			.setName('Blurb placement')
+			.setDesc('Where to place the blurb text on homepage')
+			.addDropdown(dropdown => dropdown
+				.addOption('above', 'Above')
+				.addOption('below', 'Below')
+				.addOption('none', 'None')
+				.setValue(settings.homeOptions?.blurb?.placement || 'below')
+				.onChange(async (value) => {
+					if (!settings.homeOptions?.blurb) {
+						settings.homeOptions.blurb = { placement: 'below' };
+					}
+					settings.homeOptions.blurb.placement = value as 'above' | 'below' | 'none';
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+				}));
+
+		// ═══════════════════════════════════════════════════════════════════
+		// POST OPTIONS
+		// ═══════════════════════════════════════════════════════════════════
+		const postOptionsSection = container.createDiv('settings-section');
+		postOptionsSection.style.marginTop = '30px';
+		postOptionsSection.style.paddingTop = '20px';
+		postOptionsSection.style.borderTop = '2px solid var(--background-modifier-border)';
+		postOptionsSection.createEl('h3', { text: 'Post Options' });
+
+		// Posts per page
+		new Setting(postOptionsSection)
+			.setName('Posts per page')
+			.setDesc('Number of posts to show per page')
+			.addText(text => text
+				.setPlaceholder('6')
+				.setValue(String(settings.postOptions?.postsPerPage || 6))
+				.onChange(async (value) => {
+					const num = parseInt(value) || 6;
+					if (!settings.postOptions) {
+						settings.postOptions = {
+							postsPerPage: 6,
+							readingTime: true,
+							wordCount: true,
+							tableOfContents: true,
+							tags: true,
+							linkedMentions: { enabled: true, linkedMentionsCompact: false },
+							graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true },
+							postNavigation: true,
+							showPostCardCoverImages: 'featured-and-posts',
+							postCardAspectRatio: 'og',
+							customPostCardAspectRatio: '2.5/1',
+							comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' }
+						};
+					}
+					settings.postOptions.postsPerPage = num;
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+				}));
+
+		// Reading time
+		new Setting(postOptionsSection)
+			.setName('Reading time')
+			.setDesc('Display estimated reading time on posts')
+			.addToggle(toggle => toggle
+				.setValue(settings.postOptions?.readingTime ?? true)
+				.onChange(async (value) => {
+					if (!settings.postOptions) {
+						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tableOfContents: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
+					}
+					settings.postOptions.readingTime = value;
+					settings.features.readingTime = value;
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+				}));
+
+		// Word count
+		new Setting(postOptionsSection)
+			.setName('Word count')
+			.setDesc('Display word count on posts')
+			.addToggle(toggle => toggle
+				.setValue(settings.postOptions?.wordCount ?? true)
+				.onChange(async (value) => {
+					if (!settings.postOptions) {
+						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tableOfContents: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
+					}
+					settings.postOptions.wordCount = value;
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+				}));
+
+		// Table of contents
+		new Setting(postOptionsSection)
+			.setName('Table of contents')
+			.setDesc('Show table of contents on posts')
+			.addToggle(toggle => toggle
+				.setValue(settings.postOptions?.tableOfContents ?? true)
+				.onChange(async (value) => {
+					if (!settings.postOptions) {
+						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tableOfContents: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
+					}
+					settings.postOptions.tableOfContents = value;
+					settings.features.tableOfContents = value;
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+				}));
+
+		// Tags
+		new Setting(postOptionsSection)
+			.setName('Tags')
+			.setDesc('Show tags on posts')
+			.addToggle(toggle => toggle
+				.setValue(settings.postOptions?.tags ?? true)
+				.onChange(async (value) => {
+					if (!settings.postOptions) {
+						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tableOfContents: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
+					}
+					settings.postOptions.tags = value;
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+				}));
+
+		// Linked Mentions
+		new Setting(postOptionsSection)
+			.setName('Linked mentions')
+			.setDesc('Show linked mentions and backlinks on posts')
+			.addToggle(toggle => toggle
+				.setValue(settings.postOptions?.linkedMentions?.enabled ?? true)
+				.onChange(async (value) => {
+					if (!settings.postOptions?.linkedMentions) {
+						settings.postOptions.linkedMentions = { enabled: true, linkedMentionsCompact: false };
+					}
+					settings.postOptions.linkedMentions.enabled = value;
+					settings.features.linkedMentions = value;
+					await this.plugin.saveData(settings);
+					
+					// Show/hide linked mentions compact option
+					const lmCompact = postOptionsSection.querySelector('.linked-mentions-compact') as HTMLElement;
+					if (lmCompact) {
+						lmCompact.style.display = value ? 'block' : 'none';
+					}
+					
+					await this.applyCurrentConfiguration();
+				}));
+
+		// Linked Mentions Compact container
+		const lmCompact = postOptionsSection.createDiv('linked-mentions-compact');
+		lmCompact.style.display = (settings.postOptions?.linkedMentions?.enabled ?? true) ? 'block' : 'none';
+		lmCompact.style.paddingLeft = '20px';
+
+		new Setting(lmCompact)
+			.setName('Compact view')
+			.setDesc('Use compact view for linked mentions')
+			.addToggle(toggle => toggle
+				.setValue(settings.postOptions?.linkedMentions?.linkedMentionsCompact ?? false)
+				.onChange(async (value) => {
+					if (!settings.postOptions?.linkedMentions) {
+						settings.postOptions.linkedMentions = { enabled: true, linkedMentionsCompact: false };
+					}
+					settings.postOptions.linkedMentions.linkedMentionsCompact = value;
+					settings.features.linkedMentionsCompact = value;
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+				}));
+
+		// Graph view
+		new Setting(postOptionsSection)
+			.setName('Graph view')
+			.setDesc('Show graph view of post connections')
+			.addToggle(toggle => toggle
+				.setValue(settings.postOptions?.graphView?.enabled ?? true)
+				.onChange(async (value) => {
+					if (!settings.postOptions?.graphView) {
+						settings.postOptions.graphView = { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true };
+					}
+					settings.postOptions.graphView.enabled = value;
+					settings.features.graphView = value;
+					await this.plugin.saveData(settings);
+					
+					// Show/hide graph view options
+					const gvOptions = postOptionsSection.querySelector('.graph-view-options') as HTMLElement;
+					if (gvOptions) {
+						gvOptions.style.display = value ? 'block' : 'none';
+					}
+					
+					await this.applyCurrentConfiguration();
+				}));
+
+		// Graph View options container
+		const gvOptions = postOptionsSection.createDiv('graph-view-options');
+		gvOptions.style.display = (settings.postOptions?.graphView?.enabled ?? true) ? 'block' : 'none';
+		gvOptions.style.paddingLeft = '20px';
+
+		new Setting(gvOptions)
+			.setName('Show in sidebar')
+			.setDesc('Display graph view in post sidebar')
+			.addToggle(toggle => toggle
+				.setValue(settings.postOptions?.graphView?.showInSidebar ?? true)
+				.onChange(async (value) => {
+					if (!settings.postOptions?.graphView) {
+						settings.postOptions.graphView = { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true };
+					}
+					settings.postOptions.graphView.showInSidebar = value;
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+				}));
+
+		new Setting(gvOptions)
+			.setName('Maximum nodes')
+			.setDesc('Maximum number of nodes to show in graph')
+			.addText(text => text
+				.setPlaceholder('100')
+				.setValue(String(settings.postOptions?.graphView?.maxNodes || 100))
+				.onChange(async (value) => {
+					const num = parseInt(value) || 100;
+					if (!settings.postOptions?.graphView) {
+						settings.postOptions.graphView = { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true };
+					}
+					settings.postOptions.graphView.maxNodes = num;
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+				}));
+
+		new Setting(gvOptions)
+			.setName('Show orphaned posts')
+			.setDesc('Include posts with no connections in graph view')
+			.addToggle(toggle => toggle
+				.setValue(settings.postOptions?.graphView?.showOrphanedPosts ?? true)
+				.onChange(async (value) => {
+					if (!settings.postOptions?.graphView) {
+						settings.postOptions.graphView = { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true };
+					}
+					settings.postOptions.graphView.showOrphanedPosts = value;
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+				}));
+
+		// Post navigation
+		new Setting(postOptionsSection)
+			.setName('Post navigation')
+			.setDesc('Show next/previous post navigation')
+			.addToggle(toggle => toggle
+				.setValue(settings.postOptions?.postNavigation ?? true)
+				.onChange(async (value) => {
+					if (!settings.postOptions) {
+						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tableOfContents: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
+					}
+					settings.postOptions.postNavigation = value;
+					settings.features.postNavigation = value;
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+				}));
+
+		// Show post card cover images
+		new Setting(postOptionsSection)
+			.setName('Show post card cover images')
+			.setDesc('Where to display cover images on post cards')
+			.addDropdown(dropdown => dropdown
+				.addOption('all', 'All')
+				.addOption('featured', 'Featured')
+				.addOption('home', 'Home')
+				.addOption('posts', 'Posts')
+				.addOption('featured-and-posts', 'Featured and Posts')
+				.addOption('none', 'None')
+				.setValue(settings.postOptions?.showPostCardCoverImages || 'featured-and-posts')
+				.onChange(async (value) => {
+					if (!settings.postOptions) {
+						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tableOfContents: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
+					}
+					settings.postOptions.showPostCardCoverImages = value as any;
+					settings.features.showPostCardCoverImages = value as any;
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+				}));
+
+		// Post card aspect ratio
+		new Setting(postOptionsSection)
+			.setName('Post card aspect ratio')
+			.setDesc('Aspect ratio for post card cover images')
+			.addDropdown(dropdown => dropdown
+				.addOption('16:9', '16:9')
+				.addOption('4:3', '4:3')
+				.addOption('3:2', '3:2')
+				.addOption('og', 'OG')
+				.addOption('square', 'Square')
+				.addOption('golden', 'Golden')
+				.addOption('custom', 'Custom')
+				.setValue(settings.postOptions?.postCardAspectRatio || 'og')
+				.onChange(async (value) => {
+					if (!settings.postOptions) {
+						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tableOfContents: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
+					}
+					settings.postOptions.postCardAspectRatio = value as any;
+					settings.features.postCardAspectRatio = value as any;
+					await this.plugin.saveData(settings);
+					
+					// Show/hide custom aspect ratio field
+					const customAR = postOptionsSection.querySelector('.custom-aspect-ratio') as HTMLElement;
+					if (customAR) {
+						customAR.style.display = value === 'custom' ? 'block' : 'none';
+					}
+					
+					await this.applyCurrentConfiguration();
+				}));
+
+		// Custom aspect ratio container
+		const customAR = postOptionsSection.createDiv('custom-aspect-ratio');
+		customAR.style.display = (settings.postOptions?.postCardAspectRatio === 'custom') ? 'block' : 'none';
+		customAR.style.paddingLeft = '20px';
+
+		this.createTextSetting(
+			customAR,
+			'Custom aspect ratio',
+			'Custom aspect ratio in format "width/height" (e.g., "2.5/1")',
+			settings.postOptions?.customPostCardAspectRatio || '2.5/1',
+			(value) => {
+				if (!settings.postOptions) {
+					settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tableOfContents: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
+				}
+				settings.postOptions.customPostCardAspectRatio = value;
+				settings.features.customPostCardAspectRatio = value;
+			}
+		);
+
+		// ═══════════════════════════════════════════════════════════════════
+		// OPTIONAL FEATURES
+		// ═══════════════════════════════════════════════════════════════════
+		const optionalFeaturesSection = container.createDiv('settings-section');
+		optionalFeaturesSection.style.marginTop = '30px';
+		optionalFeaturesSection.style.paddingTop = '20px';
+		optionalFeaturesSection.style.borderTop = '2px solid var(--background-modifier-border)';
+		optionalFeaturesSection.createEl('h3', { text: 'Optional Features' });
+
+		// Profile Picture (keep existing implementation)
+		this.renderProfilePictureSetting(optionalFeaturesSection, settings);
+
+		// Post Comments (keep existing implementation, update title)
+		this.renderCommentsSetting(optionalFeaturesSection, settings);
 	}
 
 	private renderProfilePictureSetting(container: HTMLElement, settings: any): void {
-		const isEnabled = settings.features.profilePicture;
-		const profileSettings = settings.optionalFeatures.profilePicture;
+		const isEnabled = settings.features?.profilePicture || settings.optionalFeatures?.profilePicture?.enabled;
+		const profileSettings = settings.optionalFeatures?.profilePicture || {
+			enabled: false,
+			image: '/profile.jpg',
+			alt: 'Profile picture',
+			size: 'md',
+			url: '',
+			placement: 'footer',
+			style: 'circle',
+		};
 
 		// Main toggle
 		const profileSetting = new Setting(container)
@@ -202,6 +965,9 @@ export class FeaturesTab extends TabRenderer {
 				.setValue(isEnabled)
 				.onChange(async (value) => {
 					settings.features.profilePicture = value;
+					if (!settings.optionalFeatures) {
+						settings.optionalFeatures = { profilePicture: profileSettings, comments: settings.postOptions?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
+					}
 					settings.optionalFeatures.profilePicture.enabled = value;
 					await this.plugin.saveData(settings);
 					
@@ -225,7 +991,6 @@ export class FeaturesTab extends TabRenderer {
 		optionsContainer.style.display = isEnabled ? 'block' : 'none';
 		optionsContainer.style.marginTop = '10px';
 		optionsContainer.style.paddingLeft = '20px';
-		optionsContainer.style.borderLeft = '2px solid var(--background-modifier-border)';
 
 		// Create two-column grid for options
 		const optionsGrid = optionsContainer.createDiv('options-grid');
@@ -319,8 +1084,8 @@ export class FeaturesTab extends TabRenderer {
 	}
 
 	private renderCommentsSetting(container: HTMLElement, settings: any): void {
-		const isEnabled = settings.features.comments;
-		const commentsSettings = settings.optionalFeatures.comments || {
+		const isEnabled = settings.postOptions?.comments?.enabled || settings.optionalFeatures?.comments?.enabled;
+		const commentsSettings = settings.postOptions?.comments || settings.optionalFeatures?.comments || {
 			enabled: false,
 			provider: 'giscus',
 			repo: 'davidvkimball/astro-modular',
@@ -339,12 +1104,19 @@ export class FeaturesTab extends TabRenderer {
 
 		// Main toggle
 		const commentsSetting = new Setting(container)
-			.setName('Comments')
+			.setName('Post comments')
 			.setDesc('Enable Giscus comment system for posts')
 			.addToggle(toggle => toggle
 				.setValue(isEnabled)
 				.onChange(async (value) => {
 					settings.features.comments = value;
+					if (!settings.postOptions) {
+						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tableOfContents: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: commentsSettings };
+					}
+					settings.postOptions.comments.enabled = value;
+					if (!settings.optionalFeatures) {
+						settings.optionalFeatures = { profilePicture: { enabled: false, image: '/profile.jpg', alt: 'Profile picture', size: 'md', url: '', placement: 'footer', style: 'circle' }, comments: commentsSettings };
+					}
 					settings.optionalFeatures.comments.enabled = value;
 					await this.plugin.saveData(settings);
 					
@@ -368,7 +1140,6 @@ export class FeaturesTab extends TabRenderer {
 		optionsContainer.style.display = isEnabled ? 'block' : 'none';
 		optionsContainer.style.marginTop = '10px';
 		optionsContainer.style.paddingLeft = '20px';
-		optionsContainer.style.borderLeft = '2px solid var(--background-modifier-border)';
 
 		// Add Giscus setup link
 		const giscusLink = optionsContainer.createDiv('giscus-setup-link');

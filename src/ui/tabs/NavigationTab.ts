@@ -97,6 +97,55 @@ export class NavigationTab extends TabRenderer {
 		
 		// Drag and drop functionality - EXACT copy from wizard
 		this.setupDragAndDrop(container);
+
+		// Navigation Options section
+		const navOptionsSection = container.createDiv('settings-section');
+		navOptionsSection.style.marginTop = '30px';
+		navOptionsSection.style.paddingTop = '20px';
+		navOptionsSection.style.borderTop = '2px solid var(--background-modifier-border)';
+		navOptionsSection.createEl('h3', { text: 'Navigation Options' });
+		navOptionsSection.createEl('p', { text: 'Configure how navigation appears on your site.' });
+
+		// Show navigation toggle
+		new Setting(navOptionsSection)
+			.setName('Show navigation')
+			.setDesc('Display navigation menu on your site')
+			.addToggle(toggle => toggle
+				.setValue(settings.navigation.showNavigation ?? true)
+				.onChange(async (value) => {
+					settings.navigation.showNavigation = value;
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+					new Notice(`Navigation ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
+				}));
+
+		// Navigation style dropdown
+		new Setting(navOptionsSection)
+			.setName('Navigation style')
+			.setDesc('Choose between minimal or traditional navigation style')
+			.addDropdown(dropdown => dropdown
+				.addOption('traditional', 'Traditional')
+				.addOption('minimal', 'Minimal')
+				.setValue(settings.navigation.style || 'traditional')
+				.onChange(async (value) => {
+					settings.navigation.style = value as 'minimal' | 'traditional';
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+					new Notice(`Navigation style changed to ${value} and applied to config.ts`);
+				}));
+
+		// Show mobile menu toggle
+		new Setting(navOptionsSection)
+			.setName('Show mobile menu')
+			.setDesc('Display mobile navigation menu on smaller screens')
+			.addToggle(toggle => toggle
+				.setValue(settings.navigation.showMobileMenu ?? true)
+				.onChange(async (value) => {
+					settings.navigation.showMobileMenu = value;
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+					new Notice(`Mobile menu ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
+				}));
 	}
 
 	private setupDragAndDrop(container: HTMLElement): void {
