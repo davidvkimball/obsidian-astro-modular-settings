@@ -16,24 +16,23 @@ export abstract class TabRenderer {
 	abstract render(container: HTMLElement): void | Promise<void>;
 
 	protected getSettings(): AstroModularSettings {
-		// Always get the plugin's current settings
-		return (this.plugin as any).settings;
+		// Always get the plugin's current settings - reload from data to ensure we have the latest
+		return (this.plugin as any).settings || (this.plugin as any).data || {};
 	}
 
 	protected async applyCurrentConfiguration(showNotice: boolean = false): Promise<void> {
 		try {
 			const settings = this.getSettings();
-			// Apply the current settings to the config file
-			const presetSuccess = await (this.plugin as any).configManager.applyPreset({
-				name: settings.currentTemplate,
-				description: '',
-				features: settings.features,
-				theme: settings.currentTheme,
-				contentOrganization: settings.contentOrganization,
-				config: settings
+			console.log('🔧 applyCurrentConfiguration called with settings:', {
+				currentTheme: settings.currentTheme,
+				optionalContentTypes: settings.optionalContentTypes,
+				features: settings.features
 			});
+			
+			// Apply the current settings to the config file using individual features
+			const success = await (this.plugin as any).configManager.updateIndividualFeatures(settings);
 
-			if (presetSuccess) {
+			if (success) {
 				if (showNotice) {
 					new Notice('Configuration applied successfully!');
 				}

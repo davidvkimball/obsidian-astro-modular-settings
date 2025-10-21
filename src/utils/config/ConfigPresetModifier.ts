@@ -61,15 +61,26 @@ export class ConfigPresetModifier {
 
 		// Update optional content types
 		if (settings.optionalContentTypes) {
+			console.log('🔧 Optional content types:', settings.optionalContentTypes);
 			if (settings.optionalContentTypes.projects !== undefined) {
+				console.log('🔧 Attempting to update projects to:', settings.optionalContentTypes.projects);
+				const projectsRegex = /\/\/ \[CONFIG:OPTIONAL_CONTENT_TYPES_PROJECTS\]\s*\n\s*projects:\s*(true|false)/;
+				const projectsMatch = modifiedConfig.match(projectsRegex);
+				console.log('🔧 Projects regex match:', projectsMatch);
+				
 				modifiedConfig = modifiedConfig.replace(
-					/\/\/ \[CONFIG:OPTIONAL_CONTENT_TYPES_PROJECTS\]\s*\n\s*projects:\s*(true|false)/,
+					projectsRegex,
 					`// [CONFIG:OPTIONAL_CONTENT_TYPES_PROJECTS]\n    projects: ${settings.optionalContentTypes.projects}`
 				);
 			}
 			if (settings.optionalContentTypes.docs !== undefined) {
+				console.log('🔧 Attempting to update docs to:', settings.optionalContentTypes.docs);
+				const docsRegex = /\/\/ \[CONFIG:OPTIONAL_CONTENT_TYPES_DOCS\]\s*\n\s*docs:\s*(true|false)/;
+				const docsMatch = modifiedConfig.match(docsRegex);
+				console.log('🔧 Docs regex match:', docsMatch);
+				
 				modifiedConfig = modifiedConfig.replace(
-					/\/\/ \[CONFIG:OPTIONAL_CONTENT_TYPES_DOCS\]\s*\n\s*docs:\s*(true|false)/,
+					docsRegex,
 					`// [CONFIG:OPTIONAL_CONTENT_TYPES_DOCS]\n    docs: ${settings.optionalContentTypes.docs}`
 				);
 			}
@@ -556,12 +567,19 @@ export class ConfigPresetModifier {
 	}
 
 	modifyConfigFromFeatures(settings: AstroModularSettings, currentConfig: string): string {
+		console.log('🔧 modifyConfigFromFeatures called with settings:', Object.keys(settings));
+		console.log('🔧 Current config length:', currentConfig.length);
 		
 		let modifiedConfig = currentConfig;
 		
 		// Update theme
+		console.log('🔧 Attempting to update theme to:', settings.currentTheme);
+		const themeRegex = /\/\/ \[CONFIG:THEME\]\s*\n\s*theme:\s*"[^"]*"/;
+		const themeMatch = modifiedConfig.match(themeRegex);
+		console.log('🔧 Theme regex match:', themeMatch);
+		
 		modifiedConfig = modifiedConfig.replace(
-			/\/\/ \[CONFIG:THEME\]\s*\n\s*theme:\s*"[^"]*"/,
+			themeRegex,
 			`// [CONFIG:THEME]\n  theme: "${settings.currentTheme}"`
 		);
 		
@@ -571,6 +589,33 @@ export class ConfigPresetModifier {
 				/\/\/ \[CONFIG:CUSTOM_THEME_FILE\]\s*\n\s*customThemeFile:\s*"[^"]*"/,
 				`// [CONFIG:CUSTOM_THEME_FILE]\n  customThemeFile: "${settings.customThemeFile}"`
 			);
+		}
+		
+		// Update optional content types
+		if (settings.optionalContentTypes) {
+			console.log('🔧 Optional content types:', settings.optionalContentTypes);
+			if (settings.optionalContentTypes.projects !== undefined) {
+				console.log('🔧 Attempting to update projects to:', settings.optionalContentTypes.projects);
+				const projectsRegex = /\/\/ \[CONFIG:OPTIONAL_CONTENT_TYPES_PROJECTS\]\s*\n\s*projects:\s*(true|false)/;
+				const projectsMatch = modifiedConfig.match(projectsRegex);
+				console.log('🔧 Projects regex match:', projectsMatch);
+				
+				modifiedConfig = modifiedConfig.replace(
+					projectsRegex,
+					`// [CONFIG:OPTIONAL_CONTENT_TYPES_PROJECTS]\n    projects: ${settings.optionalContentTypes.projects}`
+				);
+			}
+			if (settings.optionalContentTypes.docs !== undefined) {
+				console.log('🔧 Attempting to update docs to:', settings.optionalContentTypes.docs);
+				const docsRegex = /\/\/ \[CONFIG:OPTIONAL_CONTENT_TYPES_DOCS\]\s*\n\s*docs:\s*(true|false)/;
+				const docsMatch = modifiedConfig.match(docsRegex);
+				console.log('🔧 Docs regex match:', docsMatch);
+				
+				modifiedConfig = modifiedConfig.replace(
+					docsRegex,
+					`// [CONFIG:OPTIONAL_CONTENT_TYPES_DOCS]\n    docs: ${settings.optionalContentTypes.docs}`
+				);
+			}
 		}
 		
 		// Update font source
@@ -986,6 +1031,9 @@ export class ConfigPresetModifier {
 				`// [CONFIG:POST_OPTIONS_CUSTOM_POST_CARD_ASPECT_RATIO]\n    customPostCardAspectRatio: "${settings.features.customPostCardAspectRatio}"`
 			);
 		}
+		
+		console.log('🔧 modifyConfigFromFeatures returning modified config, length:', modifiedConfig.length);
+		console.log('🔧 Config changed:', modifiedConfig !== currentConfig);
 		
 		return modifiedConfig;
 	}

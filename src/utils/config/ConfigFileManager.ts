@@ -7,12 +7,12 @@ export class ConfigFileManager {
 
 	constructor(app: App) {
 		this.app = app;
-		// The main Astro config.ts file is one level up from vault (src/config.ts)
-		this.configPath = '../config.ts';
+		// The main Astro config.ts file is at src/config.ts (two levels up from vault)
+		this.configPath = '../../src/config.ts';
 	}
 
 	async getConfigFileInfo(): Promise<ConfigFileInfo> {
-		// The main Astro config.ts file is one level up from vault (src/config.ts)
+		// The main Astro config.ts file is at src/config.ts (two levels up from vault)
 		// NOTE: This plugin accesses files outside the Obsidian vault to manage Astro configuration.
 		// This is necessary for the plugin's core functionality of managing Astro Modular theme settings.
 		
@@ -27,7 +27,7 @@ export class ConfigFileManager {
 			// If vaultPath is an object, try to get the string value
 			const vaultPathString = typeof vaultPath === 'string' ? vaultPath : (vaultPath ? String(vaultPath) : '');
 			
-			const configPath = path.join(vaultPathString, '..', 'config.ts');
+			const configPath = path.join(vaultPathString, '..', '..', 'src', 'config.ts');
 			
 			// Check if the parent directory exists
 			const parentDir = path.dirname(configPath);
@@ -78,6 +78,7 @@ export class ConfigFileManager {
 	}
 
 	async writeConfig(content: string): Promise<boolean> {
+		console.log('🔧 writeConfig called with content length:', content.length);
 		
 		// Try to write the file outside the vault using Node.js fs
 		try {
@@ -90,12 +91,16 @@ export class ConfigFileManager {
 			// If vaultPath is an object, try to get the string value
 			const vaultPathString = typeof vaultPath === 'string' ? vaultPath : (vaultPath ? String(vaultPath) : '');
 			
-			const configPath = path.join(vaultPathString, '..', 'config.ts');
+			const configPath = path.join(vaultPathString, '..', '..', 'src', 'config.ts');
+			console.log('🔧 Vault path:', vaultPathString);
+			console.log('🔧 Config path:', configPath);
+			console.log('🔧 Config file exists:', fs.existsSync(configPath));
 			
 			fs.writeFileSync(configPath, content, 'utf8');
+			console.log('✅ Config file written successfully');
 			return true;
 		} catch (error) {
-			console.error('Error writing config:', error);
+			console.error('❌ Error writing config:', error);
 			return false;
 		}
 	}
