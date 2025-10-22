@@ -1,10 +1,13 @@
 # Astro Modular Settings
 
-A comprehensive Obsidian plugin for easy setup and configuration management of the Astro Modular theme. This plugin provides a user-friendly setup wizard, preset configurations, and automatic plugin settings management to streamline your Astro Modular experience.
+A comprehensive Obsidian plugin for easy setup and configuration management of the [Astro Modular theme](https://github.com/davidvkimball/astro-modular). This plugin provides a user-friendly setup wizard, preset configurations, and automatic plugin settings management to streamline your Astro Modular experience.
+
+> [!NOTE]
+> This is only intended to work with a specific Astro blog template and is not a general-purpose Obsidian plugin.
 
 ## Features
 
-### 🚀 Setup Wizard
+### Setup Wizard
 - **Welcome Screen**: Beautiful onboarding with Astro Modular branding
 - **Template Selection**: Choose from Standard, Minimal, Compact, Documentation, or Custom templates
 - **Theme Selection**: Visual theme picker with 18+ beautiful color schemes
@@ -13,21 +16,21 @@ A comprehensive Obsidian plugin for easy setup and configuration management of t
 - **Plugin Configuration**: Automatic setup of required Obsidian plugins
 - **Smart Defaults**: Skip options with sensible defaults for quick setup
 
-### ⚙️ Settings Interface
+### Settings Interface
 - **General Tab**: Basic plugin settings and current configuration overview
 - **Quick Config**: Fast template, theme, and organization changes
 - **Features Tab**: Toggle individual theme features on/off
 - **Plugin Settings**: Manage Obsidian plugin configurations
 - **Advanced Tab**: Direct config file editing and import/export
 
-### 🎨 Preset Templates
+### Preset Templates
 - **Standard**: Full-featured blog with all options enabled
 - **Minimal**: Clean, simple blog with minimal features
 - **Compact**: Balanced setup for smaller sites
 - **Documentation**: Optimized for technical documentation
 - **Custom**: Granular control over every setting
 
-### 🌈 Theme Support
+### Theme Support
 - Oxygen (default) - Modern, clean design
 - Minimal - Understated with high contrast
 - Atom - Dark theme with vibrant accents
@@ -211,22 +214,12 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 5. Test thoroughly
 6. Submit a pull request
 
-## Support
-
-- **Documentation**: [GitHub Wiki](https://github.com/astro-modular/obsidian-astro-modular-settings/wiki)
-- **Issues**: [GitHub Issues](https://github.com/astro-modular/obsidian-astro-modular-settings/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/astro-modular/obsidian-astro-modular-settings/discussions)
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
-- Built for the [Astro Modular](https://github.com/astro-modular) theme
-- Inspired by the Obsidian community's need for easier theme configuration
+- Built for the [Astro Modular](https://github.com/davidvkimball/astro-modular) theme
+- Inspired by the Obsidian community's need for easier, more flexible publishing of their notes
 - Thanks to all contributors and users who provide feedback
-
----
-
-**Made with ❤️ for the Obsidian and Astro communities**
