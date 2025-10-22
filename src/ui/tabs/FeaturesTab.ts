@@ -1276,6 +1276,11 @@ export class FeaturesTab extends TabRenderer {
 				// Parse and update all settings
 				const parsed = GiscusScriptParser.parseScript(scriptContent);
 				if (parsed) {
+					// Enable comments when a valid script is pasted
+					settings.features.comments = true;
+					
+					// Update the commentsSettings object with parsed data
+					commentsSettings.enabled = true;
 					commentsSettings.rawScript = scriptContent;
 					commentsSettings.repo = parsed.repo;
 					commentsSettings.repoId = parsed.repoId;
@@ -1290,7 +1295,32 @@ export class FeaturesTab extends TabRenderer {
 					commentsSettings.lang = parsed.lang;
 					commentsSettings.loading = parsed.loading;
 					
+					// Update optionalFeatures.comments (this is what modifyConfigFromFeatures reads)
+					if (!settings.optionalFeatures) {
+						settings.optionalFeatures = { profilePicture: { enabled: false, image: '/profile.jpg', alt: 'Profile picture', size: 'md', url: '', placement: 'footer', style: 'circle' }, comments: commentsSettings };
+					}
+					settings.optionalFeatures.comments = { ...commentsSettings };
+					
+					// Also update postOptions.comments for consistency
+					if (!settings.postOptions) {
+						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tableOfContents: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: commentsSettings };
+					}
+					settings.postOptions.comments = { ...commentsSettings };
+					
 					await this.plugin.saveData(settings);
+					
+					// Update the toggle to show comments are enabled
+					const toggle = container.querySelector('.setting-item .checkbox-container input[type="checkbox"]') as HTMLInputElement;
+					if (toggle) {
+						toggle.checked = true;
+					}
+					
+					// Show the options container
+					const optionsDiv = container.querySelector('.comments-options') as HTMLElement;
+					if (optionsDiv) {
+						optionsDiv.style.display = 'block';
+					}
+					
 					await this.applyCurrentConfiguration();
 				}
 			} else {

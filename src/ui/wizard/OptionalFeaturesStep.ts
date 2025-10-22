@@ -219,20 +219,42 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 				// Parse and update all settings
 				const parsed = GiscusScriptParser.parseScript(scriptContent);
 				if (parsed) {
-					// Update all the individual settings
-					this.updateCommentSetting('rawScript', scriptContent, state);
-					this.updateCommentSetting('repo', parsed.repo, state);
-					this.updateCommentSetting('repoId', parsed.repoId, state);
-					this.updateCommentSetting('category', parsed.category, state);
-					this.updateCommentSetting('categoryId', parsed.categoryId, state);
-					this.updateCommentSetting('mapping', parsed.mapping, state);
-					this.updateCommentSetting('strict', parsed.strict, state);
-					this.updateCommentSetting('reactions', parsed.reactions, state);
-					this.updateCommentSetting('metadata', parsed.metadata, state);
-					this.updateCommentSetting('inputPosition', parsed.inputPosition, state);
-					this.updateCommentSetting('theme', parsed.theme, state);
-					this.updateCommentSetting('lang', parsed.lang, state);
-					this.updateCommentSetting('loading', parsed.loading, state);
+					// Enable comments when a valid script is pasted
+					this.updateState({
+						selectedFeatures: { ...state.selectedFeatures, comments: true },
+						selectedOptionalFeatures: {
+							...state.selectedOptionalFeatures,
+							comments: { 
+								...state.selectedOptionalFeatures?.comments, 
+								enabled: true,
+								rawScript: scriptContent,
+								repo: parsed.repo,
+								repoId: parsed.repoId,
+								category: parsed.category,
+								categoryId: parsed.categoryId,
+								mapping: parsed.mapping,
+								strict: parsed.strict,
+								reactions: parsed.reactions,
+								metadata: parsed.metadata,
+								inputPosition: parsed.inputPosition,
+								theme: parsed.theme,
+								lang: parsed.lang,
+								loading: parsed.loading
+							}
+						}
+					});
+					
+					// Update the toggle to show comments are enabled
+					const toggle = container.querySelector('.setting-item .checkbox-container input[type="checkbox"]') as HTMLInputElement;
+					if (toggle) {
+						toggle.checked = true;
+					}
+					
+					// Show the options container
+					const optionsDiv = container.querySelector('.comments-options') as HTMLElement;
+					if (optionsDiv) {
+						optionsDiv.style.display = 'block';
+					}
 				}
 			} else {
 				validationDiv.innerHTML = `<span style="color: var(--text-error)">✗ ${validation.error}</span>`;
