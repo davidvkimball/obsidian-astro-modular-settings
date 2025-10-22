@@ -1129,6 +1129,7 @@ export class FeaturesTab extends TabRenderer {
 		const commentsSettings = settings.postOptions?.comments || settings.optionalFeatures?.comments || {
 			enabled: false,
 			provider: 'giscus',
+			rawScript: '',
 			repo: 'davidvkimball/astro-modular',
 			repoId: 'R_kgDOPllfKw',
 			category: 'General',
@@ -1176,217 +1177,130 @@ export class FeaturesTab extends TabRenderer {
 					}
 				}));
 
-		// Detailed options container
+		// Options container
 		const optionsContainer = container.createDiv('comments-options');
 		optionsContainer.style.display = isEnabled ? 'block' : 'none';
 		optionsContainer.style.marginTop = '10px';
 		optionsContainer.style.paddingLeft = '20px';
 
-		// Add Giscus setup link
-		const giscusLink = optionsContainer.createDiv('giscus-setup-link');
-		giscusLink.style.marginBottom = '15px';
-		giscusLink.style.padding = '10px';
-		giscusLink.style.background = 'var(--background-modifier-border)';
-		giscusLink.style.borderRadius = '4px';
-		giscusLink.style.borderLeft = '3px solid var(--interactive-accent)';
+		// Instructions
+		const instructionsDiv = optionsContainer.createDiv('comments-instructions');
+		instructionsDiv.style.marginBottom = '15px';
+		instructionsDiv.style.padding = '10px';
+		instructionsDiv.style.background = 'var(--background-modifier-border)';
+		instructionsDiv.style.borderRadius = '4px';
+		instructionsDiv.style.borderLeft = '3px solid var(--interactive-accent)';
 		
-		const linkText = giscusLink.createEl('p', { text: 'Need help setting up Giscus? ' });
-		linkText.style.margin = '0';
-		linkText.style.fontSize = '13px';
-		linkText.style.color = 'var(--text-muted)';
+		const instructionsText = instructionsDiv.createEl('p');
+		instructionsText.style.margin = '0';
+		instructionsText.style.fontSize = '13px';
+		instructionsText.style.color = 'var(--text-muted)';
+		instructionsText.style.whiteSpace = 'pre-line';
 		
-		const link = linkText.createEl('a', { 
-			text: 'Visit giscus.app →',
-			href: 'https://giscus.app/',
-			attr: { target: '_blank', rel: 'noopener noreferrer' }
+		// Create the text with proper link placement
+		instructionsText.innerHTML = '1. Go to <a href="https://giscus.app/" target="_blank" rel="noopener noreferrer" style="color: var(--interactive-accent); text-decoration: none;">giscus.app</a> and configure your comments\n2. Copy the generated script\n3. Paste it below';
+		
+		// Add hover effects to the link
+		const giscusLink = instructionsText.querySelector('a');
+		if (giscusLink) {
+			giscusLink.addEventListener('mouseenter', () => {
+				giscusLink.style.textDecoration = 'underline';
+			});
+			giscusLink.addEventListener('mouseleave', () => {
+				giscusLink.style.textDecoration = 'none';
+			});
+		}
+
+		// Script textarea
+		const scriptSetting = new Setting(optionsContainer)
+			.setName('Giscus Script')
+			.setDesc('Paste your Giscus script here (the plugin will automatically parse all settings)');
+		
+		const textarea = scriptSetting.controlEl.createEl('textarea', {
+			attr: {
+				placeholder: `<script src="https://giscus.app/client.js"
+        data-repo="davidvkimball/astro-modular"
+        data-repo-id="R_kgDOPllfKw"
+        data-category="General"
+        data-category-id="DIC_kwDOPllfK84CvUpx"
+        data-mapping="pathname"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>`,
+				rows: '8'
+			}
 		});
-		link.style.color = 'var(--interactive-accent)';
-		link.style.textDecoration = 'none';
-		link.addEventListener('mouseenter', () => {
-			link.style.textDecoration = 'underline';
-		});
-		link.addEventListener('mouseleave', () => {
-			link.style.textDecoration = 'none';
-		});
-
-		// Create two-column grid for options
-		const optionsGrid = optionsContainer.createDiv('options-grid');
-		optionsGrid.style.display = 'grid';
-		optionsGrid.style.gridTemplateColumns = '1fr 1fr';
-		optionsGrid.style.gap = '10px';
-		optionsGrid.style.marginTop = '10px';
-
-		// Repository setting
-		new Setting(optionsGrid)
-			.setName('Repository')
-			.setDesc('GitHub repository for comments (username/repo)')
-			.addText(text => text
-				.setValue(commentsSettings.repo)
-				.setPlaceholder('username/repo')
-				.onChange(async (value) => {
-					commentsSettings.repo = value;
+		
+		textarea.style.width = '100%';
+		textarea.style.fontFamily = 'var(--font-monospace)';
+		textarea.style.fontSize = '12px';
+		textarea.style.padding = '8px';
+		textarea.style.border = '1px solid var(--background-modifier-border)';
+		textarea.style.borderRadius = '4px';
+		textarea.style.background = 'var(--background-primary)';
+		textarea.style.color = 'var(--text-normal)';
+		textarea.style.resize = 'none';
+		
+		// Set current value
+		textarea.value = commentsSettings.rawScript || '';
+		
+		// Validation and parsing
+		const validationDiv = optionsContainer.createDiv('script-validation');
+		validationDiv.style.marginTop = '8px';
+		validationDiv.style.fontSize = '12px';
+		
+		const updateValidation = async () => {
+			const scriptContent = textarea.value.trim();
+			
+			if (!scriptContent) {
+				validationDiv.innerHTML = '';
+				commentsSettings.rawScript = '';
+				await this.plugin.saveData(settings);
+				return;
+			}
+			
+			// Import the parser dynamically
+			const { GiscusScriptParser } = await import('../../utils/GiscusScriptParser');
+			const validation = GiscusScriptParser.validateScript(scriptContent);
+			
+			if (validation.valid) {
+				validationDiv.innerHTML = '<span style="color: var(--text-success)">✓ Valid Giscus script detected</span>';
+				
+				// Parse and update all settings
+				const parsed = GiscusScriptParser.parseScript(scriptContent);
+				if (parsed) {
+					commentsSettings.rawScript = scriptContent;
+					commentsSettings.repo = parsed.repo;
+					commentsSettings.repoId = parsed.repoId;
+					commentsSettings.category = parsed.category;
+					commentsSettings.categoryId = parsed.categoryId;
+					commentsSettings.mapping = parsed.mapping;
+					commentsSettings.strict = parsed.strict;
+					commentsSettings.reactions = parsed.reactions;
+					commentsSettings.metadata = parsed.metadata;
+					commentsSettings.inputPosition = parsed.inputPosition;
+					commentsSettings.theme = parsed.theme;
+					commentsSettings.lang = parsed.lang;
+					commentsSettings.loading = parsed.loading;
+					
 					await this.plugin.saveData(settings);
 					await this.applyCurrentConfiguration();
-				}));
-
-		// Repository ID setting
-		new Setting(optionsGrid)
-			.setName('Repository ID')
-			.setDesc('GitHub repository ID for Giscus')
-			.addText(text => text
-				.setValue(commentsSettings.repoId)
-				.setPlaceholder('R_kgDOPllfKw')
-				.onChange(async (value) => {
-					commentsSettings.repoId = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
-				}));
-
-		// Category setting
-		new Setting(optionsGrid)
-			.setName('Category')
-			.setDesc('Discussion category name')
-			.addText(text => text
-				.setValue(commentsSettings.category)
-				.setPlaceholder('General')
-				.onChange(async (value) => {
-					commentsSettings.category = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
-				}));
-
-		// Category ID setting
-		new Setting(optionsGrid)
-			.setName('Category ID')
-			.setDesc('Discussion category ID for Giscus')
-			.addText(text => text
-				.setValue(commentsSettings.categoryId)
-				.setPlaceholder('DIC_kwDOPllfK84CvUpx')
-				.onChange(async (value) => {
-					commentsSettings.categoryId = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
-				}));
-
-		// Mapping setting
-		new Setting(optionsGrid)
-			.setName('Mapping')
-			.setDesc('How to map discussions to pages')
-			.addDropdown(dropdown => dropdown
-				.addOption('pathname', 'Pathname')
-				.addOption('url', 'URL')
-				.addOption('title', 'Title')
-				.addOption('og:title', 'OG Title')
-				.setValue(commentsSettings.mapping)
-				.onChange(async (value) => {
-					commentsSettings.mapping = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
-				}));
-
-		// Strict setting
-		new Setting(optionsGrid)
-			.setName('Strict')
-			.setDesc('Only match discussions with the same category')
-			.addDropdown(dropdown => dropdown
-				.addOption('0', 'No')
-				.addOption('1', 'Yes')
-				.setValue(commentsSettings.strict)
-				.onChange(async (value) => {
-					commentsSettings.strict = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
-				}));
-
-		// Reactions setting
-		new Setting(optionsGrid)
-			.setName('Reactions')
-			.setDesc('Enable reaction buttons')
-			.addDropdown(dropdown => dropdown
-				.addOption('0', 'Disabled')
-				.addOption('1', 'Enabled')
-				.setValue(commentsSettings.reactions)
-				.onChange(async (value) => {
-					commentsSettings.reactions = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
-				}));
-
-		// Metadata setting
-		new Setting(optionsGrid)
-			.setName('Metadata')
-			.setDesc('Show metadata in comments')
-			.addDropdown(dropdown => dropdown
-				.addOption('0', 'Disabled')
-				.addOption('1', 'Enabled')
-				.setValue(commentsSettings.metadata)
-				.onChange(async (value) => {
-					commentsSettings.metadata = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
-				}));
-
-		// Input Position setting
-		new Setting(optionsGrid)
-			.setName('Input Position')
-			.setDesc('Where to place the comment input')
-			.addDropdown(dropdown => dropdown
-				.addOption('top', 'Top')
-				.addOption('bottom', 'Bottom')
-				.setValue(commentsSettings.inputPosition)
-				.onChange(async (value) => {
-					commentsSettings.inputPosition = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
-				}));
-
-		// Theme setting
-		new Setting(optionsGrid)
-			.setName('Theme')
-			.setDesc('Comments theme')
-			.addDropdown(dropdown => dropdown
-				.addOption('light', 'Light')
-				.addOption('dark', 'Dark')
-				.addOption('preferred_color_scheme', 'Auto')
-				.setValue(commentsSettings.theme)
-				.onChange(async (value) => {
-					commentsSettings.theme = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
-				}));
-
-		// Language setting
-		new Setting(optionsGrid)
-			.setName('Language')
-			.setDesc('Comments interface language')
-			.addDropdown(dropdown => dropdown
-				.addOption('en', 'English')
-				.addOption('es', 'Spanish')
-				.addOption('fr', 'French')
-				.addOption('de', 'German')
-				.addOption('ja', 'Japanese')
-				.addOption('ko', 'Korean')
-				.addOption('zh-CN', 'Chinese (Simplified)')
-				.addOption('zh-TW', 'Chinese (Traditional)')
-				.setValue(commentsSettings.lang)
-				.onChange(async (value) => {
-					commentsSettings.lang = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
-				}));
-
-		// Loading setting
-		new Setting(optionsGrid)
-			.setName('Loading')
-			.setDesc('When to load comments')
-			.addDropdown(dropdown => dropdown
-				.addOption('lazy', 'Lazy')
-				.addOption('eager', 'Eager')
-				.setValue(commentsSettings.loading)
-				.onChange(async (value) => {
-					commentsSettings.loading = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
-				}));
+				}
+			} else {
+				validationDiv.innerHTML = `<span style="color: var(--text-error)">✗ ${validation.error}</span>`;
+			}
+		};
+		
+		textarea.addEventListener('input', updateValidation);
+		
+		// Initial validation
+		updateValidation();
 	}
 }

@@ -97,8 +97,9 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 	private renderCommentsFeatureNative(container: HTMLElement, state: any): void {
 		const isEnabled = state.selectedOptionalFeatures?.comments?.enabled || false;
 		const commentsSettings = state.selectedOptionalFeatures?.comments || {
-			enabled: false, provider: 'giscus', repo: 'davidvkimball/astro-modular',
-			repoId: 'R_kgDOPllfKw', category: 'General', categoryId: 'DIC_kwDOPllfK84CvUpx',
+			enabled: false, provider: 'giscus', rawScript: '',
+			repo: 'davidvkimball/astro-modular', repoId: 'R_kgDOPllfKw', 
+			category: 'General', categoryId: 'DIC_kwDOPllfK84CvUpx',
 			mapping: 'pathname', strict: '0', reactions: '1', metadata: '0',
 			inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy'
 		};
@@ -126,65 +127,122 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 		optionsContainer.style.display = isEnabled ? 'block' : 'none';
 		optionsContainer.className = 'comments-options';
 
-		// Giscus setup link
-		const giscusLink = optionsContainer.createDiv('giscus-setup-link');
-		const linkText = giscusLink.createEl('p', { text: 'Need help setting up Giscus? ' });
-		const link = linkText.createEl('a', { 
-			text: 'Visit giscus.app →', href: 'https://giscus.app/',
-			attr: { target: '_blank', rel: 'noopener noreferrer' }
-		});
+		// Instructions
+		const instructionsDiv = optionsContainer.createDiv('comments-instructions');
+		instructionsDiv.style.marginBottom = '15px';
+		instructionsDiv.style.padding = '10px';
+		instructionsDiv.style.background = 'var(--background-modifier-border)';
+		instructionsDiv.style.borderRadius = '4px';
+		instructionsDiv.style.borderLeft = '3px solid var(--interactive-accent)';
+		
+		const instructionsText = instructionsDiv.createEl('p');
+		instructionsText.style.margin = '0';
+		instructionsText.style.fontSize = '13px';
+		instructionsText.style.color = 'var(--text-muted)';
+		instructionsText.style.whiteSpace = 'pre-line';
+		
+		// Create the text with proper link placement
+		instructionsText.innerHTML = '1. Go to <a href="https://giscus.app/" target="_blank" rel="noopener noreferrer" style="color: var(--interactive-accent); text-decoration: none;">giscus.app</a> and configure your comments\n2. Copy the generated script\n3. Paste it below';
+		
+		// Add hover effects to the link
+		const giscusLink = instructionsText.querySelector('a');
+		if (giscusLink) {
+			giscusLink.addEventListener('mouseenter', () => {
+				giscusLink.style.textDecoration = 'underline';
+			});
+			giscusLink.addEventListener('mouseleave', () => {
+				giscusLink.style.textDecoration = 'none';
+			});
+		}
 
-		// Helper function for comments settings
-		const createCommentSetting = (name: string, desc: string, type: 'text' | 'dropdown', options?: Array<{value: string, label: string}>) => {
-			const setting = new Setting(optionsContainer).setName(name).setDesc(desc);
-			if (type === 'text') {
-				setting.addText((text: TextComponent) => text
-					.setValue(commentsSettings[name] || '')
-					.setPlaceholder(options?.[0]?.value || '')
-					.onChange((value: string) => this.updateCommentSetting(name, value, state)));
+		// Script textarea
+		const scriptSetting = new Setting(optionsContainer)
+			.setName('Giscus Script')
+			.setDesc('Paste your Giscus script here (the plugin will automatically parse all settings)');
+		
+		const textarea = scriptSetting.controlEl.createEl('textarea', {
+			attr: {
+				placeholder: `<script src="https://giscus.app/client.js"
+        data-repo="davidvkimball/astro-modular"
+        data-repo-id="R_kgDOPllfKw"
+        data-category="General"
+        data-category-id="DIC_kwDOPllfK84CvUpx"
+        data-mapping="pathname"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>`,
+				rows: '8'
+			}
+		});
+		
+		textarea.style.width = '100%';
+		textarea.style.fontFamily = 'var(--font-monospace)';
+		textarea.style.fontSize = '12px';
+		textarea.style.padding = '8px';
+		textarea.style.border = '1px solid var(--background-modifier-border)';
+		textarea.style.borderRadius = '4px';
+		textarea.style.background = 'var(--background-primary)';
+		textarea.style.color = 'var(--text-normal)';
+		textarea.style.resize = 'none';
+		
+		// Set current value
+		textarea.value = commentsSettings.rawScript || '';
+		
+		// Validation and parsing
+		const validationDiv = optionsContainer.createDiv('script-validation');
+		validationDiv.style.marginTop = '8px';
+		validationDiv.style.fontSize = '12px';
+		
+		const updateValidation = async () => {
+			const scriptContent = textarea.value.trim();
+			
+			if (!scriptContent) {
+				validationDiv.innerHTML = '';
+				this.updateCommentSetting('rawScript', '', state);
+				return;
+			}
+			
+			// Import the parser dynamically
+			const { GiscusScriptParser } = await import('../../utils/GiscusScriptParser');
+			const validation = GiscusScriptParser.validateScript(scriptContent);
+			
+			if (validation.valid) {
+				validationDiv.innerHTML = '<span style="color: var(--text-success)">✓ Valid Giscus script detected</span>';
+				
+				// Parse and update all settings
+				const parsed = GiscusScriptParser.parseScript(scriptContent);
+				if (parsed) {
+					// Update all the individual settings
+					this.updateCommentSetting('rawScript', scriptContent, state);
+					this.updateCommentSetting('repo', parsed.repo, state);
+					this.updateCommentSetting('repoId', parsed.repoId, state);
+					this.updateCommentSetting('category', parsed.category, state);
+					this.updateCommentSetting('categoryId', parsed.categoryId, state);
+					this.updateCommentSetting('mapping', parsed.mapping, state);
+					this.updateCommentSetting('strict', parsed.strict, state);
+					this.updateCommentSetting('reactions', parsed.reactions, state);
+					this.updateCommentSetting('metadata', parsed.metadata, state);
+					this.updateCommentSetting('inputPosition', parsed.inputPosition, state);
+					this.updateCommentSetting('theme', parsed.theme, state);
+					this.updateCommentSetting('lang', parsed.lang, state);
+					this.updateCommentSetting('loading', parsed.loading, state);
+				}
 			} else {
-				setting.addDropdown((dropdown: DropdownComponent) => {
-					options?.forEach(opt => dropdown.addOption(opt.value, opt.label));
-					dropdown.setValue(commentsSettings[name])
-						.onChange((value: string) => this.updateCommentSetting(name, value, state));
-				});
+				validationDiv.innerHTML = `<span style="color: var(--text-error)">✗ ${validation.error}</span>`;
 			}
 		};
-
-		// Create all comment settings
-		createCommentSetting('repo', 'Repository', 'text', [{value: 'username/repo', label: 'username/repo'}]);
-		createCommentSetting('repoId', 'Repository ID', 'text', [{value: 'R_kgDOPllfKw', label: 'R_kgDOPllfKw'}]);
-		createCommentSetting('category', 'Category', 'text', [{value: 'General', label: 'General'}]);
-		createCommentSetting('categoryId', 'Category ID', 'text', [{value: 'DIC_kwDOPllfK84CvUpx', label: 'DIC_kwDOPllfK84CvUpx'}]);
-		createCommentSetting('mapping', 'Mapping', 'dropdown', [
-			{value: 'pathname', label: 'Pathname'}, {value: 'url', label: 'URL'},
-			{value: 'title', label: 'Title'}, {value: 'og:title', label: 'OG Title'}
-		]);
-		createCommentSetting('strict', 'Strict', 'dropdown', [
-			{value: '0', label: 'No'}, {value: '1', label: 'Yes'}
-		]);
-		createCommentSetting('reactions', 'Reactions', 'dropdown', [
-			{value: '0', label: 'Disabled'}, {value: '1', label: 'Enabled'}
-		]);
-		createCommentSetting('metadata', 'Metadata', 'dropdown', [
-			{value: '0', label: 'Disabled'}, {value: '1', label: 'Enabled'}
-		]);
-		createCommentSetting('inputPosition', 'Input Position', 'dropdown', [
-			{value: 'top', label: 'Top'}, {value: 'bottom', label: 'Bottom'}
-		]);
-		createCommentSetting('theme', 'Theme', 'dropdown', [
-			{value: 'light', label: 'Light'}, {value: 'dark', label: 'Dark'},
-			{value: 'preferred_color_scheme', label: 'Auto'}
-		]);
-		createCommentSetting('lang', 'Language', 'dropdown', [
-			{value: 'en', label: 'English'}, {value: 'es', label: 'Spanish'},
-			{value: 'fr', label: 'French'}, {value: 'de', label: 'German'},
-			{value: 'ja', label: 'Japanese'}, {value: 'ko', label: 'Korean'},
-			{value: 'zh-CN', label: 'Chinese (Simplified)'}, {value: 'zh-TW', label: 'Chinese (Traditional)'}
-		]);
-		createCommentSetting('loading', 'Loading', 'dropdown', [
-			{value: 'lazy', label: 'Lazy'}, {value: 'eager', label: 'Eager'}
-		]);
+		
+		textarea.addEventListener('input', updateValidation);
+		
+		// Initial validation
+		updateValidation();
 	}
 
 	private updateCommentSetting(key: string, value: any, state: any): void {

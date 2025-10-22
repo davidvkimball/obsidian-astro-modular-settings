@@ -113,6 +113,19 @@ These markers allow the plugin to find and update specific configuration values 
 - `CONFIG:POST_OPTIONS_POST_CARD_ASPECT_RATIO` - Post card aspect ratio
 - `CONFIG:POST_OPTIONS_CUSTOM_POST_CARD_ASPECT_RATIO` - Custom aspect ratio
 - `CONFIG:POST_OPTIONS_COMMENTS_ENABLED` - Enable/disable comments
+- `CONFIG:POST_OPTIONS_COMMENTS_PROVIDER` - Comments provider (giscus)
+- `CONFIG:POST_OPTIONS_COMMENTS_REPO` - Repository for comments
+- `CONFIG:POST_OPTIONS_COMMENTS_REPO_ID` - Repository ID for comments
+- `CONFIG:POST_OPTIONS_COMMENTS_CATEGORY` - Comments category
+- `CONFIG:POST_OPTIONS_COMMENTS_CATEGORY_ID` - Comments category ID
+- `CONFIG:POST_OPTIONS_COMMENTS_MAPPING` - Comments mapping (pathname/url/title/og:title)
+- `CONFIG:POST_OPTIONS_COMMENTS_STRICT` - Comments strict mode (0/1)
+- `CONFIG:POST_OPTIONS_COMMENTS_REACTIONS` - Comments reactions (0/1)
+- `CONFIG:POST_OPTIONS_COMMENTS_METADATA` - Comments metadata (0/1)
+- `CONFIG:POST_OPTIONS_COMMENTS_INPUT_POSITION` - Comments input position (top/bottom)
+- `CONFIG:POST_OPTIONS_COMMENTS_THEME` - Comments theme
+- `CONFIG:POST_OPTIONS_COMMENTS_LANG` - Comments language
+- `CONFIG:POST_OPTIONS_COMMENTS_LOADING` - Comments loading strategy (lazy/eager)
 
 ## What Happens If Markers Are Removed?
 

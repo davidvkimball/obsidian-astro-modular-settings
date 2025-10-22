@@ -215,6 +215,7 @@ export interface ProfilePictureSettings {
 export interface CommentsSettings {
 	enabled: boolean;
 	provider: 'giscus';
+	rawScript: string; // The full Giscus script pasted by the user
 	repo: string;
 	repoId: string;
 	category: string;
@@ -460,6 +461,7 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 		comments: {
 			enabled: false,
 			provider: 'giscus',
+			rawScript: '',
 			repo: 'davidvkimball/astro-modular',
 			repoId: 'R_kgDOPllfKw',
 			category: 'General',
@@ -521,6 +523,7 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 		comments: {
 			enabled: false,
 			provider: 'giscus',
+			rawScript: '',
 			repo: 'davidvkimball/astro-modular',
 			repoId: 'R_kgDOPllfKw',
 			category: 'General',
