@@ -12,7 +12,14 @@ export class ConfigPresetModifier {
 	}
 
 	modifyConfigFromPreset(preset: PresetTemplate, currentConfig: string): string {
-		const settings = preset.config as AstroModularSettings;
+		// Use the actual settings passed in the preset, not the template's config
+		// The preset contains the user's current settings in its properties
+		const settings = {
+			...preset.config,
+			features: preset.features,
+			currentTheme: preset.theme,
+			contentOrganization: preset.contentOrganization
+		} as AstroModularSettings;
 		
 		// First apply individual features to ensure they're not overridden by template
 		let modifiedConfig = this.modifyConfigFromFeatures(settings, currentConfig);
@@ -367,7 +374,6 @@ export class ConfigPresetModifier {
 			const booleanFeatures = [
 				{ key: 'readingTime', marker: 'CONFIG:POST_OPTIONS_READING_TIME' },
 				{ key: 'wordCount', marker: 'CONFIG:POST_OPTIONS_WORD_COUNT' },
-				{ key: 'tableOfContents', marker: 'CONFIG:POST_OPTIONS_TABLE_OF_CONTENTS' },
 				{ key: 'tags', marker: 'CONFIG:POST_OPTIONS_TAGS' },
 				{ key: 'postNavigation', marker: 'CONFIG:POST_OPTIONS_POST_NAVIGATION' }
 			];
@@ -403,13 +409,13 @@ export class ConfigPresetModifier {
 			if (templateConfig.postOptions.graphView.enabled !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:POST_OPTIONS_GRAPH_VIEW_ENABLED\]\s*enabled:\s*(true|false)/,
-					`// [CONFIG:POST_OPTIONS_GRAPH_VIEW_ENABLED]\n    enabled: ${templateConfig.postOptions.graphView.enabled}`
+					`// [CONFIG:POST_OPTIONS_GRAPH_VIEW_ENABLED]\n      enabled: ${templateConfig.postOptions.graphView.enabled}`
 				);
 			}
 			// Update showInSidebar state
 			if (templateConfig.postOptions.graphView.showInSidebar !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
-					/\/\/ \[CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_IN_SIDEBAR\]\s*showInSidebar:\s*(true|false)/,
+					/\/\/ \[CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_IN_SIDEBAR\]\s*\n?\s*showInSidebar:\s*(true|false)/,
 					`// [CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_IN_SIDEBAR]\n      showInSidebar: ${templateConfig.postOptions.graphView.showInSidebar}`
 				);
 			}
@@ -682,6 +688,18 @@ export class ConfigPresetModifier {
 			);
 		}
 		
+		// Update table of contents settings
+		if (settings.tableOfContents) {
+			modifiedConfig = modifiedConfig.replace(
+				/\/\/ \[CONFIG:TABLE_OF_CONTENTS_ENABLED\]\s*\n\s*enabled:\s*(true|false)/,
+				`// [CONFIG:TABLE_OF_CONTENTS_ENABLED]\n    enabled: ${settings.tableOfContents.enabled}`
+			);
+			modifiedConfig = modifiedConfig.replace(
+				/\/\/ \[CONFIG:TABLE_OF_CONTENTS_DEPTH\]\s*\n\s*depth:\s*\d+/,
+				`// [CONFIG:TABLE_OF_CONTENTS_DEPTH]\n    depth: ${settings.tableOfContents.depth}`
+			);
+		}
+		
 		// Update footer settings
 		if (settings.footer) {
 			if (settings.footer.enabled !== undefined) {
@@ -938,11 +956,6 @@ export class ConfigPresetModifier {
 			`// [CONFIG:COMMAND_PALETTE_ENABLED]\n    enabled: ${settings.commandPalette?.enabled ?? settings.features.commandPalette}`
 		);
 		
-		// Update table of contents
-		modifiedConfig = modifiedConfig.replace(
-			/\/\/ \[CONFIG:POST_OPTIONS_TABLE_OF_CONTENTS\]\s*tableOfContents:\s*(true|false)/,
-			`// [CONFIG:POST_OPTIONS_TABLE_OF_CONTENTS]\n    tableOfContents: ${settings.features.tableOfContents}`
-		);
 		
 		// Update reading time
 		modifiedConfig = modifiedConfig.replace(
@@ -987,7 +1000,7 @@ export class ConfigPresetModifier {
 		// Update graph view enabled
 		modifiedConfig = modifiedConfig.replace(
 			/\/\/ \[CONFIG:POST_OPTIONS_GRAPH_VIEW_ENABLED\]\s*enabled:\s*(true|false)/,
-			`// [CONFIG:POST_OPTIONS_GRAPH_VIEW_ENABLED]\n    enabled: ${settings.features.graphView}`
+			`// [CONFIG:POST_OPTIONS_GRAPH_VIEW_ENABLED]\n      enabled: ${settings.features.graphView}`
 		);
 		
 		// Update post navigation

@@ -60,6 +60,53 @@ export class FeaturesTab extends TabRenderer {
 						new Notice(`Docs ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
 				}));
 
+		// Table of contents
+		new Setting(globalSection)
+			.setName('Table of contents')
+			.setDesc('Show table of contents on content pages')
+			.addToggle(toggle => toggle
+				.setValue(settings.tableOfContents?.enabled ?? true)
+				.onChange(async (value) => {
+					if (!settings.tableOfContents) {
+						settings.tableOfContents = { enabled: true, depth: 4 };
+					}
+					settings.tableOfContents.enabled = value;
+					await this.plugin.saveData(settings);
+					
+					// Show/hide ToC depth option
+					const tocDepth = globalSection.querySelector('.toc-depth-option') as HTMLElement;
+					if (tocDepth) {
+						tocDepth.style.display = value ? 'block' : 'none';
+					}
+					
+					await this.applyCurrentConfiguration();
+					new Notice(`Table of contents ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
+				}));
+
+		// ToC depth container
+		const tocDepthContainer = globalSection.createDiv('toc-depth-option');
+		tocDepthContainer.style.display = (settings.tableOfContents?.enabled ?? true) ? 'block' : 'none';
+		tocDepthContainer.style.paddingLeft = '20px';
+
+		new Setting(tocDepthContainer)
+			.setName('Table of contents depth')
+			.setDesc('Maximum heading depth to include in ToC (2=H2, 3=H3, 4=H4, 5=H5, 6=H6)')
+			.addText(text => text
+				.setPlaceholder('4')
+				.setValue(String(settings.tableOfContents?.depth || 4))
+				.onChange(async (value) => {
+					const num = parseInt(value) || 4;
+					const clampedNum = Math.max(2, Math.min(6, num));
+					if (!settings.tableOfContents) {
+						settings.tableOfContents = { enabled: true, depth: 4 };
+					}
+					settings.tableOfContents.depth = clampedNum;
+					text.setValue(String(clampedNum)); // Update display if clamped
+					await this.plugin.saveData(settings);
+					await this.applyCurrentConfiguration();
+					new Notice(`Table of contents depth set to ${clampedNum} and applied to config.ts`);
+				}));
+
 		// Footer enabled
 		new Setting(globalSection)
 			.setName('Footer')
@@ -659,7 +706,6 @@ export class FeaturesTab extends TabRenderer {
 							postsPerPage: 6,
 							readingTime: true,
 							wordCount: true,
-							tableOfContents: true,
 							tags: true,
 							linkedMentions: { enabled: true, linkedMentionsCompact: false },
 							graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true },
@@ -683,7 +729,7 @@ export class FeaturesTab extends TabRenderer {
 				.setValue(settings.postOptions?.readingTime ?? true)
 				.onChange(async (value) => {
 					if (!settings.postOptions) {
-						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tableOfContents: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
+						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
 					}
 					settings.postOptions.readingTime = value;
 					settings.features.readingTime = value;
@@ -699,28 +745,13 @@ export class FeaturesTab extends TabRenderer {
 				.setValue(settings.postOptions?.wordCount ?? true)
 				.onChange(async (value) => {
 					if (!settings.postOptions) {
-						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tableOfContents: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
+						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
 					}
 					settings.postOptions.wordCount = value;
 					await this.plugin.saveData(settings);
 					await this.applyCurrentConfiguration();
 				}));
 
-		// Table of contents
-		new Setting(postOptionsSection)
-			.setName('Table of contents')
-			.setDesc('Show table of contents on posts')
-			.addToggle(toggle => toggle
-				.setValue(settings.postOptions?.tableOfContents ?? true)
-				.onChange(async (value) => {
-					if (!settings.postOptions) {
-						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tableOfContents: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
-					}
-					settings.postOptions.tableOfContents = value;
-					settings.features.tableOfContents = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
-				}));
 
 		// Tags
 		new Setting(postOptionsSection)
@@ -730,7 +761,7 @@ export class FeaturesTab extends TabRenderer {
 				.setValue(settings.postOptions?.tags ?? true)
 				.onChange(async (value) => {
 					if (!settings.postOptions) {
-						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tableOfContents: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
+						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
 					}
 					settings.postOptions.tags = value;
 					await this.plugin.saveData(settings);
@@ -860,7 +891,7 @@ export class FeaturesTab extends TabRenderer {
 				.setValue(settings.postOptions?.postNavigation ?? true)
 				.onChange(async (value) => {
 					if (!settings.postOptions) {
-						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tableOfContents: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
+						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
 					}
 					settings.postOptions.postNavigation = value;
 					settings.features.postNavigation = value;
@@ -882,7 +913,7 @@ export class FeaturesTab extends TabRenderer {
 				.setValue(settings.postOptions?.showPostCardCoverImages || 'featured-and-posts')
 				.onChange(async (value) => {
 					if (!settings.postOptions) {
-						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tableOfContents: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
+						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
 					}
 					settings.postOptions.showPostCardCoverImages = value as any;
 					settings.features.showPostCardCoverImages = value as any;
@@ -898,14 +929,14 @@ export class FeaturesTab extends TabRenderer {
 				.addOption('16:9', '16:9')
 				.addOption('4:3', '4:3')
 				.addOption('3:2', '3:2')
-				.addOption('og', 'OG')
+				.addOption('og', 'Open Graph')
 				.addOption('square', 'Square')
 				.addOption('golden', 'Golden')
 				.addOption('custom', 'Custom')
 				.setValue(settings.postOptions?.postCardAspectRatio || 'og')
 				.onChange(async (value) => {
 					if (!settings.postOptions) {
-						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tableOfContents: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
+						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
 					}
 					settings.postOptions.postCardAspectRatio = value as any;
 					settings.features.postCardAspectRatio = value as any;
@@ -932,7 +963,7 @@ export class FeaturesTab extends TabRenderer {
 			settings.postOptions?.customPostCardAspectRatio || '2.5/1',
 			(value) => {
 				if (!settings.postOptions) {
-					settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tableOfContents: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
+					settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
 				}
 				settings.postOptions.customPostCardAspectRatio = value;
 				settings.features.customPostCardAspectRatio = value;

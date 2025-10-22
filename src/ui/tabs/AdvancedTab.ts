@@ -74,9 +74,17 @@ export class AdvancedTab extends TabRenderer {
 							settings.typography.monoFont = currentConfig.typography.monoFont ?? settings.typography.monoFont;
 						}
 						
+						// Update table of contents settings
+						if (currentConfig.tableOfContents) {
+							if (!settings.tableOfContents) {
+								settings.tableOfContents = { enabled: true, depth: 4 };
+							}
+							settings.tableOfContents.enabled = currentConfig.tableOfContents.enabled ?? settings.tableOfContents.enabled;
+							settings.tableOfContents.depth = currentConfig.tableOfContents.depth ?? settings.tableOfContents.depth;
+						}
+						
 						// Update features based on config.ts
 						if (currentConfig.postOptions) {
-							settings.features.tableOfContents = currentConfig.postOptions.tableOfContents ?? settings.features.tableOfContents;
 							settings.features.readingTime = currentConfig.postOptions.readingTime ?? settings.features.readingTime;
 							settings.features.linkedMentions = currentConfig.postOptions.linkedMentions?.enabled ?? settings.features.linkedMentions;
 							settings.features.linkedMentionsCompact = currentConfig.postOptions.linkedMentions?.linkedMentionsCompact ?? settings.features.linkedMentionsCompact;

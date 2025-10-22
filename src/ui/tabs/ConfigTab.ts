@@ -217,6 +217,11 @@ export class ConfigTab extends TabRenderer {
 			settings.features.profilePicture = currentProfilePicture;
 		}
 		
+		// Update table of contents settings from preset
+		if (templatePreset.config.tableOfContents) {
+			settings.tableOfContents = { ...settings.tableOfContents, ...templatePreset.config.tableOfContents };
+		}
+		
 		// Update optional content types - standard has them, others don't
 		const isStandardOrCustom = template === 'standard' || template === 'custom';
 		settings.optionalContentTypes = {

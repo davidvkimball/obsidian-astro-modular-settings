@@ -39,6 +39,8 @@ These markers allow the plugin to find and update specific configuration values 
 - `CONFIG:FONT_MONO` - Monospace font family
 - `CONFIG:FONT_DISPLAY` - Font display strategy (swap/fallback/optional)
 - `CONFIG:LAYOUT_CONTENT_WIDTH` - Content width
+- `CONFIG:TABLE_OF_CONTENTS_ENABLED` - Enable/disable table of contents globally
+- `CONFIG:TABLE_OF_CONTENTS_DEPTH` - Maximum heading depth (2-6, where 2=H2, 3=H3, etc.)
 - `CONFIG:FOOTER_ENABLED` - Footer enabled state
 - `CONFIG:FOOTER_CONTENT` - Footer content HTML
 - `CONFIG:FOOTER_SHOW_SOCIAL_ICONS` - Footer social icons
@@ -99,7 +101,6 @@ These markers allow the plugin to find and update specific configuration values 
 - `CONFIG:POST_OPTIONS_POSTS_PER_PAGE` - Posts per page
 - `CONFIG:POST_OPTIONS_READING_TIME` - Show/hide reading time
 - `CONFIG:POST_OPTIONS_WORD_COUNT` - Show/hide word count
-- `CONFIG:POST_OPTIONS_TABLE_OF_CONTENTS` - Show/hide TOC
 - `CONFIG:POST_OPTIONS_TAGS` - Show/hide tags
 - `CONFIG:POST_OPTIONS_LINKED_MENTIONS_ENABLED` - Enable/disable linked mentions
 - `CONFIG:POST_OPTIONS_LINKED_MENTIONS_COMPACT` - Compact linked mentions

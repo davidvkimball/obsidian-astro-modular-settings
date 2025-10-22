@@ -5,7 +5,6 @@
 		"currentTemplate": "standard",
 		"features": {
 			"commandPalette": true,
-			"tableOfContents": true,
 			"readingTime": true,
 			"linkedMentions": true,
 			"linkedMentionsCompact": false,
@@ -22,6 +21,10 @@
 				"graphView": true,
 				"changeTheme": true
 			}
+		},
+		"tableOfContents": {
+			"enabled": true,
+			"depth": 4
 		}
 	}
 }

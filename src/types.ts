@@ -14,6 +14,9 @@ export interface AstroModularSettings {
 	// Layout
 	layout: LayoutSettings;
 	
+	// Table of Contents
+	tableOfContents: TableOfContentsSettings;
+	
 	// Footer
 	footer: FooterSettings;
 	
@@ -67,6 +70,11 @@ export interface SiteInformation {
 
 export interface LayoutSettings {
 	contentWidth: string;
+}
+
+export interface TableOfContentsSettings {
+	enabled: boolean;
+	depth: number; // 2-6
 }
 
 export interface FooterSettings {
@@ -130,10 +138,9 @@ export interface HomeOptions {
 
 export interface PostOptions {
 	postsPerPage: number;
-	readingTime: boolean;
-	wordCount: boolean;
-	tableOfContents: boolean;
-	tags: boolean;
+		readingTime: boolean;
+		wordCount: boolean;
+		tags: boolean;
 	linkedMentions: {
 		enabled: boolean;
 		linkedMentionsCompact: boolean;
@@ -153,7 +160,6 @@ export interface PostOptions {
 
 export interface FeatureSettings {
 	commandPalette: boolean;
-	tableOfContents: boolean;
 	readingTime: boolean;
 	linkedMentions: boolean;
 	linkedMentionsCompact: boolean;
@@ -360,6 +366,10 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 	layout: {
 		contentWidth: '45rem',
 	},
+	tableOfContents: {
+		enabled: true,
+		depth: 4,
+	},
 	footer: {
 		enabled: true,
 		content: '© 2025 {author}. Built with the <a href="https://github.com/davidvkimball/astro-modular" target="_blank">Astro Modular</a> theme.',
@@ -432,7 +442,6 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 		postsPerPage: 6,
 		readingTime: true,
 		wordCount: true,
-		tableOfContents: true,
 		tags: true,
 		linkedMentions: {
 			enabled: true,
@@ -467,7 +476,6 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 	},
 	features: {
 		commandPalette: true,
-		tableOfContents: true,
 		readingTime: true,
 		linkedMentions: true,
 		linkedMentionsCompact: false,
