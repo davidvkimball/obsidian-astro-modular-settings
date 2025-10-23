@@ -68,7 +68,7 @@ export abstract class TabRenderer {
 				dropdown.onChange(async (value) => {
 					onChange(value);
 					await this.plugin.saveData(this.getSettings());
-					await this.applyCurrentConfiguration(true);
+					// Note: applyCurrentConfiguration should be called explicitly by the setting implementation
 				});
 				return dropdown;
 			});
@@ -80,13 +80,18 @@ export abstract class TabRenderer {
 		description: string,
 		value: string,
 		onChange: (value: string) => void,
-		debounceMs: number = 1000
+		debounceMs: number = 1000,
+		onApplyConfig?: () => Promise<void>,
+		placeholder?: string
 	): Setting {
 		return new Setting(container)
 			.setName(name)
 			.setDesc(description)
 			.addText(text => {
 				text.setValue(value);
+				if (placeholder) {
+					text.setPlaceholder(placeholder);
+				}
 				
 				let timeoutId: number | null = null;
 				text.onChange(async (value) => {
@@ -103,7 +108,9 @@ export abstract class TabRenderer {
 					
 					// Debounce the configuration application
 					timeoutId = window.setTimeout(async () => {
-						await this.applyCurrentConfiguration(true);
+						if (onApplyConfig) {
+							await onApplyConfig();
+						}
 					}, debounceMs);
 				});
 				
@@ -111,7 +118,9 @@ export abstract class TabRenderer {
 				text.inputEl.addEventListener('blur', async () => {
 					if (timeoutId) {
 						clearTimeout(timeoutId);
-						await this.applyCurrentConfiguration(true);
+						if (onApplyConfig) {
+							await onApplyConfig();
+						}
 					}
 				});
 				
@@ -134,7 +143,7 @@ export abstract class TabRenderer {
 				toggle.onChange(async (value) => {
 					onChange(value);
 					await this.plugin.saveData(this.getSettings());
-					await this.applyCurrentConfiguration(true);
+					// Note: applyCurrentConfiguration should be called explicitly by the setting implementation
 				});
 				return toggle;
 			});

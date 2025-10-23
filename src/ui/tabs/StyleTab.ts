@@ -25,15 +25,17 @@ export class StyleTab extends TabRenderer {
 				});
 				dropdown.setValue(settings.currentTheme);
 				dropdown.onChange(async (value) => {
-					settings.currentTheme = value as any;
-					await this.plugin.saveData(settings);
-					
-					// Re-render to show/hide custom theme file field
-					this.render(container);
-					
-					// Apply changes immediately to config.ts
-					try {
-						await this.applyCurrentConfiguration();
+				settings.currentTheme = value as any;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				
+				// Re-render to show/hide custom theme file field
+				this.render(container);
+				
+				// Apply changes immediately to config.ts
+				try {
+					await this.applyCurrentConfiguration();
 						new Notice(`Theme changed to ${value} and applied to config.ts`);
 					} catch (error) {
 						new Notice(`Failed to apply theme change: ${error instanceof Error ? error.message : String(error)}`);
@@ -186,12 +188,14 @@ export class StyleTab extends TabRenderer {
 				});
 				dropdown.setValue(settings.typography.headingFont);
 				dropdown.onChange(async (value) => {
-					settings.typography.headingFont = value;
-					await this.plugin.saveData(settings);
-					
-					// Apply changes immediately to config.ts
-					try {
-						await this.applyCurrentConfiguration();
+				settings.typography.headingFont = value;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				
+				// Apply changes immediately to config.ts
+				try {
+					await this.applyCurrentConfiguration();
 						new Notice('Heading font updated and applied to config.ts');
 					} catch (error) {
 						new Notice(`Failed to apply heading font change: ${error instanceof Error ? error.message : String(error)}`);
@@ -209,12 +213,14 @@ export class StyleTab extends TabRenderer {
 				});
 				dropdown.setValue(settings.typography.proseFont);
 				dropdown.onChange(async (value) => {
-					settings.typography.proseFont = value;
-					await this.plugin.saveData(settings);
-					
-					// Apply changes immediately to config.ts
-					try {
-						await this.applyCurrentConfiguration();
+				settings.typography.proseFont = value;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				
+				// Apply changes immediately to config.ts
+				try {
+					await this.applyCurrentConfiguration();
 						new Notice('Prose font updated and applied to config.ts');
 					} catch (error) {
 						new Notice(`Failed to apply prose font change: ${error instanceof Error ? error.message : String(error)}`);
@@ -232,12 +238,14 @@ export class StyleTab extends TabRenderer {
 				});
 				dropdown.setValue(settings.typography.monoFont);
 				dropdown.onChange(async (value) => {
-					settings.typography.monoFont = value;
-					await this.plugin.saveData(settings);
-					
-					// Apply changes immediately to config.ts
-					try {
-						await this.applyCurrentConfiguration();
+				settings.typography.monoFont = value;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				
+				// Apply changes immediately to config.ts
+				try {
+					await this.applyCurrentConfiguration();
 						new Notice('Monospace font updated and applied to config.ts');
 					} catch (error) {
 						new Notice(`Failed to apply monospace font change: ${error instanceof Error ? error.message : String(error)}`);
@@ -254,11 +262,13 @@ export class StyleTab extends TabRenderer {
 				dropdown.addOption('cdn', 'CDN (Custom)');
 				dropdown.setValue(settings.typography.fontSource);
 				dropdown.onChange(async (value) => {
-					settings.typography.fontSource = value as any;
-					await this.plugin.saveData(settings);
-					
-					// Re-render to show/hide custom inputs
-					this.render(container);
+				settings.typography.fontSource = value as any;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				
+				// Re-render to show/hide custom inputs
+				this.render(container);
 					
 					// Apply changes immediately to config.ts
 					try {
@@ -280,12 +290,14 @@ export class StyleTab extends TabRenderer {
 				dropdown.addOption('optional', 'Optional');
 				dropdown.setValue(settings.typography.fontDisplay || 'swap');
 				dropdown.onChange(async (value) => {
-					settings.typography.fontDisplay = value as 'swap' | 'fallback' | 'optional';
-					await this.plugin.saveData(settings);
-					
-					// Apply changes immediately to config.ts
-					try {
-						await this.applyCurrentConfiguration();
+				settings.typography.fontDisplay = value as 'swap' | 'fallback' | 'optional';
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				
+				// Apply changes immediately to config.ts
+				try {
+					await this.applyCurrentConfiguration();
 						new Notice('Font display updated and applied to config.ts');
 					} catch (error) {
 						new Notice(`Failed to apply font display change: ${error instanceof Error ? error.message : String(error)}`);

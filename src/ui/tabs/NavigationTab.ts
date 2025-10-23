@@ -113,9 +113,11 @@ export class NavigationTab extends TabRenderer {
 			.addToggle(toggle => toggle
 				.setValue(settings.navigation.showNavigation ?? true)
 				.onChange(async (value) => {
-					settings.navigation.showNavigation = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
+				settings.navigation.showNavigation = value;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				await this.applyCurrentConfiguration();
 					new Notice(`Navigation ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
 				}));
 
@@ -128,9 +130,11 @@ export class NavigationTab extends TabRenderer {
 				.addOption('minimal', 'Minimal')
 				.setValue(settings.navigation.style || 'traditional')
 				.onChange(async (value) => {
-					settings.navigation.style = value as 'minimal' | 'traditional';
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
+				settings.navigation.style = value as 'minimal' | 'traditional';
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				await this.applyCurrentConfiguration();
 					new Notice(`Navigation style changed to ${value} and applied to config.ts`);
 				}));
 
@@ -141,9 +145,11 @@ export class NavigationTab extends TabRenderer {
 			.addToggle(toggle => toggle
 				.setValue(settings.navigation.showMobileMenu ?? true)
 				.onChange(async (value) => {
-					settings.navigation.showMobileMenu = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
+				settings.navigation.showMobileMenu = value;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				await this.applyCurrentConfiguration();
 					new Notice(`Mobile menu ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
 				}));
 	}
@@ -283,6 +289,8 @@ export class NavigationTab extends TabRenderer {
 				}
 				
 				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
 				await this.applyCurrentConfiguration();
 				this.render(container); // Re-render to update indices
 			}

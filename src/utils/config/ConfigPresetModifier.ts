@@ -463,49 +463,6 @@ export class ConfigPresetModifier {
 			}
 		}
 		
-	// Update profile picture settings - always update enabled state, other settings only if enabled
-	// Update enabled state (always update this)
-	if (settings.optionalFeatures?.profilePicture?.enabled !== undefined) {
-		modifiedConfig = modifiedConfig.replace(
-			/\/\/ \[CONFIG:PROFILE_PICTURE_ENABLED\]\s*enabled:\s*(true|false)/,
-			`// [CONFIG:PROFILE_PICTURE_ENABLED]\n    enabled: ${settings.optionalFeatures.profilePicture.enabled}`
-		);
-	}
-	
-	// Update other profile picture settings only if enabled
-	if (settings.optionalFeatures?.profilePicture?.enabled) {
-			// Update image
-			modifiedConfig = modifiedConfig.replace(
-				/\/\/ \[CONFIG:PROFILE_PICTURE_IMAGE\]\s*image:\s*"[^"]*"/,
-				`// [CONFIG:PROFILE_PICTURE_IMAGE]\n    image: "${settings.optionalFeatures.profilePicture.image}"`
-			);
-			// Update alt
-			modifiedConfig = modifiedConfig.replace(
-				/\/\/ \[CONFIG:PROFILE_PICTURE_ALT\]\s*alt:\s*"[^"]*"/,
-				`// [CONFIG:PROFILE_PICTURE_ALT]\n    alt: "${settings.optionalFeatures.profilePicture.alt}"`
-			);
-			// Update size
-			modifiedConfig = modifiedConfig.replace(
-				/\/\/ \[CONFIG:PROFILE_PICTURE_SIZE\]\s*size:\s*"[^"]*"/,
-				`// [CONFIG:PROFILE_PICTURE_SIZE]\n    size: "${settings.optionalFeatures.profilePicture.size}"`
-			);
-			// Update url
-			modifiedConfig = modifiedConfig.replace(
-				/\/\/ \[CONFIG:PROFILE_PICTURE_URL\]\s*url:\s*"[^"]*"/,
-				`// [CONFIG:PROFILE_PICTURE_URL]\n    url: "${settings.optionalFeatures.profilePicture.url || ''}"`
-			);
-			// Update placement
-			modifiedConfig = modifiedConfig.replace(
-				/\/\/ \[CONFIG:PROFILE_PICTURE_PLACEMENT\]\s*placement:\s*"[^"]*"/,
-				`// [CONFIG:PROFILE_PICTURE_PLACEMENT]\n    placement: "${settings.optionalFeatures.profilePicture.placement}"`
-			);
-			// Update style
-			modifiedConfig = modifiedConfig.replace(
-				/\/\/ \[CONFIG:PROFILE_PICTURE_STYLE\]\s*style:\s*"[^"]*"/,
-				`// [CONFIG:PROFILE_PICTURE_STYLE]\n    style: "${settings.optionalFeatures.profilePicture.style}"`
-			);
-		}
-		
 	// Update comments settings
 	if (settings.optionalFeatures?.comments?.enabled !== undefined) {
 		modifiedConfig = modifiedConfig.replace(
@@ -1268,6 +1225,49 @@ export class ConfigPresetModifier {
 			modifiedConfig = modifiedConfig.replace(
 				/\/\/ \[CONFIG:POST_OPTIONS_CUSTOM_POST_CARD_ASPECT_RATIO\]\s*customPostCardAspectRatio:\s*"[^"]*"/,
 				`// [CONFIG:POST_OPTIONS_CUSTOM_POST_CARD_ASPECT_RATIO]\n    customPostCardAspectRatio: "${settings.features.customPostCardAspectRatio}"`
+			);
+		}
+		
+		// Update profile picture settings - always update enabled state, other settings only if enabled
+		// Update enabled state (always update this)
+		if (settings.optionalFeatures?.profilePicture?.enabled !== undefined) {
+			modifiedConfig = modifiedConfig.replace(
+				/\/\/ \[CONFIG:PROFILE_PICTURE_ENABLED\]\s*enabled:\s*(true|false)/,
+				`// [CONFIG:PROFILE_PICTURE_ENABLED]\n    enabled: ${settings.optionalFeatures.profilePicture.enabled}`
+			);
+		}
+		
+		// Update other profile picture settings only if enabled
+		if (settings.optionalFeatures?.profilePicture?.enabled) {
+			// Update image
+			modifiedConfig = modifiedConfig.replace(
+				/\/\/ \[CONFIG:PROFILE_PICTURE_IMAGE\]\s*image:\s*"[^"]*"/,
+				`// [CONFIG:PROFILE_PICTURE_IMAGE]\n    image: "${settings.optionalFeatures.profilePicture.image}"`
+			);
+			// Update alt
+			modifiedConfig = modifiedConfig.replace(
+				/\/\/ \[CONFIG:PROFILE_PICTURE_ALT\]\s*alt:\s*"[^"]*"/,
+				`// [CONFIG:PROFILE_PICTURE_ALT]\n    alt: "${settings.optionalFeatures.profilePicture.alt}"`
+			);
+			// Update size
+			modifiedConfig = modifiedConfig.replace(
+				/\/\/ \[CONFIG:PROFILE_PICTURE_SIZE\]\s*size:\s*"[^"]*"/,
+				`// [CONFIG:PROFILE_PICTURE_SIZE]\n    size: "${settings.optionalFeatures.profilePicture.size}"`
+			);
+			// Update url
+			modifiedConfig = modifiedConfig.replace(
+				/\/\/ \[CONFIG:PROFILE_PICTURE_URL\]\s*url:\s*"[^"]*"/,
+				`// [CONFIG:PROFILE_PICTURE_URL]\n    url: "${settings.optionalFeatures.profilePicture.url || ''}"`
+			);
+			// Update placement
+			modifiedConfig = modifiedConfig.replace(
+				/\/\/ \[CONFIG:PROFILE_PICTURE_PLACEMENT\]\s*placement:\s*"[^"]*"/,
+				`// [CONFIG:PROFILE_PICTURE_PLACEMENT]\n    placement: "${settings.optionalFeatures.profilePicture.placement}"`
+			);
+			// Update style
+			modifiedConfig = modifiedConfig.replace(
+				/\/\/ \[CONFIG:PROFILE_PICTURE_STYLE\]\s*style:\s*"[^"]*"/,
+				`// [CONFIG:PROFILE_PICTURE_STYLE]\n    style: "${settings.optionalFeatures.profilePicture.style}"`
 			);
 		}
 		

@@ -78,10 +78,12 @@ export class ConfigTab extends TabRenderer {
 				dropdown.addOption('folder-based', 'Folder-based');
 				dropdown.setValue(settings.contentOrganization);
 				dropdown.onChange(async (value) => {
-					settings.contentOrganization = value as any;
-					await this.plugin.saveData(settings);
-					
-					// Build plugin config dynamically based on new content organization (like wizard does)
+				settings.contentOrganization = value as any;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				
+				// Build plugin config dynamically based on new content organization (like wizard does)
 					const contentOrg = value as 'file-based' | 'folder-based';
 					const config = {
 						obsidianSettings: {
@@ -124,12 +126,14 @@ export class ConfigTab extends TabRenderer {
 				dropdown.addOption('github-pages', 'GitHub Pages');
 				dropdown.setValue(settings.deployment.platform);
 				dropdown.onChange(async (value) => {
-					settings.deployment.platform = value as any;
-					await this.plugin.saveData(settings);
-					
-					// Apply changes immediately to config.ts
-					try {
-						await this.applyCurrentConfiguration();
+				settings.deployment.platform = value as any;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				
+				// Apply changes immediately to config.ts
+				try {
+					await this.applyCurrentConfiguration();
 						new Notice(`Deployment platform changed to ${value} and applied to config.ts`);
 					} catch (error) {
 						new Notice(`Failed to apply deployment platform change: ${error instanceof Error ? error.message : String(error)}`);
@@ -150,12 +154,14 @@ export class ConfigTab extends TabRenderer {
 						// Load the template preset
 						const templatePreset = (this.plugin as any).configManager.getTemplatePreset(settings.currentTemplate);
 						if (templatePreset) {
-							// Apply the template settings
-							Object.assign(settings, templatePreset.config);
-							await this.plugin.saveData(settings);
-							
-							// Apply to config file
-							await this.applyCurrentConfiguration(true);
+					// Apply the template settings
+					Object.assign(settings, templatePreset.config);
+					await this.plugin.saveData(settings);
+					// Reload settings to ensure the plugin has the latest values
+					await (this.plugin as any).loadSettings();
+					
+					// Apply to config file
+					await this.applyCurrentConfiguration(true);
 							new Notice(`Reset to ${settings.currentTemplate} template and applied to config.ts`);
 						} else {
 							new Notice('Template not found');

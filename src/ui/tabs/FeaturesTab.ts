@@ -105,6 +105,8 @@ export class FeaturesTab extends TabRenderer {
 					settings.tableOfContents.depth = clampedNum;
 					text.setValue(String(clampedNum)); // Update display if clamped
 					await this.plugin.saveData(settings);
+					// Reload settings to ensure the plugin has the latest values
+					await (this.plugin as any).loadSettings();
 					await this.applyCurrentConfiguration();
 					new Notice(`Table of contents depth set to ${clampedNum} and applied to config.ts`);
 				}));
@@ -140,18 +142,22 @@ export class FeaturesTab extends TabRenderer {
 		footerOptions.style.paddingLeft = '20px';
 
 		// Footer content
-		this.createTextSetting(
-			footerOptions,
-			'Footer content',
-			'Text to display in footer. Use {author} for site author and {title} for site title',
-			settings.footer?.content || '© 2025 {author}. Built with the <a href="https://github.com/davidvkimball/astro-modular" target="_blank">Astro Modular</a> theme.',
-			(value) => {
-				if (!settings.footer) {
-					settings.footer = { enabled: true, content: '', showSocialIconsInFooter: true };
-				}
-				settings.footer.content = value;
-			}
-		);
+		new Setting(footerOptions)
+			.setName('Footer content')
+			.setDesc('Text to display in footer. Use {author} for site author and {title} for site title')
+			.addText(text => text
+				.setPlaceholder('© 2025 {author}. Built with the Astro Modular theme.')
+				.setValue(settings.footer?.content || '© 2025 {author}. Built with the <a href="https://github.com/davidvkimball/astro-modular" target="_blank">Astro Modular</a> theme.')
+				.onChange(async (value) => {
+					if (!settings.footer) {
+						settings.footer = { enabled: true, content: '', showSocialIconsInFooter: true };
+					}
+					settings.footer.content = value;
+					await this.plugin.saveData(settings);
+					// Reload settings to ensure the plugin has the latest values
+					await (this.plugin as any).loadSettings();
+					await this.applyCurrentConfiguration();
+				}));
 
 		// Show social icons in footer
 		new Setting(footerOptions)
@@ -238,7 +244,9 @@ export class FeaturesTab extends TabRenderer {
 				.onChange(async (value) => {
 					settings.features.featureButton = value as 'mode' | 'graph' | 'theme' | 'none';
 					await this.plugin.saveData(settings);
-						await this.applyCurrentConfiguration();
+					// Reload settings to ensure the plugin has the latest values
+					await (this.plugin as any).loadSettings();
+					await this.applyCurrentConfiguration();
 						new Notice(`Feature button updated to "${value}" and applied to config.ts`);
 				}));
 
@@ -271,6 +279,8 @@ export class FeaturesTab extends TabRenderer {
 					settings.commandPalette.enabled = value;
 					settings.features.commandPalette = value;
 					await this.plugin.saveData(settings);
+					// Reload settings to ensure the plugin has the latest values
+					await (this.plugin as any).loadSettings();
 					
 					// Show/hide command palette options
 					const cpOptions = commandPaletteSection.querySelector('.command-palette-options') as HTMLElement;
@@ -333,6 +343,8 @@ export class FeaturesTab extends TabRenderer {
 					}
 					settings.commandPalette.search.posts = value;
 					await this.plugin.saveData(settings);
+					// Reload settings to ensure the plugin has the latest values
+					await (this.plugin as any).loadSettings();
 					await this.applyCurrentConfiguration();
 				}));
 
@@ -345,9 +357,11 @@ export class FeaturesTab extends TabRenderer {
 					if (!settings.commandPalette?.search) {
 						settings.commandPalette.search = { posts: true, pages: false, projects: false, docs: false };
 					}
-					settings.commandPalette.search.pages = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
+				settings.commandPalette.search.pages = value;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				await this.applyCurrentConfiguration();
 				}));
 
 		new Setting(searchSection)
@@ -359,9 +373,11 @@ export class FeaturesTab extends TabRenderer {
 					if (!settings.commandPalette?.search) {
 						settings.commandPalette.search = { posts: true, pages: false, projects: false, docs: false };
 					}
-					settings.commandPalette.search.projects = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
+				settings.commandPalette.search.projects = value;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				await this.applyCurrentConfiguration();
 				}));
 
 		new Setting(searchSection)
@@ -373,9 +389,11 @@ export class FeaturesTab extends TabRenderer {
 					if (!settings.commandPalette?.search) {
 						settings.commandPalette.search = { posts: true, pages: false, projects: false, docs: false };
 					}
-					settings.commandPalette.search.docs = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
+				settings.commandPalette.search.docs = value;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				await this.applyCurrentConfiguration();
 				}));
 
 		// Sections toggles
@@ -419,10 +437,12 @@ export class FeaturesTab extends TabRenderer {
 					if (!settings.commandPalette?.quickActions) {
 						settings.commandPalette.quickActions = { enabled: true, toggleMode: true, graphView: true, changeTheme: true };
 					}
-					settings.commandPalette.quickActions.toggleMode = value;
-					settings.features.quickActions.toggleMode = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
+				settings.commandPalette.quickActions.toggleMode = value;
+				settings.features.quickActions.toggleMode = value;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				await this.applyCurrentConfiguration();
 				}));
 
 		new Setting(qaOptions)
@@ -434,10 +454,12 @@ export class FeaturesTab extends TabRenderer {
 					if (!settings.commandPalette?.quickActions) {
 						settings.commandPalette.quickActions = { enabled: true, toggleMode: true, graphView: true, changeTheme: true };
 					}
-					settings.commandPalette.quickActions.graphView = value;
-					settings.features.quickActions.graphView = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
+				settings.commandPalette.quickActions.graphView = value;
+				settings.features.quickActions.graphView = value;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				await this.applyCurrentConfiguration();
 				}));
 
 		new Setting(qaOptions)
@@ -449,10 +471,12 @@ export class FeaturesTab extends TabRenderer {
 					if (!settings.commandPalette?.quickActions) {
 						settings.commandPalette.quickActions = { enabled: true, toggleMode: true, graphView: true, changeTheme: true };
 					}
-					settings.commandPalette.quickActions.changeTheme = value;
-					settings.features.quickActions.changeTheme = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
+				settings.commandPalette.quickActions.changeTheme = value;
+				settings.features.quickActions.changeTheme = value;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				await this.applyCurrentConfiguration();
 				}));
 
 		new Setting(sectionsSection)
@@ -464,9 +488,11 @@ export class FeaturesTab extends TabRenderer {
 					if (!settings.commandPalette?.sections) {
 						settings.commandPalette.sections = { quickActions: true, pages: true, social: true };
 					}
-					settings.commandPalette.sections.pages = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
+				settings.commandPalette.sections.pages = value;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				await this.applyCurrentConfiguration();
 				}));
 
 		new Setting(sectionsSection)
@@ -478,9 +504,11 @@ export class FeaturesTab extends TabRenderer {
 					if (!settings.commandPalette?.sections) {
 						settings.commandPalette.sections = { quickActions: true, pages: true, social: true };
 					}
-					settings.commandPalette.sections.social = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
+				settings.commandPalette.sections.social = value;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				await this.applyCurrentConfiguration();
 				}));
 
 		// ═══════════════════════════════════════════════════════════════════
@@ -511,15 +539,17 @@ export class FeaturesTab extends TabRenderer {
 					if (!settings.homeOptions.featuredPost) {
 						settings.homeOptions.featuredPost = { enabled: true, type: 'latest', slug: 'getting-started' };
 					}
-					settings.homeOptions.featuredPost.enabled = value;
-						await this.plugin.saveData(settings);
-						
-					// Show/hide featured post options
-					const fpOptions = homeOptionsSection.querySelector('.featured-post-options') as HTMLElement;
-					if (fpOptions) {
-						fpOptions.style.display = value ? 'block' : 'none';
-					}
+				settings.homeOptions.featuredPost.enabled = value;
+					await this.plugin.saveData(settings);
+					// Reload settings to ensure the plugin has the latest values
+					await (this.plugin as any).loadSettings();
 					
+				// Show/hide featured post options
+				const fpOptions = homeOptionsSection.querySelector('.featured-post-options') as HTMLElement;
+				if (fpOptions) {
+					fpOptions.style.display = value ? 'block' : 'none';
+				}
+				
 							await this.applyCurrentConfiguration();
 					new Notice(`Featured post ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
 				}));
@@ -556,18 +586,22 @@ export class FeaturesTab extends TabRenderer {
 		const fpSlug = fpOptions.createDiv('featured-post-slug');
 		fpSlug.style.display = (settings.homeOptions?.featuredPost?.type === 'featured') ? 'block' : 'none';
 
-		this.createTextSetting(
-			fpSlug,
-			'Featured post slug',
-			'Slug of the post to feature (e.g., "getting-started" for /posts/getting-started)',
-			settings.homeOptions?.featuredPost?.slug || 'getting-started',
-			(value) => {
-				if (!settings.homeOptions?.featuredPost) {
-					settings.homeOptions.featuredPost = { enabled: true, type: 'featured', slug: 'getting-started' };
-				}
-				settings.homeOptions.featuredPost.slug = value;
-			}
-		);
+		new Setting(fpSlug)
+			.setName('Featured post slug')
+			.setDesc('Slug of the post to feature (e.g., "getting-started" for /posts/getting-started)')
+			.addText(text => text
+				.setPlaceholder('getting-started')
+				.setValue(settings.homeOptions?.featuredPost?.slug || 'getting-started')
+				.onChange(async (value) => {
+					if (!settings.homeOptions?.featuredPost) {
+						settings.homeOptions.featuredPost = { enabled: true, type: 'featured', slug: 'getting-started' };
+					}
+					settings.homeOptions.featuredPost.slug = value;
+					await this.plugin.saveData(settings);
+					// Reload settings to ensure the plugin has the latest values
+					await (this.plugin as any).loadSettings();
+					await this.applyCurrentConfiguration();
+				}));
 
 		// Recent Posts
 		new Setting(homeOptionsSection)
@@ -579,16 +613,18 @@ export class FeaturesTab extends TabRenderer {
 					if (!settings.homeOptions?.recentPosts) {
 						settings.homeOptions.recentPosts = { enabled: true, count: 7 };
 					}
-					settings.homeOptions.recentPosts.enabled = value;
-					await this.plugin.saveData(settings);
-					
-					// Show/hide recent posts count
-					const rpCount = homeOptionsSection.querySelector('.recent-posts-count') as HTMLElement;
-					if (rpCount) {
-						rpCount.style.display = value ? 'block' : 'none';
-					}
-					
-					await this.applyCurrentConfiguration();
+				settings.homeOptions.recentPosts.enabled = value;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				
+				// Show/hide recent posts count
+				const rpCount = homeOptionsSection.querySelector('.recent-posts-count') as HTMLElement;
+				if (rpCount) {
+					rpCount.style.display = value ? 'block' : 'none';
+				}
+				
+				await this.applyCurrentConfiguration();
 				}));
 
 		// Recent Posts count container
@@ -607,9 +643,11 @@ export class FeaturesTab extends TabRenderer {
 					if (!settings.homeOptions?.recentPosts) {
 						settings.homeOptions.recentPosts = { enabled: true, count: 7 };
 					}
-					settings.homeOptions.recentPosts.count = num;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
+				settings.homeOptions.recentPosts.count = num;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				await this.applyCurrentConfiguration();
 				}));
 
 		// Projects
@@ -764,10 +802,12 @@ export class FeaturesTab extends TabRenderer {
 					if (!settings.postOptions) {
 						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
 					}
-					settings.postOptions.readingTime = value;
-					settings.features.readingTime = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
+				settings.postOptions.readingTime = value;
+				settings.features.readingTime = value;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				await this.applyCurrentConfiguration();
 				}));
 
 		// Word count
@@ -780,9 +820,11 @@ export class FeaturesTab extends TabRenderer {
 					if (!settings.postOptions) {
 						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
 					}
-					settings.postOptions.wordCount = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
+				settings.postOptions.wordCount = value;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				await this.applyCurrentConfiguration();
 				}));
 
 
@@ -796,9 +838,11 @@ export class FeaturesTab extends TabRenderer {
 					if (!settings.postOptions) {
 						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
 					}
-					settings.postOptions.tags = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
+				settings.postOptions.tags = value;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				await this.applyCurrentConfiguration();
 				}));
 
 		// Linked Mentions
@@ -811,17 +855,19 @@ export class FeaturesTab extends TabRenderer {
 					if (!settings.postOptions?.linkedMentions) {
 						settings.postOptions.linkedMentions = { enabled: true, linkedMentionsCompact: false };
 					}
-					settings.postOptions.linkedMentions.enabled = value;
-					settings.features.linkedMentions = value;
-					await this.plugin.saveData(settings);
-					
-					// Show/hide linked mentions compact option
-					const lmCompact = postOptionsSection.querySelector('.linked-mentions-compact') as HTMLElement;
-					if (lmCompact) {
-						lmCompact.style.display = value ? 'block' : 'none';
-					}
-					
-					await this.applyCurrentConfiguration();
+				settings.postOptions.linkedMentions.enabled = value;
+				settings.features.linkedMentions = value;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				
+				// Show/hide linked mentions compact option
+				const lmCompact = postOptionsSection.querySelector('.linked-mentions-compact') as HTMLElement;
+				if (lmCompact) {
+					lmCompact.style.display = value ? 'block' : 'none';
+				}
+				
+				await this.applyCurrentConfiguration();
 				}));
 
 		// Linked Mentions Compact container
@@ -854,17 +900,19 @@ export class FeaturesTab extends TabRenderer {
 					if (!settings.postOptions?.graphView) {
 						settings.postOptions.graphView = { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true };
 					}
-					settings.postOptions.graphView.enabled = value;
-					settings.features.graphView = value;
-					await this.plugin.saveData(settings);
-					
-					// Show/hide graph view options
-					const gvOptions = postOptionsSection.querySelector('.graph-view-options') as HTMLElement;
-					if (gvOptions) {
-						gvOptions.style.display = value ? 'block' : 'none';
-					}
-					
-					await this.applyCurrentConfiguration();
+				settings.postOptions.graphView.enabled = value;
+				settings.features.graphView = value;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				
+				// Show/hide graph view options
+				const gvOptions = postOptionsSection.querySelector('.graph-view-options') as HTMLElement;
+				if (gvOptions) {
+					gvOptions.style.display = value ? 'block' : 'none';
+				}
+				
+				await this.applyCurrentConfiguration();
 				}));
 
 		// Graph View options container
@@ -926,10 +974,12 @@ export class FeaturesTab extends TabRenderer {
 					if (!settings.postOptions) {
 						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
 					}
-					settings.postOptions.postNavigation = value;
-					settings.features.postNavigation = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
+				settings.postOptions.postNavigation = value;
+				settings.features.postNavigation = value;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				await this.applyCurrentConfiguration();
 				}));
 
 		// Show post card cover images
@@ -948,10 +998,12 @@ export class FeaturesTab extends TabRenderer {
 					if (!settings.postOptions) {
 						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
 					}
-					settings.postOptions.showPostCardCoverImages = value as any;
-					settings.features.showPostCardCoverImages = value as any;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
+				settings.postOptions.showPostCardCoverImages = value as any;
+				settings.features.showPostCardCoverImages = value as any;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				await this.applyCurrentConfiguration();
 				}));
 
 		// Post card aspect ratio
@@ -971,17 +1023,19 @@ export class FeaturesTab extends TabRenderer {
 					if (!settings.postOptions) {
 						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
 					}
-					settings.postOptions.postCardAspectRatio = value as any;
-					settings.features.postCardAspectRatio = value as any;
-					await this.plugin.saveData(settings);
-					
-					// Show/hide custom aspect ratio field
-					const customAR = postOptionsSection.querySelector('.custom-aspect-ratio') as HTMLElement;
-					if (customAR) {
-						customAR.style.display = value === 'custom' ? 'block' : 'none';
-					}
-					
-					await this.applyCurrentConfiguration();
+				settings.postOptions.postCardAspectRatio = value as any;
+				settings.features.postCardAspectRatio = value as any;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				
+				// Show/hide custom aspect ratio field
+				const customAR = postOptionsSection.querySelector('.custom-aspect-ratio') as HTMLElement;
+				if (customAR) {
+					customAR.style.display = value === 'custom' ? 'block' : 'none';
+				}
+				
+				await this.applyCurrentConfiguration();
 				}));
 
 		// Custom aspect ratio container
@@ -1000,6 +1054,12 @@ export class FeaturesTab extends TabRenderer {
 				}
 				settings.postOptions.customPostCardAspectRatio = value;
 				settings.features.customPostCardAspectRatio = value;
+			},
+			1000,
+			async () => {
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				await this.applyCurrentConfiguration();
 			}
 		);
 
@@ -1044,6 +1104,8 @@ export class FeaturesTab extends TabRenderer {
 					}
 					settings.optionalFeatures.profilePicture.enabled = value;
 					await this.plugin.saveData(settings);
+					// Reload settings to ensure the plugin has the latest values
+					await (this.plugin as any).loadSettings();
 					
 					// Show/hide the detailed options
 					const optionsDiv = container.querySelector('.profile-picture-options') as HTMLElement;
@@ -1074,30 +1136,40 @@ export class FeaturesTab extends TabRenderer {
 		optionsGrid.style.marginTop = '10px';
 
 		// Image path setting
-		new Setting(optionsGrid)
-			.setName('Image path')
-			.setDesc('Path to the profile picture image')
-			.addText(text => text
-				.setValue(profileSettings.image)
-				.setPlaceholder('/profile.jpg')
-				.onChange(async (value) => {
-					profileSettings.image = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
-				}));
+		this.createTextSetting(
+			optionsGrid,
+			'Image path',
+			'Path to the profile picture image',
+			profileSettings.image,
+			(value) => {
+				profileSettings.image = value;
+			},
+			1000,
+			async () => {
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				await this.applyCurrentConfiguration();
+			},
+			'/profile.jpg'
+		);
 
 		// Alt text setting
-		new Setting(optionsGrid)
-			.setName('Alt text')
-			.setDesc('Alternative text for the profile picture')
-			.addText(text => text
-				.setValue(profileSettings.alt)
-				.setPlaceholder('Profile picture')
-				.onChange(async (value) => {
-					profileSettings.alt = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
-				}));
+		this.createTextSetting(
+			optionsGrid,
+			'Alt text',
+			'Alternative text for the profile picture',
+			profileSettings.alt,
+			(value) => {
+				profileSettings.alt = value;
+			},
+			1000,
+			async () => {
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				await this.applyCurrentConfiguration();
+			},
+			'Profile picture'
+		);
 
 		// Size setting
 		new Setting(optionsGrid)
@@ -1111,21 +1183,28 @@ export class FeaturesTab extends TabRenderer {
 				.onChange(async (value) => {
 					profileSettings.size = value as 'sm' | 'md' | 'lg';
 					await this.plugin.saveData(settings);
+					// Reload settings to ensure the plugin has the latest values
+					await (this.plugin as any).loadSettings();
 					await this.applyCurrentConfiguration();
 				}));
 
 		// URL setting
-		new Setting(optionsGrid)
-			.setName('URL (optional)')
-			.setDesc('Optional URL to link the profile picture to')
-			.addText(text => text
-				.setValue(profileSettings.url || '')
-				.setPlaceholder('https://example.com')
-				.onChange(async (value) => {
-					profileSettings.url = value;
-					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
-				}));
+		this.createTextSetting(
+			optionsGrid,
+			'URL (optional)',
+			'Optional URL to link the profile picture to',
+			profileSettings.url || '',
+			(value) => {
+				profileSettings.url = value;
+			},
+			1000,
+			async () => {
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				await this.applyCurrentConfiguration();
+			},
+			'/about'
+		);
 
 		// Placement setting
 		new Setting(optionsGrid)
@@ -1138,6 +1217,8 @@ export class FeaturesTab extends TabRenderer {
 				.onChange(async (value) => {
 					profileSettings.placement = value as 'footer' | 'header';
 					await this.plugin.saveData(settings);
+					// Reload settings to ensure the plugin has the latest values
+					await (this.plugin as any).loadSettings();
 					await this.applyCurrentConfiguration();
 				}));
 
@@ -1153,6 +1234,8 @@ export class FeaturesTab extends TabRenderer {
 				.onChange(async (value) => {
 					profileSettings.style = value as 'circle' | 'square' | 'none';
 					await this.plugin.saveData(settings);
+					// Reload settings to ensure the plugin has the latest values
+					await (this.plugin as any).loadSettings();
 					await this.applyCurrentConfiguration();
 				}));
 	}

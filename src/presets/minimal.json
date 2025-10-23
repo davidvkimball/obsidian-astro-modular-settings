@@ -11,7 +11,7 @@
 			"graphView": false,
 			"postNavigation": false,
 			"hideScrollBar": true,
-			"scrollToTop": true,
+			"scrollToTop": false,
 			"showSocialIconsInFooter": false,
 			"profilePicture": false,
 			"comments": false,
