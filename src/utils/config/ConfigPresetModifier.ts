@@ -1199,6 +1199,20 @@ export class ConfigPresetModifier {
 			`// [CONFIG:POST_OPTIONS_POST_NAVIGATION]\n    postNavigation: ${settings.features.postNavigation}`
 		);
 		
+		// Update hide scroll bar
+		console.log('🔧 hideScrollBar debug:', {
+			value: settings.features.hideScrollBar,
+			type: typeof settings.features.hideScrollBar,
+			isUndefined: settings.features.hideScrollBar === undefined,
+			isNull: settings.features.hideScrollBar === null,
+			stringValue: String(settings.features.hideScrollBar)
+		});
+		
+		modifiedConfig = modifiedConfig.replace(
+			/\/\/\s*\[CONFIG:HIDE_SCROLL_BAR\]\s*hideScrollBar:\s*(true|false)/,
+			`//[CONFIG:HIDE_SCROLL_BAR]\n  hideScrollBar: ${settings.features.hideScrollBar}`
+		);
+		
 		// Update scroll to top
 		modifiedConfig = modifiedConfig.replace(
 			/\/\/ \[CONFIG:SCROLL_TO_TOP\]\s*scrollToTop:\s*(true|false)/,

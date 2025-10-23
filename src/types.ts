@@ -166,6 +166,7 @@ export interface FeatureSettings {
 	comments: boolean;
 	graphView: boolean;
 	postNavigation: boolean;
+	hideScrollBar: boolean;
 	scrollToTop: boolean;
 	featureButton: 'mode' | 'graph' | 'theme' | 'none';
 	showSocialIconsInFooter: boolean;
@@ -484,6 +485,7 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 		comments: false,
 		graphView: true,
 		postNavigation: true,
+		hideScrollBar: false,
 		scrollToTop: true,
 		featureButton: 'mode',
 		showSocialIconsInFooter: true,

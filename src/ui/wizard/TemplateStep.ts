@@ -137,6 +137,9 @@ export class TemplateStep extends BaseWizardStep {
 		// Save the updated settings
 		await this.plugin.saveData(settings);
 		
+		// Reload settings to ensure the plugin has the latest values
+		await (this.plugin as any).loadSettings();
+		
 		// Trigger a refresh of the settings tab if it's open
 		this.refreshSettingsTab();
 	}

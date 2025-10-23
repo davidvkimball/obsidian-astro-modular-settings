@@ -34,14 +34,20 @@ export class ConfigTab extends TabRenderer {
 								// Update template settings exactly like the wizard does
 								await this.updatePluginSettingsWithTemplate(value);
 								
+								// Reload settings to ensure the plugin has the latest values
+								await (this.plugin as any).loadSettings();
+								
+								// Get fresh settings after reload
+								const freshSettings = (this.plugin as any).settings;
+								
 								// Apply the configuration
 								const presetSuccess = await (this.plugin as any).configManager.applyPreset({
-									name: settings.currentTemplate,
+									name: freshSettings.currentTemplate,
 									description: '',
-									features: settings.features,
-									theme: settings.currentTheme,
-									contentOrganization: settings.contentOrganization,
-									config: settings
+									features: freshSettings.features,
+									theme: freshSettings.currentTheme,
+									contentOrganization: freshSettings.contentOrganization,
+									config: freshSettings
 								});
 								
 								if (presetSuccess) {

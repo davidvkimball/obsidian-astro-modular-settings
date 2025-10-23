@@ -10,6 +10,7 @@
 			"linkedMentionsCompact": false,
 			"graphView": true,
 			"postNavigation": true,
+			"hideScrollBar": false,
 			"scrollToTop": true,
 			"showSocialIconsInFooter": true,
 			"profilePicture": false,

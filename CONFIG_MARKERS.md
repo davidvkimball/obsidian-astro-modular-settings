@@ -44,6 +44,7 @@ These markers allow the plugin to find and update specific configuration values 
 - `CONFIG:FOOTER_ENABLED` - Footer enabled state
 - `CONFIG:FOOTER_CONTENT` - Footer content HTML
 - `CONFIG:FOOTER_SHOW_SOCIAL_ICONS` - Footer social icons
+- `CONFIG:HIDE_SCROLL_BAR` - Hide browser scroll bar
 - `CONFIG:SCROLL_TO_TOP` - Scroll to top button
 - `CONFIG:FEATURE_BUTTON` - Feature button type (mode/graph/theme/none)
 - `CONFIG:SEO_DEFAULT_OG_IMAGE_ALT` - Default Open Graph image alt text

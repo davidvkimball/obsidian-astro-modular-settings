@@ -56,6 +56,12 @@ export class FinalizeStep extends BaseWizardStep {
 			// Build final settings - this now updates plugin.settings directly
 			this.stateManager.buildFinalSettings();
 			
+			// Save the settings to disk
+			await (this.plugin as any).saveData((this.plugin as any).settings);
+			
+			// Reload settings to ensure the plugin has the latest values
+			await (this.plugin as any).loadSettings();
+			
 			// Always apply the configuration
 			const settings = (this.plugin as any).settings;
 			const presetSuccess = await (this.plugin as any).configManager.applyPreset({

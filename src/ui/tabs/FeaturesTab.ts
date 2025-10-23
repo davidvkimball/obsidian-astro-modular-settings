@@ -72,6 +72,8 @@ export class FeaturesTab extends TabRenderer {
 					}
 					settings.tableOfContents.enabled = value;
 					await this.plugin.saveData(settings);
+					// Reload settings to ensure the plugin has the latest values
+					await (this.plugin as any).loadSettings();
 					
 					// Show/hide ToC depth option
 					const tocDepth = globalSection.querySelector('.toc-depth-option') as HTMLElement;
@@ -119,6 +121,8 @@ export class FeaturesTab extends TabRenderer {
 					}
 					settings.footer.enabled = value;
 					await this.plugin.saveData(settings);
+					// Reload settings to ensure the plugin has the latest values
+					await (this.plugin as any).loadSettings();
 					
 					// Show/hide footer options
 					const footerOptions = globalSection.querySelector('.footer-options') as HTMLElement;
@@ -160,9 +164,36 @@ export class FeaturesTab extends TabRenderer {
 						settings.footer = { enabled: true, content: '© 2025 {author}. Built with the <a href="https://github.com/davidvkimball/astro-modular" target="_blank">Astro Modular</a> theme.', showSocialIconsInFooter: true };
 					}
 					settings.footer.showSocialIconsInFooter = value;
-							await this.plugin.saveData(settings);
+					await this.plugin.saveData(settings);
+					// Reload settings to ensure the plugin has the latest values
+					await (this.plugin as any).loadSettings();
 					await this.applyCurrentConfiguration();
 					new Notice(`Social icons in footer ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
+				}));
+
+		// Hide scroll bar
+		new Setting(globalSection)
+			.setName('Hide scroll bar')
+			.setDesc('Hide the browser scroll bar for a cleaner look')
+			.addToggle(toggle => toggle
+				.setValue(settings.features?.hideScrollBar ?? false)
+				.onChange(async (value) => {
+					console.log('🔧 hideScrollBar UI onChange:', {
+						value: value,
+						type: typeof value,
+						settingsBefore: settings.features?.hideScrollBar
+					});
+					settings.features.hideScrollBar = value;
+					console.log('🔧 hideScrollBar after setting:', {
+						value: settings.features.hideScrollBar,
+						type: typeof settings.features.hideScrollBar
+					});
+					await this.plugin.saveData(settings);
+					// Reload settings to ensure the plugin has the latest values
+					await (this.plugin as any).loadSettings();
+					console.log('🔧 Settings saved and reloaded, calling applyCurrentConfiguration');
+					await this.applyCurrentConfiguration();
+					new Notice(`Hide scroll bar ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
 				}));
 
 		// Scroll to top
@@ -174,7 +205,9 @@ export class FeaturesTab extends TabRenderer {
 				.onChange(async (value) => {
 					settings.features.scrollToTop = value;
 					await this.plugin.saveData(settings);
-								await this.applyCurrentConfiguration();
+					// Reload settings to ensure the plugin has the latest values
+					await (this.plugin as any).loadSettings();
+					await this.applyCurrentConfiguration();
 					new Notice(`Scroll to top ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
 				}));
 
@@ -1125,7 +1158,7 @@ export class FeaturesTab extends TabRenderer {
 	}
 
 	private renderCommentsSetting(container: HTMLElement, settings: any): void {
-		const isEnabled = settings.postOptions?.comments?.enabled || settings.optionalFeatures?.comments?.enabled;
+		const isEnabled = settings.features?.comments || settings.postOptions?.comments?.enabled || settings.optionalFeatures?.comments?.enabled;
 		const commentsSettings = settings.postOptions?.comments || settings.optionalFeatures?.comments || {
 			enabled: false,
 			provider: 'giscus',
@@ -1276,8 +1309,8 @@ export class FeaturesTab extends TabRenderer {
 				// Parse and update all settings
 				const parsed = GiscusScriptParser.parseScript(scriptContent);
 				if (parsed) {
-					// Enable comments when a valid script is pasted
-					settings.features.comments = true;
+					// Store the script data but don't automatically enable comments
+					// The user can toggle comments on/off independently
 					
 					// Update the commentsSettings object with parsed data
 					commentsSettings.enabled = true;
@@ -1308,19 +1341,6 @@ export class FeaturesTab extends TabRenderer {
 					settings.postOptions.comments = { ...commentsSettings };
 					
 					await this.plugin.saveData(settings);
-					
-					// Update the toggle to show comments are enabled
-					const toggle = container.querySelector('.setting-item .checkbox-container input[type="checkbox"]') as HTMLInputElement;
-					if (toggle) {
-						toggle.checked = true;
-					}
-					
-					// Show the options container
-					const optionsDiv = container.querySelector('.comments-options') as HTMLElement;
-					if (optionsDiv) {
-						optionsDiv.style.display = 'block';
-					}
-					
 					await this.applyCurrentConfiguration();
 				}
 			} else {
