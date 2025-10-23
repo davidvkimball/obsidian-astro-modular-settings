@@ -160,11 +160,11 @@ export class WizardStateManager {
 				},
 			},
 			selectedOptionalContentTypes: (() => {
-				// Set based on current template: enabled for 'standard' and 'custom', disabled for others
-				const isStandardOrCustom = settings.currentTemplate === 'standard' || settings.currentTemplate === 'custom';
+				// Set based on current template: enabled for 'standard', disabled for others
+				const isStandard = settings.currentTemplate === 'standard';
 				return {
-					projects: isStandardOrCustom,
-					docs: isStandardOrCustom
+					projects: isStandard,
+					docs: isStandard
 				};
 			})(),
 			selectedDeployment: settings.deployment.platform,
@@ -245,7 +245,6 @@ export class WizardStateManager {
 				featureButton: 'none', showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og',
 				customPostCardAspectRatio: '2.5/1', quickActions: { enabled: true, toggleMode: true, graphView: true, changeTheme: true }
 			},
-			'custom': { ...settings.features }
 		};
 		
 		const templateFeaturesResult = templateFeatures[settings.currentTemplate] || templateFeatures['standard'];
@@ -291,10 +290,10 @@ export class WizardStateManager {
 		};
 		
 		// Update optional content types
-		const isStandardOrCustom = settings.currentTemplate === 'standard' || settings.currentTemplate === 'custom';
+		const isStandard = settings.currentTemplate === 'standard';
 		this.state.selectedOptionalContentTypes = {
-			projects: isStandardOrCustom,
-			docs: isStandardOrCustom
+			projects: isStandard,
+			docs: isStandard
 		};
 	}
 
@@ -312,13 +311,25 @@ export class WizardStateManager {
 		settings.deployment.platform = this.state.selectedDeployment;
 		settings.runWizardOnStartup = this.state.runWizardOnStartup;
 
-		// Apply template preset changes (moved from TemplateStep to here)
+		// Apply template preset changes if template was changed
 		// This ensures template changes are only applied when the wizard is completed
-		const templatePreset = (this.plugin as any).configManager.getTemplatePreset(this.state.selectedTemplate);
-		if (templatePreset && templatePreset.config) {
-			// Update table of contents settings from preset
-			if (templatePreset.config.tableOfContents) {
-				settings.tableOfContents = { ...settings.tableOfContents, ...templatePreset.config.tableOfContents };
+		const originalSettings = (this.plugin as any).settings;
+		if (this.state.selectedTemplate !== originalSettings.currentTemplate) {
+			const templatePreset = (this.plugin as any).configManager.getTemplatePreset(this.state.selectedTemplate);
+			if (templatePreset && templatePreset.config) {
+				// Update features from preset (preserving user preferences for comments/profilePicture)
+				if (templatePreset.config.features) {
+					const currentComments = settings.features.comments;
+					const currentProfilePicture = settings.features.profilePicture;
+					settings.features = { ...settings.features, ...templatePreset.config.features };
+					settings.features.comments = currentComments;
+					settings.features.profilePicture = currentProfilePicture;
+				}
+				
+				// Update table of contents settings from preset
+				if (templatePreset.config.tableOfContents) {
+					settings.tableOfContents = { ...settings.tableOfContents, ...templatePreset.config.tableOfContents };
+				}
 			}
 		}
 

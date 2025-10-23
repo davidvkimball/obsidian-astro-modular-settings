@@ -235,10 +235,10 @@ export class ConfigTab extends TabRenderer {
 		}
 		
 		// Update optional content types - standard has them, others don't
-		const isStandardOrCustom = template === 'standard' || template === 'custom';
+		const isStandard = template === 'standard';
 		settings.optionalContentTypes = {
-			projects: isStandardOrCustom,
-			docs: isStandardOrCustom
+			projects: isStandard,
+			docs: isStandard
 		};
 
 		// Save the updated settings
@@ -298,12 +298,12 @@ export class ConfigTab extends TabRenderer {
 		}
 
 		// Compare optional content types
-		const isStandardOrCustom = templateId === 'standard' || templateId === 'custom';
-		if (settings.optionalContentTypes?.projects !== isStandardOrCustom) {
-			featureChanges.push(`Projects content type: ${settings.optionalContentTypes?.projects ? 'enabled' : 'disabled'} → ${isStandardOrCustom ? 'enabled' : 'disabled'}`);
+		const isStandard = templateId === 'standard';
+		if (settings.optionalContentTypes?.projects !== isStandard) {
+			featureChanges.push(`Projects content type: ${settings.optionalContentTypes?.projects ? 'enabled' : 'disabled'} → ${isStandard ? 'enabled' : 'disabled'}`);
 		}
-		if (settings.optionalContentTypes?.docs !== isStandardOrCustom) {
-			featureChanges.push(`Docs content type: ${settings.optionalContentTypes?.docs ? 'enabled' : 'disabled'} → ${isStandardOrCustom ? 'enabled' : 'disabled'}`);
+		if (settings.optionalContentTypes?.docs !== isStandard) {
+			featureChanges.push(`Docs content type: ${settings.optionalContentTypes?.docs ? 'enabled' : 'disabled'} → ${isStandard ? 'enabled' : 'disabled'}`);
 		}
 
 		if (featureChanges.length > 0) {

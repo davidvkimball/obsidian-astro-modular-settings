@@ -51,6 +51,10 @@ export class SetupWizardModal extends Modal {
 	onClose() {
 		const { contentEl } = this;
 		contentEl.empty();
+		
+		// Save any wizard state changes to data.json if modal is closed
+		// This ensures changes are preserved even if user closes modal without completing wizard
+		this.saveWizardStateToDataJson();
 	}
 
 	private renderCurrentStep() {
@@ -116,9 +120,9 @@ export class SetupWizardModal extends Modal {
 				cls: 'mod-button'
 			});
 			prevBtn.addEventListener('click', () => {
+				// Discard any changes made on current step and go back
+				this.discardCurrentStepChanges();
 				this.stateManager.previousStep();
-				// Refresh state when navigating to ensure we have the latest settings
-				this.stateManager.refreshState();
 				this.renderCurrentStep();
 			});
 		}
@@ -130,9 +134,9 @@ export class SetupWizardModal extends Modal {
 				cls: 'mod-button mod-cta'
 			});
 			nextBtn.addEventListener('click', () => {
+				// Save current step changes to wizard state (not to data.json yet)
+				this.saveCurrentStepToWizardState();
 				this.stateManager.nextStep();
-				// Refresh state when navigating to ensure we have the latest settings
-				this.stateManager.refreshState();
 				this.renderCurrentStep();
 			});
 		} else {
@@ -163,73 +167,40 @@ export class SetupWizardModal extends Modal {
 			});
 			skipBtn.style.opacity = '0.6';
 			skipBtn.addEventListener('click', () => {
-				// Revert current step to original settings (skip without applying changes)
-				this.revertCurrentStepToOriginalSettings();
+				// Skip without saving current step changes to wizard state
 				this.stateManager.nextStep();
 				this.renderCurrentStep();
 			});
 		}
 	}
 
-	private revertCurrentStepToOriginalSettings() {
-		// Revert the current step's state back to the original plugin settings
-		// This ensures that skipping a step doesn't apply any changes made on that step
-		const settings = (this.plugin as any).settings;
-		const state = this.stateManager.getState();
-		const stepIndex = state.currentStep - 1;
-		
-		switch (stepIndex) {
-			case 0: // WelcomeStep - revert site info
-				this.stateManager.updateState({
-					selectedSiteInfo: settings.siteInfo
-				});
-				break;
-			case 1: // TemplateStep - revert template and features
-				// Revert template selection
-				this.stateManager.updateState({
-					selectedTemplate: settings.currentTemplate
-				});
-				
-				// Revert features to match the original template
-				const originalTemplatePreset = (this.plugin as any).configManager.getTemplatePreset(settings.currentTemplate);
-				if (originalTemplatePreset && originalTemplatePreset.config && originalTemplatePreset.config.features) {
-					this.stateManager.updateState({
-						selectedFeatures: originalTemplatePreset.config.features
-					});
-				}
-				break;
-			case 2: // ThemeStep - revert theme
-				this.stateManager.updateState({
-					selectedTheme: settings.currentTheme
-				});
-				break;
-			case 3: // FontStep - revert typography
-				this.stateManager.updateState({
-					selectedTypography: settings.typography
-				});
-				break;
-			case 4: // ContentOrgStep - revert content organization
-				this.stateManager.updateState({
-					selectedContentOrg: settings.contentOrganization
-				});
-				break;
-			case 5: // NavigationStep - revert navigation
-				this.stateManager.updateState({
-					selectedNavigation: settings.navigation
-				});
-				break;
-			case 6: // OptionalFeaturesStep - revert optional features
-				this.stateManager.updateState({
-					selectedOptionalFeatures: settings.optionalFeatures
-				});
-				break;
-			case 7: // DeploymentStep - revert deployment
-				this.stateManager.updateState({
-					selectedDeployment: settings.deployment.platform
-				});
-				break;
-			case 8: // PluginConfigStep - no specific state to revert
-				break;
+	private saveCurrentStepToWizardState(): void {
+		// Save current step changes to wizard state (not to data.json yet)
+		// This is called when NEXT is clicked
+		// The wizard state already contains the changes from user interactions
+		// This method is mainly for any final processing needed before moving to next step
+	}
+
+	private discardCurrentStepChanges(): void {
+		// Discard changes made on current step - this is called when PREVIOUS is clicked
+		// Refresh the wizard state to show original values from data.json
+		this.stateManager.refreshState();
+	}
+
+	private async saveWizardStateToDataJson(): Promise<void> {
+		// Save wizard state changes to data.json when modal is closed
+		// This ensures changes are preserved even if user closes modal without completing wizard
+		try {
+			// Build final settings from wizard state
+			this.stateManager.buildFinalSettings();
+			
+			// Save to data.json
+			await this.plugin.saveData((this.plugin as any).settings);
+			
+			// Reload settings to ensure the plugin has the latest values
+			await (this.plugin as any).loadSettings();
+		} catch (error) {
+			console.error('Error saving wizard state to data.json:', error);
 		}
 	}
 

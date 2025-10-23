@@ -133,8 +133,8 @@ export class AdvancedTab extends TabRenderer {
 						
 						// Update template based on current settings
 						// This is a bit tricky since we need to determine which template best matches
-						// For now, we'll set it to 'custom' since it's been manually modified
-						settings.currentTemplate = 'custom';
+						// For now, we'll set it to 'standard' since it's been manually modified
+						settings.currentTemplate = 'standard';
 						
 						// Save the updated settings
 						await this.plugin.saveData(settings);

@@ -57,6 +57,42 @@ export class ConfigManager {
 		return writeResult;
 	}
 
+	async updateThemeOnly(theme: string): Promise<boolean> {
+		// Read the existing config file
+		const currentConfig = await this.readConfig();
+		
+		// Update only the theme setting
+		const modifiedConfig = this.presetModifier.updateThemeInConfig(currentConfig, theme);
+		
+		const writeResult = await this.writeConfig(modifiedConfig);
+		
+		return writeResult;
+	}
+
+	async updateFontOnly(fontType: 'heading' | 'prose' | 'mono', fontName: string): Promise<boolean> {
+		// Read the existing config file
+		const currentConfig = await this.readConfig();
+		
+		// Update only the specific font setting
+		const modifiedConfig = this.presetModifier.updateFontInConfig(currentConfig, fontType, fontName);
+		
+		const writeResult = await this.writeConfig(modifiedConfig);
+		
+		return writeResult;
+	}
+
+	async updateFeatureOnly(featureName: string, value: boolean): Promise<boolean> {
+		// Read the existing config file
+		const currentConfig = await this.readConfig();
+		
+		// Update only the specific feature setting
+		const modifiedConfig = this.presetModifier.updateFeatureInConfig(currentConfig, featureName, value);
+		
+		const writeResult = await this.writeConfig(modifiedConfig);
+		
+		return writeResult;
+	}
+
 	async triggerRebuild(): Promise<void> {
 		// In a real implementation, you might:
 		// 1. Send a signal to the Astro dev server

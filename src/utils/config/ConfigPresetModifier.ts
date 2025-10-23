@@ -11,6 +11,47 @@ export class ConfigPresetModifier {
 		this.markerValidator = new ConfigMarkerValidator();
 	}
 
+	updateThemeInConfig(currentConfig: string, theme: string): string {
+		// Update only the theme setting in the config file
+		const themeMarkerExists = currentConfig.includes('// [CONFIG:THEME]');
+		
+		if (themeMarkerExists) {
+			const themeRegex = /\/\/ \[CONFIG:THEME\]\s*\n\s*theme:\s*"[^"]*"/;
+			return currentConfig.replace(
+				themeRegex,
+				`// [CONFIG:THEME]\n  theme: "${theme}"`
+			);
+		}
+		
+		// If no theme marker found, return unchanged
+		return currentConfig;
+	}
+
+	updateFontInConfig(currentConfig: string, fontType: 'heading' | 'prose' | 'mono', fontName: string): string {
+		// Update only the specific font setting in the config file
+		const fontMarker = `// [CONFIG:FONT_${fontType.toUpperCase()}]`;
+		const fontMarkerExists = currentConfig.includes(fontMarker);
+		
+		if (fontMarkerExists) {
+			const fontRegex = new RegExp(`${fontMarker}\\s*\\n\\s*${fontType}:\\s*"[^"]*"`);
+			return currentConfig.replace(
+				fontRegex,
+				`${fontMarker}\n      ${fontType}: "${fontName}"`
+			);
+		}
+		
+		// If no font marker found, return unchanged
+		return currentConfig;
+	}
+
+	updateFeatureInConfig(currentConfig: string, featureName: string, value: boolean): string {
+		// Update only the specific feature setting in the config file
+		// This is a simplified version - in reality, we'd need to map feature names to config markers
+		// For now, return unchanged to avoid breaking things
+		console.log(`updateFeatureInConfig called with ${featureName}: ${value} - not implemented yet`);
+		return currentConfig;
+	}
+
 	modifyConfigFromPreset(preset: PresetTemplate, currentConfig: string): string {
 		// Use the actual settings passed in the preset, not the template's config
 		// The preset contains the user's current settings in its properties

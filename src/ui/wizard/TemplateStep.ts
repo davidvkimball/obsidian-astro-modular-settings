@@ -25,10 +25,16 @@ export class TemplateStep extends BaseWizardStep {
 						</div>
 					`).join('')}
 				</div>
+				<div class="template-actions" style="margin-top: 2rem; padding-top: 1.5rem;">
+					<button class="mod-cta" id="edit-config-directly">
+						Edit config.ts directly
+					</button>
+					<p class="template-action-desc" style="margin-top: 0.5rem; margin-bottom: 0;">Skip the wizard and edit your Astro configuration file directly (advanced).</p>
+				</div>
 			</div>
 		`;
 
-		// Add click handlers
+		// Add click handlers for template options
 		container.querySelectorAll('.template-option').forEach(option => {
 			option.addEventListener('click', () => {
 				const template = option.getAttribute('data-template');
@@ -36,53 +42,30 @@ export class TemplateStep extends BaseWizardStep {
 					this.updateState({ selectedTemplate: template as TemplateType });
 					
 					// Sync optional content types based on template selection
-					const isStandardOrCustom = template === 'standard' || template === 'custom';
+					const isStandard = template === 'standard';
 					this.updateState({
 						selectedOptionalContentTypes: {
-							projects: isStandardOrCustom,
-							docs: isStandardOrCustom
+							projects: isStandard,
+							docs: isStandard
 						}
 					});
 
 					// Sync all features based on template selection
 					this.syncFeaturesWithTemplate(template);
 					
-					// Don't save to disk in real-time - only update wizard state
-					// Settings will be saved when the wizard is completed
-					
-					if (template === 'custom') {
-						// Open config.ts file - it's one level up from the vault
-						try {
-							const fs = require('fs');
-							const path = require('path');
-							const { shell } = require('electron');
-							
-							// Get the actual vault path string from the adapter
-							const vaultPath = (this.app.vault.adapter as any).basePath || (this.app.vault.adapter as any).path;
-							const vaultPathString = typeof vaultPath === 'string' ? vaultPath : vaultPath.toString();
-							const configPath = path.join(vaultPathString, '..', 'config.ts');
-							
-							if (fs.existsSync(configPath)) {
-								// Use Electron's shell to open the file with the default editor
-								shell.openPath(configPath);
-							} else {
-								// Create the file if it doesn't exist
-								fs.writeFileSync(configPath, '// Astro Modular Configuration\n// Customize your settings here\n\nexport const siteConfig = {\n  // Add your configuration here\n};\n');
-								shell.openPath(configPath);
-							}
-							new Notice('Opening config.ts for custom configuration');
-							this.modal.close();
-							return;
-						} catch (error) {
-							new Notice(`Error opening config file: ${error instanceof Error ? error.message : String(error)}`);
-						}
-					}
-					
 					// Re-render to update the UI
 					this.render(container);
 				}
 			});
 		});
+
+		// Add click handler for "Edit config.ts directly" button
+		const editConfigButton = container.querySelector('#edit-config-directly');
+		if (editConfigButton) {
+			editConfigButton.addEventListener('click', () => {
+				this.openConfigFile();
+			});
+		}
 	}
 
 	private syncFeaturesWithTemplate(template: string): void {
@@ -128,10 +111,10 @@ export class TemplateStep extends BaseWizardStep {
 		}
 		
 		// Update optional content types
-		const isStandardOrCustom = template === 'standard' || template === 'custom';
+		const isStandard = template === 'standard';
 		settings.optionalContentTypes = {
-			projects: isStandardOrCustom,
-			docs: isStandardOrCustom
+			projects: isStandard,
+			docs: isStandard
 		};
 
 		// Save the updated settings
@@ -149,6 +132,33 @@ export class TemplateStep extends BaseWizardStep {
 		const settingsTab = (this.plugin as any).settingsTab;
 		if (settingsTab && typeof settingsTab.display === 'function') {
 			settingsTab.display();
+		}
+	}
+
+	private openConfigFile(): void {
+		// Open config.ts file - it's one level up from the vault
+		try {
+			const fs = require('fs');
+			const path = require('path');
+			const { shell } = require('electron');
+			
+			// Get the actual vault path string from the adapter
+			const vaultPath = (this.app.vault.adapter as any).basePath || (this.app.vault.adapter as any).path;
+			const vaultPathString = typeof vaultPath === 'string' ? vaultPath : vaultPath.toString();
+			const configPath = path.join(vaultPathString, '..', 'config.ts');
+			
+			if (fs.existsSync(configPath)) {
+				// Use Electron's shell to open the file with the default editor
+				shell.openPath(configPath);
+			} else {
+				// Create the file if it doesn't exist
+				fs.writeFileSync(configPath, '// Astro Modular Configuration\n// Customize your settings here\n\nexport const siteConfig = {\n  // Add your configuration here\n};\n');
+				shell.openPath(configPath);
+			}
+			new Notice('Opening config.ts for direct editing');
+			this.modal.close();
+		} catch (error) {
+			new Notice(`Error opening config file: ${error instanceof Error ? error.message : String(error)}`);
 		}
 	}
 }

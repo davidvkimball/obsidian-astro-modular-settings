@@ -35,7 +35,7 @@ export interface AstroModularSettings {
 	// Post Options
 	postOptions: PostOptions;
 	
-	// Features (for custom template)
+	// Features
 	features: FeatureSettings;
 	
 	// Typography settings
@@ -256,7 +256,7 @@ export interface ImageInserterSettings {
 	insertFormat: string;
 }
 
-export type TemplateType = 'standard' | 'minimal' | 'compact' | 'custom';
+export type TemplateType = 'standard' | 'minimal' | 'compact';
 
 export type ThemeType = 
 	| 'oxygen' | 'minimal' | 'atom' | 'ayu' | 'catppuccin' | 'charcoal' | 'dracula' | 'everforest' | 'flexoki' | 'gruvbox'
@@ -731,13 +731,6 @@ export const TEMPLATE_OPTIONS: TemplateOption[] = [
 		name: 'Minimal',
 		description: 'Clean, simple blog with minimal features and content',
 		features: ['Command palette', 'Search posts/pages', 'Minimal navigation'],
-		recommended: false,
-	},
-	{
-		id: 'custom',
-		name: 'Custom',
-		description: 'Granular control over every setting - opens config.ts',
-		features: ['All features configurable'],
 		recommended: false,
 	},
 ];

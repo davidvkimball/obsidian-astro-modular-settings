@@ -33,13 +33,17 @@ export class StyleTab extends TabRenderer {
 				// Re-render to show/hide custom theme file field
 				this.render(container);
 				
-				// Apply changes immediately to config.ts
+				// Apply only theme change to config.ts (not all settings)
 				try {
-					await this.applyCurrentConfiguration();
+					const success = await (this.plugin as any).configManager.updateThemeOnly(value);
+					if (success) {
 						new Notice(`Theme changed to ${value} and applied to config.ts`);
-					} catch (error) {
-						new Notice(`Failed to apply theme change: ${error instanceof Error ? error.message : String(error)}`);
+					} else {
+						new Notice(`Failed to apply theme change to config.ts`);
 					}
+				} catch (error) {
+					new Notice(`Failed to apply theme change: ${error instanceof Error ? error.message : String(error)}`);
+				}
 				});
 			});
 
@@ -193,13 +197,17 @@ export class StyleTab extends TabRenderer {
 				// Reload settings to ensure the plugin has the latest values
 				await (this.plugin as any).loadSettings();
 				
-				// Apply changes immediately to config.ts
+				// Apply only heading font change to config.ts (not all settings)
 				try {
-					await this.applyCurrentConfiguration();
+					const success = await (this.plugin as any).configManager.updateFontOnly('heading', value);
+					if (success) {
 						new Notice('Heading font updated and applied to config.ts');
-					} catch (error) {
-						new Notice(`Failed to apply heading font change: ${error instanceof Error ? error.message : String(error)}`);
+					} else {
+						new Notice('Failed to apply heading font change to config.ts');
 					}
+				} catch (error) {
+					new Notice(`Failed to apply heading font change: ${error instanceof Error ? error.message : String(error)}`);
+				}
 				});
 			});
 
@@ -218,13 +226,17 @@ export class StyleTab extends TabRenderer {
 				// Reload settings to ensure the plugin has the latest values
 				await (this.plugin as any).loadSettings();
 				
-				// Apply changes immediately to config.ts
+				// Apply only prose font change to config.ts (not all settings)
 				try {
-					await this.applyCurrentConfiguration();
+					const success = await (this.plugin as any).configManager.updateFontOnly('prose', value);
+					if (success) {
 						new Notice('Prose font updated and applied to config.ts');
-					} catch (error) {
-						new Notice(`Failed to apply prose font change: ${error instanceof Error ? error.message : String(error)}`);
+					} else {
+						new Notice('Failed to apply prose font change to config.ts');
 					}
+				} catch (error) {
+					new Notice(`Failed to apply prose font change: ${error instanceof Error ? error.message : String(error)}`);
+				}
 				});
 			});
 
@@ -243,13 +255,17 @@ export class StyleTab extends TabRenderer {
 				// Reload settings to ensure the plugin has the latest values
 				await (this.plugin as any).loadSettings();
 				
-				// Apply changes immediately to config.ts
+				// Apply only monospace font change to config.ts (not all settings)
 				try {
-					await this.applyCurrentConfiguration();
+					const success = await (this.plugin as any).configManager.updateFontOnly('mono', value);
+					if (success) {
 						new Notice('Monospace font updated and applied to config.ts');
-					} catch (error) {
-						new Notice(`Failed to apply monospace font change: ${error instanceof Error ? error.message : String(error)}`);
+					} else {
+						new Notice('Failed to apply monospace font change to config.ts');
 					}
+				} catch (error) {
+					new Notice(`Failed to apply monospace font change: ${error instanceof Error ? error.message : String(error)}`);
+				}
 				});
 			});
 
