@@ -41,6 +41,10 @@ export class SetupWizardModal extends Modal {
 		const { contentEl } = this;
 		contentEl.empty();
 		contentEl.addClass('astro-modular-wizard');
+		
+		// Refresh the wizard state with current settings
+		this.stateManager.refreshState();
+		
 		this.renderCurrentStep();
 	}
 
@@ -113,6 +117,8 @@ export class SetupWizardModal extends Modal {
 			});
 			prevBtn.addEventListener('click', () => {
 				this.stateManager.previousStep();
+				// Refresh state when navigating to ensure we have the latest settings
+				this.stateManager.refreshState();
 				this.renderCurrentStep();
 			});
 		}
@@ -125,6 +131,8 @@ export class SetupWizardModal extends Modal {
 			});
 			nextBtn.addEventListener('click', () => {
 				this.stateManager.nextStep();
+				// Refresh state when navigating to ensure we have the latest settings
+				this.stateManager.refreshState();
 				this.renderCurrentStep();
 			});
 		} else {
@@ -147,80 +155,88 @@ export class SetupWizardModal extends Modal {
 			});
 		}
 
-		// Skip button (for steps 2-9, not first or last)
-		if (this.stateManager.canGoNext() && state.currentStep > 1) {
+		// Skip button (for all steps except the last)
+		if (this.stateManager.canGoNext()) {
 			const skipBtn = buttons.createEl('button', {
 				text: 'Skip',
 				cls: 'mod-button'
 			});
 			skipBtn.style.opacity = '0.6';
 			skipBtn.addEventListener('click', () => {
-				// Apply default values for current step
-				this.applyDefaultValuesForCurrentStep();
+				// Revert current step to original settings (skip without applying changes)
+				this.revertCurrentStepToOriginalSettings();
 				this.stateManager.nextStep();
 				this.renderCurrentStep();
 			});
 		}
 	}
 
-	private applyDefaultValuesForCurrentStep() {
+	private revertCurrentStepToOriginalSettings() {
+		// Revert the current step's state back to the original plugin settings
+		// This ensures that skipping a step doesn't apply any changes made on that step
+		const settings = (this.plugin as any).settings;
 		const state = this.stateManager.getState();
 		const stepIndex = state.currentStep - 1;
 		
-		// Apply default values based on current step
 		switch (stepIndex) {
-			case 1: // Template step - use standard template
-				this.stateManager.setState({ selectedTemplate: 'standard' });
-				break;
-			case 2: // Theme step - use default theme
-				this.stateManager.setState({ selectedTheme: 'oxygen' });
-				break;
-			case 3: // Font step - use default fonts
-				this.stateManager.setState({ 
-					selectedTypography: {
-						fontSource: 'local',
-						proseFont: 'Inter',
-						headingFont: 'Inter',
-						monoFont: 'JetBrains Mono',
-						customFonts: {
-							prose: '',
-							heading: '',
-							mono: '',
-							urls: ''
-						}
-					}
+			case 0: // WelcomeStep - revert site info
+				this.stateManager.updateState({
+					selectedSiteInfo: settings.siteInfo
 				});
 				break;
-			case 4: // Content organization step
-				this.stateManager.setState({ selectedContentOrg: 'file-based' });
+			case 1: // TemplateStep - revert template and features
+				// Revert template selection
+				this.stateManager.updateState({
+					selectedTemplate: settings.currentTemplate
+				});
+				
+				// Revert features to match the original template
+				const originalTemplatePreset = (this.plugin as any).configManager.getTemplatePreset(settings.currentTemplate);
+				if (originalTemplatePreset && originalTemplatePreset.config && originalTemplatePreset.config.features) {
+					this.stateManager.updateState({
+						selectedFeatures: originalTemplatePreset.config.features
+					});
+				}
 				break;
-			case 5: // Navigation step - don't reset, keep current values
-				// Navigation step should preserve current values, not reset them
-				break;
-			case 6: // Optional features step
-				this.stateManager.setState({
-					selectedOptionalFeatures: {
-						profilePicture: {
-							enabled: false,
-							image: '/profile.jpg',
-							alt: 'Profile picture',
-							size: 'md',
-							url: '',
-							placement: 'footer',
-							style: 'circle'
-						},
-						comments: {
-							enabled: false,
-							provider: 'giscus'
-						}
-					}
+			case 2: // ThemeStep - revert theme
+				this.stateManager.updateState({
+					selectedTheme: settings.currentTheme
 				});
 				break;
-			case 7: // Deployment step
-				this.stateManager.setState({ selectedDeployment: 'netlify' });
+			case 3: // FontStep - revert typography
+				this.stateManager.updateState({
+					selectedTypography: settings.typography
+				});
 				break;
-			case 8: // Plugin config step - no defaults needed
+			case 4: // ContentOrgStep - revert content organization
+				this.stateManager.updateState({
+					selectedContentOrg: settings.contentOrganization
+				});
+				break;
+			case 5: // NavigationStep - revert navigation
+				this.stateManager.updateState({
+					selectedNavigation: settings.navigation
+				});
+				break;
+			case 6: // OptionalFeaturesStep - revert optional features
+				this.stateManager.updateState({
+					selectedOptionalFeatures: settings.optionalFeatures
+				});
+				break;
+			case 7: // DeploymentStep - revert deployment
+				this.stateManager.updateState({
+					selectedDeployment: settings.deployment.platform
+				});
+				break;
+			case 8: // PluginConfigStep - no specific state to revert
 				break;
 		}
+	}
+
+	private applyDefaultValuesForCurrentStep() {
+		// Skip button should preserve current values for all steps
+		// This means not applying any changes - just move to the next step
+		// The current state already has the correct values from refreshState()
+		// No state modifications needed
 	}
 }

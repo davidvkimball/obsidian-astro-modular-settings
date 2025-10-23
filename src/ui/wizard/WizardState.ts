@@ -53,7 +53,17 @@ export class WizardStateManager {
 					scrollToTop: true,
 					showSocialIconsInFooter: true,
 					profilePicture: false,
-					comments: false
+					comments: false,
+					featureButton: 'mode',
+					showPostCardCoverImages: 'featured-and-posts',
+					postCardAspectRatio: 'og',
+					customPostCardAspectRatio: '2.5/1',
+					quickActions: {
+						enabled: true,
+						toggleMode: true,
+						graphView: true,
+						changeTheme: true,
+					}
 				},
 					'compact': {
 						commandPalette: true,
@@ -67,7 +77,17 @@ export class WizardStateManager {
 						scrollToTop: true,
 						showSocialIconsInFooter: false,
 						profilePicture: false,
-						comments: false
+						comments: false,
+						featureButton: 'none',
+						showPostCardCoverImages: 'featured-and-posts',
+						postCardAspectRatio: 'og',
+						customPostCardAspectRatio: '2.5/1',
+						quickActions: {
+							enabled: true,
+							toggleMode: true,
+							graphView: true,
+							changeTheme: true,
+						}
 					},
 					'minimal': {
 						commandPalette: true,
@@ -81,42 +101,62 @@ export class WizardStateManager {
 						scrollToTop: true,
 						showSocialIconsInFooter: false,
 						profilePicture: false,
-						comments: false
+						comments: false,
+						featureButton: 'none',
+						showPostCardCoverImages: 'featured-and-posts',
+						postCardAspectRatio: 'og',
+						customPostCardAspectRatio: '2.5/1',
+						quickActions: {
+							enabled: true,
+							toggleMode: true,
+							graphView: true,
+							changeTheme: true,
+						}
 					},
 					'custom': {
 						// For custom, use current settings
 						...settings.features
 					}
 				};
-				return templateFeatures[settings.currentTemplate] || templateFeatures['standard'];
+				const templateFeaturesResult = templateFeatures[settings.currentTemplate] || templateFeatures['standard'];
+				
+				// Ensure profile picture and comments features are synchronized with existing settings
+				if (settings.optionalFeatures?.profilePicture) {
+					templateFeaturesResult.profilePicture = settings.optionalFeatures.profilePicture.enabled;
+				}
+				if (settings.optionalFeatures?.comments) {
+					templateFeaturesResult.comments = settings.optionalFeatures.comments.enabled;
+				}
+				
+				return templateFeaturesResult;
 			})(),
 			selectedTypography: settings.typography,
-			selectedOptionalFeatures: settings.optionalFeatures || {
+			selectedOptionalFeatures: {
 				profilePicture: {
-					enabled: false,
-					image: '/profile.jpg',
-					alt: 'Profile picture',
-					size: 'md',
-					url: '',
-					placement: 'footer',
-					style: 'circle',
+					enabled: settings.optionalFeatures?.profilePicture?.enabled || false,
+					image: settings.optionalFeatures?.profilePicture?.image || '/profile.jpg',
+					alt: settings.optionalFeatures?.profilePicture?.alt || 'Profile picture',
+					size: settings.optionalFeatures?.profilePicture?.size || 'md',
+					url: settings.optionalFeatures?.profilePicture?.url || '',
+					placement: settings.optionalFeatures?.profilePicture?.placement || 'footer',
+					style: settings.optionalFeatures?.profilePicture?.style || 'circle',
 				},
 				comments: {
-					enabled: false,
+					enabled: settings.optionalFeatures?.comments?.enabled || false,
 					provider: 'giscus',
-					rawScript: '',
-					repo: 'davidvkimball/astro-modular',
-					repoId: 'R_kgDOPllfKw',
-					category: 'General',
-					categoryId: 'DIC_kwDOPllfK84CvUpx',
-					mapping: 'pathname',
-					strict: '0',
-					reactions: '1',
-					metadata: '0',
-					inputPosition: 'bottom',
-					theme: 'preferred_color_scheme',
-					lang: 'en',
-					loading: 'lazy',
+					rawScript: settings.optionalFeatures?.comments?.rawScript || '',
+					repo: settings.optionalFeatures?.comments?.repo || 'davidvkimball/astro-modular',
+					repoId: settings.optionalFeatures?.comments?.repoId || 'R_kgDOPllfKw',
+					category: settings.optionalFeatures?.comments?.category || 'General',
+					categoryId: settings.optionalFeatures?.comments?.categoryId || 'DIC_kwDOPllfK84CvUpx',
+					mapping: settings.optionalFeatures?.comments?.mapping || 'pathname',
+					strict: settings.optionalFeatures?.comments?.strict || '0',
+					reactions: settings.optionalFeatures?.comments?.reactions || '1',
+					metadata: settings.optionalFeatures?.comments?.metadata || '0',
+					inputPosition: settings.optionalFeatures?.comments?.inputPosition || 'bottom',
+					theme: settings.optionalFeatures?.comments?.theme || 'preferred_color_scheme',
+					lang: settings.optionalFeatures?.comments?.lang || 'en',
+					loading: settings.optionalFeatures?.comments?.loading || 'lazy',
 				},
 			},
 			selectedOptionalContentTypes: (() => {
@@ -168,6 +208,96 @@ export class WizardStateManager {
 		return (this.state.currentStep / this.state.totalSteps) * 100;
 	}
 
+	refreshState(): void {
+		// Refresh the wizard state with current plugin settings
+		const settings = (this.plugin as any).settings;
+		
+		// Update the state with current settings
+		this.state.selectedTemplate = settings.currentTemplate;
+		this.state.selectedTheme = settings.currentTheme;
+		this.state.selectedContentOrg = settings.contentOrganization;
+		this.state.selectedSiteInfo = settings.siteInfo;
+		this.state.selectedNavigation = settings.navigation;
+		this.state.selectedTypography = settings.typography;
+		this.state.selectedDeployment = settings.deployment.platform;
+		this.state.runWizardOnStartup = settings.runWizardOnStartup;
+		
+		// Update features with current settings, preserving template defaults for missing values
+		const templateFeatures: Record<string, any> = {
+			'standard': {
+				commandPalette: true, tableOfContents: true, readingTime: true, linkedMentions: true,
+				linkedMentionsCompact: false, graphView: true, postNavigation: true, hideScrollBar: false,
+				scrollToTop: true, showSocialIconsInFooter: true, profilePicture: false, comments: false,
+				featureButton: 'mode', showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og',
+				customPostCardAspectRatio: '2.5/1', quickActions: { enabled: true, toggleMode: true, graphView: true, changeTheme: true }
+			},
+			'compact': {
+				commandPalette: true, tableOfContents: true, readingTime: true, linkedMentions: true,
+				linkedMentionsCompact: true, graphView: false, postNavigation: true, hideScrollBar: false,
+				scrollToTop: true, showSocialIconsInFooter: false, profilePicture: false, comments: false,
+				featureButton: 'none', showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og',
+				customPostCardAspectRatio: '2.5/1', quickActions: { enabled: true, toggleMode: true, graphView: true, changeTheme: true }
+			},
+			'minimal': {
+				commandPalette: true, tableOfContents: false, readingTime: false, linkedMentions: false,
+				linkedMentionsCompact: false, graphView: false, postNavigation: false, hideScrollBar: true,
+				scrollToTop: true, showSocialIconsInFooter: false, profilePicture: false, comments: false,
+				featureButton: 'none', showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og',
+				customPostCardAspectRatio: '2.5/1', quickActions: { enabled: true, toggleMode: true, graphView: true, changeTheme: true }
+			},
+			'custom': { ...settings.features }
+		};
+		
+		const templateFeaturesResult = templateFeatures[settings.currentTemplate] || templateFeatures['standard'];
+		
+		// Ensure profile picture and comments features are synchronized with existing settings
+		if (settings.optionalFeatures?.profilePicture) {
+			templateFeaturesResult.profilePicture = settings.optionalFeatures.profilePicture.enabled;
+		}
+		if (settings.optionalFeatures?.comments) {
+			templateFeaturesResult.comments = settings.optionalFeatures.comments.enabled;
+		}
+		
+		this.state.selectedFeatures = templateFeaturesResult;
+		
+		// Update optional features with current settings
+		this.state.selectedOptionalFeatures = {
+			profilePicture: {
+				enabled: settings.optionalFeatures?.profilePicture?.enabled || false,
+				image: settings.optionalFeatures?.profilePicture?.image || '/profile.jpg',
+				alt: settings.optionalFeatures?.profilePicture?.alt || 'Profile picture',
+				size: settings.optionalFeatures?.profilePicture?.size || 'md',
+				url: settings.optionalFeatures?.profilePicture?.url || '',
+				placement: settings.optionalFeatures?.profilePicture?.placement || 'footer',
+				style: settings.optionalFeatures?.profilePicture?.style || 'circle',
+			},
+			comments: {
+				enabled: settings.optionalFeatures?.comments?.enabled || false,
+				provider: 'giscus',
+				rawScript: settings.optionalFeatures?.comments?.rawScript || '',
+				repo: settings.optionalFeatures?.comments?.repo || 'davidvkimball/astro-modular',
+				repoId: settings.optionalFeatures?.comments?.repoId || 'R_kgDOPllfKw',
+				category: settings.optionalFeatures?.comments?.category || 'General',
+				categoryId: settings.optionalFeatures?.comments?.categoryId || 'DIC_kwDOPllfK84CvUpx',
+				mapping: settings.optionalFeatures?.comments?.mapping || 'pathname',
+				strict: settings.optionalFeatures?.comments?.strict || '0',
+				reactions: settings.optionalFeatures?.comments?.reactions || '1',
+				metadata: settings.optionalFeatures?.comments?.metadata || '0',
+				inputPosition: settings.optionalFeatures?.comments?.inputPosition || 'bottom',
+				theme: settings.optionalFeatures?.comments?.theme || 'preferred_color_scheme',
+				lang: settings.optionalFeatures?.comments?.lang || 'en',
+				loading: settings.optionalFeatures?.comments?.loading || 'lazy',
+			},
+		};
+		
+		// Update optional content types
+		const isStandardOrCustom = settings.currentTemplate === 'standard' || settings.currentTemplate === 'custom';
+		this.state.selectedOptionalContentTypes = {
+			projects: isStandardOrCustom,
+			docs: isStandardOrCustom
+		};
+	}
+
 	buildFinalSettings(): void {
 		// Update plugin.settings directly instead of returning a new object
 		const settings = (this.plugin as any).settings;
@@ -181,6 +311,16 @@ export class WizardStateManager {
 		settings.optionalFeatures = this.state.selectedOptionalFeatures;
 		settings.deployment.platform = this.state.selectedDeployment;
 		settings.runWizardOnStartup = this.state.runWizardOnStartup;
+
+		// Apply template preset changes (moved from TemplateStep to here)
+		// This ensures template changes are only applied when the wizard is completed
+		const templatePreset = (this.plugin as any).configManager.getTemplatePreset(this.state.selectedTemplate);
+		if (templatePreset && templatePreset.config) {
+			// Update table of contents settings from preset
+			if (templatePreset.config.tableOfContents) {
+				settings.tableOfContents = { ...settings.tableOfContents, ...templatePreset.config.tableOfContents };
+			}
+		}
 
 		// Synchronize profile picture settings between features and optionalFeatures
 		if (settings.optionalFeatures?.profilePicture) {

@@ -47,8 +47,8 @@ export class TemplateStep extends BaseWizardStep {
 					// Sync all features based on template selection
 					this.syncFeaturesWithTemplate(template);
 					
-					// Update plugin settings immediately so Features tab reflects changes
-					this.updatePluginSettingsWithTemplate(template);
+					// Don't save to disk in real-time - only update wizard state
+					// Settings will be saved when the wizard is completed
 					
 					if (template === 'custom') {
 						// Open config.ts file - it's one level up from the vault

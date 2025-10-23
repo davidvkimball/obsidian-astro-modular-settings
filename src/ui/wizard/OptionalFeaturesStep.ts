@@ -36,11 +36,13 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 			.addToggle((toggle: ToggleComponent) => toggle
 				.setValue(isEnabled)
 				.onChange((value: boolean) => {
+					// Get fresh state to avoid stale closure issues
+					const currentState = this.getState();
 					this.updateState({
-						selectedFeatures: { ...state.selectedFeatures, profilePicture: value },
+						selectedFeatures: { ...currentState.selectedFeatures, profilePicture: value },
 						selectedOptionalFeatures: {
-							...state.selectedOptionalFeatures,
-							profilePicture: { ...state.selectedOptionalFeatures?.profilePicture, enabled: value }
+							...currentState.selectedOptionalFeatures,
+							profilePicture: { ...currentState.selectedOptionalFeatures?.profilePicture, enabled: value }
 						}
 					});
 					// Show/hide options
@@ -86,10 +88,12 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 	}
 
 	private updateProfileSetting(key: string, value: any, state: any): void {
+		// Get fresh state to avoid stale closure issues
+		const currentState = this.getState();
 		this.updateState({
 			selectedOptionalFeatures: {
-				...state.selectedOptionalFeatures,
-				profilePicture: { ...state.selectedOptionalFeatures?.profilePicture, [key]: value }
+				...currentState.selectedOptionalFeatures,
+				profilePicture: { ...currentState.selectedOptionalFeatures?.profilePicture, [key]: value }
 			}
 		});
 	}
@@ -104,23 +108,30 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 			inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy'
 		};
 
+		// Store reference to toggle for later updates
+		let commentsToggle: ToggleComponent;
+
 		// Main toggle
 		new Setting(container)
 			.setName('Comments')
 			.setDesc('Enable Giscus comment system for posts')
-			.addToggle((toggle: ToggleComponent) => toggle
-				.setValue(isEnabled)
-				.onChange((value: boolean) => {
-					this.updateState({
-						selectedFeatures: { ...state.selectedFeatures, comments: value },
-						selectedOptionalFeatures: {
-							...state.selectedOptionalFeatures,
-							comments: { ...state.selectedOptionalFeatures?.comments, enabled: value }
-						}
+			.addToggle((toggle: ToggleComponent) => {
+				commentsToggle = toggle;
+				toggle.setValue(isEnabled)
+					.onChange((value: boolean) => {
+						// Get fresh state to avoid stale closure issues
+						const currentState = this.getState();
+						this.updateState({
+							selectedFeatures: { ...currentState.selectedFeatures, comments: value },
+							selectedOptionalFeatures: {
+								...currentState.selectedOptionalFeatures,
+								comments: { ...currentState.selectedOptionalFeatures?.comments, enabled: value }
+							}
+						});
+						const optionsDiv = container.querySelector('.comments-options') as HTMLElement;
+						if (optionsDiv) optionsDiv.style.display = value ? 'block' : 'none';
 					});
-					const optionsDiv = container.querySelector('.comments-options') as HTMLElement;
-					if (optionsDiv) optionsDiv.style.display = value ? 'block' : 'none';
-				}));
+			});
 
 		// Options container
 		const optionsContainer = container.createDiv('comments-options');
@@ -216,17 +227,15 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 			if (validation.valid) {
 				validationDiv.innerHTML = '<span style="color: var(--text-success)">✓ Valid Giscus script detected</span>';
 				
-				// Parse and update all settings
+				// Parse and update script settings without forcing comments to be enabled
 				const parsed = GiscusScriptParser.parseScript(scriptContent);
 				if (parsed) {
-					// Enable comments when a valid script is pasted
+					// Update script data but preserve the current enabled state
 					this.updateState({
-						selectedFeatures: { ...state.selectedFeatures, comments: true },
 						selectedOptionalFeatures: {
 							...state.selectedOptionalFeatures,
 							comments: { 
 								...state.selectedOptionalFeatures?.comments, 
-								enabled: true,
 								rawScript: scriptContent,
 								repo: parsed.repo,
 								repoId: parsed.repoId,
@@ -244,17 +253,8 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 						}
 					});
 					
-					// Update the toggle to show comments are enabled
-					const toggle = container.querySelector('.setting-item .checkbox-container input[type="checkbox"]') as HTMLInputElement;
-					if (toggle) {
-						toggle.checked = true;
-					}
-					
-					// Show the options container
-					const optionsDiv = container.querySelector('.comments-options') as HTMLElement;
-					if (optionsDiv) {
-						optionsDiv.style.display = 'block';
-					}
+					// Don't force the toggle - let the user decide whether to enable comments
+					// The toggle should reflect the current state, not be forced to true
 				}
 			} else {
 				validationDiv.innerHTML = `<span style="color: var(--text-error)">✗ ${validation.error}</span>`;
@@ -268,10 +268,12 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 	}
 
 	private updateCommentSetting(key: string, value: any, state: any): void {
+		// Get fresh state to avoid stale closure issues
+		const currentState = this.getState();
 		this.updateState({
 			selectedOptionalFeatures: {
-				...state.selectedOptionalFeatures,
-				comments: { ...state.selectedOptionalFeatures?.comments, [key]: value }
+				...currentState.selectedOptionalFeatures,
+				comments: { ...currentState.selectedOptionalFeatures?.comments, [key]: value }
 			}
 		});
 	}

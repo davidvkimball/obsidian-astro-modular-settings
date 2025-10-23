@@ -1241,7 +1241,8 @@ export class FeaturesTab extends TabRenderer {
 	}
 
 	private renderCommentsSetting(container: HTMLElement, settings: any): void {
-		const isEnabled = settings.features?.comments || settings.postOptions?.comments?.enabled || settings.optionalFeatures?.comments?.enabled;
+		// Use optionalFeatures.comments.enabled as the primary source, fallback to others
+		const isEnabled = settings.optionalFeatures?.comments?.enabled ?? settings.features?.comments ?? settings.postOptions?.comments?.enabled ?? false;
 		const commentsSettings = settings.postOptions?.comments || settings.optionalFeatures?.comments || {
 			enabled: false,
 			provider: 'giscus',
@@ -1267,16 +1268,25 @@ export class FeaturesTab extends TabRenderer {
 			.addToggle(toggle => toggle
 				.setValue(isEnabled)
 				.onChange(async (value) => {
+					// Update all three locations to ensure consistency
 					settings.features.comments = value;
+					
+					// Ensure postOptions exists, but preserve existing comment settings
 					if (!settings.postOptions) {
-						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tableOfContents: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: commentsSettings };
+						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tableOfContents: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: { ...commentsSettings } };
 					}
+					// Only update the enabled state, preserve all other comment settings
 					settings.postOptions.comments.enabled = value;
+					
+					// Ensure optionalFeatures exists, but preserve existing comment settings
 					if (!settings.optionalFeatures) {
-						settings.optionalFeatures = { profilePicture: { enabled: false, image: '/profile.jpg', alt: 'Profile picture', size: 'md', url: '', placement: 'footer', style: 'circle' }, comments: commentsSettings };
+						settings.optionalFeatures = { profilePicture: { enabled: false, image: '/profile.jpg', alt: 'Profile picture', size: 'md', url: '', placement: 'footer', style: 'circle' }, comments: { ...commentsSettings } };
 					}
+					// Only update the enabled state, preserve all other comment settings
 					settings.optionalFeatures.comments.enabled = value;
 					await this.plugin.saveData(settings);
+					// Reload settings to ensure the plugin has the latest values
+					await (this.plugin as any).loadSettings();
 					
 					// Show/hide the detailed options
 					const optionsDiv = container.querySelector('.comments-options') as HTMLElement;
@@ -1364,8 +1374,8 @@ export class FeaturesTab extends TabRenderer {
 		textarea.style.color = 'var(--text-normal)';
 		textarea.style.resize = 'none';
 		
-		// Set current value
-		textarea.value = commentsSettings.rawScript || '';
+		// Set current value from the actual saved settings
+		textarea.value = settings.optionalFeatures?.comments?.rawScript || settings.postOptions?.comments?.rawScript || '';
 		
 		// Validation and parsing
 		const validationDiv = optionsContainer.createDiv('script-validation');

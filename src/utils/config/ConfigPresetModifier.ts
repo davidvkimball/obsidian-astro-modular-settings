@@ -1211,20 +1211,20 @@ export class ConfigPresetModifier {
 		// Update post card cover images
 		modifiedConfig = modifiedConfig.replace(
 			/\/\/ \[CONFIG:POST_OPTIONS_SHOW_POST_CARD_COVER_IMAGES\]\s*showPostCardCoverImages:\s*"[^"]*"/,
-			`// [CONFIG:POST_OPTIONS_SHOW_POST_CARD_COVER_IMAGES]\n    showPostCardCoverImages: "${settings.features.showPostCardCoverImages}"`
+			`// [CONFIG:POST_OPTIONS_SHOW_POST_CARD_COVER_IMAGES]\n    showPostCardCoverImages: "${settings.postOptions.showPostCardCoverImages}"`
 		);
 		
 		// Update post card aspect ratio
 		modifiedConfig = modifiedConfig.replace(
 			/\/\/ \[CONFIG:POST_OPTIONS_POST_CARD_ASPECT_RATIO\]\s*postCardAspectRatio:\s*"[^"]*"/,
-			`// [CONFIG:POST_OPTIONS_POST_CARD_ASPECT_RATIO]\n    postCardAspectRatio: "${settings.features.postCardAspectRatio}"`
+			`// [CONFIG:POST_OPTIONS_POST_CARD_ASPECT_RATIO]\n    postCardAspectRatio: "${settings.postOptions.postCardAspectRatio}"`
 		);
 		
 		// Update custom post card aspect ratio if it exists
-		if (settings.features.customPostCardAspectRatio) {
+		if (settings.postOptions.customPostCardAspectRatio) {
 			modifiedConfig = modifiedConfig.replace(
 				/\/\/ \[CONFIG:POST_OPTIONS_CUSTOM_POST_CARD_ASPECT_RATIO\]\s*customPostCardAspectRatio:\s*"[^"]*"/,
-				`// [CONFIG:POST_OPTIONS_CUSTOM_POST_CARD_ASPECT_RATIO]\n    customPostCardAspectRatio: "${settings.features.customPostCardAspectRatio}"`
+				`// [CONFIG:POST_OPTIONS_CUSTOM_POST_CARD_ASPECT_RATIO]\n    customPostCardAspectRatio: "${settings.postOptions.customPostCardAspectRatio}"`
 			);
 		}
 		
