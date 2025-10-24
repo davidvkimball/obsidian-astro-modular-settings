@@ -1269,6 +1269,164 @@
 	text-decoration: underline;
 }
 
+/* Theme Colors Tab Styles */
+.theme-extraction-timestamp {
+	font-size: 12px;
+	color: var(--text-muted);
+	margin-top: 8px;
+	font-style: italic;
+}
+
+.color-preview-section {
+	margin-top: 20px;
+	padding: 15px;
+	background: var(--background-secondary);
+	border-radius: 8px;
+	border: 1px solid var(--background-modifier-border);
+}
+
+.color-preview-section h4 {
+	margin: 0 0 10px 0;
+	color: var(--text-normal);
+	font-size: 14px;
+}
+
+.color-preview-container {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 10px;
+}
+
+.color-box {
+	width: 20px;
+	height: 20px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 3px;
+	cursor: pointer;
+	transition: transform 0.2s ease;
+}
+
+.color-box:hover {
+	transform: scale(1.2);
+	border-color: var(--interactive-accent);
+}
+
+.no-colors-message {
+	font-style: italic;
+	color: var(--text-muted);
+	text-align: center;
+	padding: 20px;
+	background: var(--background-secondary);
+	border-radius: 8px;
+	border: 1px solid var(--background-modifier-border);
+}
+
+/* Color scale editor improvements */
+.color-scale-editor {
+	margin: 15px 0;
+}
+
+.color-scale-editor .setting-item {
+	margin-bottom: 8px;
+}
+
+.color-scale-editor .setting-item-name {
+	font-size: 12px;
+	color: var(--text-muted);
+	min-width: 40px;
+}
+
+.color-scale-editor .setting-item-control {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+.color-scale-editor input[type="text"] {
+	width: 100px;
+	font-family: var(--font-monospace);
+	font-size: 12px;
+}
+
+.color-scale-editor .color-picker {
+	width: 30px;
+	height: 30px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+/* Simple mode color inputs */
+.simple-color-inputs {
+	display: flex;
+	flex-direction: column;
+	gap: 15px;
+	margin-top: 15px;
+}
+
+.simple-color-input {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.simple-color-input label {
+	font-weight: 500;
+	color: var(--text-normal);
+	min-width: 120px;
+}
+
+.simple-color-input input[type="text"] {
+	width: 100px;
+	font-family: var(--font-monospace);
+}
+
+.simple-color-input .color-picker {
+	width: 30px;
+	height: 30px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+/* Advanced mode sections */
+.advanced-mode-section {
+	margin: 20px 0;
+	padding: 15px;
+	background: var(--background-secondary);
+	border-radius: 8px;
+	border: 1px solid var(--background-modifier-border);
+}
+
+.advanced-mode-section h4 {
+	margin: 0 0 15px 0;
+	color: var(--text-normal);
+	font-size: 16px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	padding-bottom: 8px;
+}
+
+/* Save theme section */
+.save-theme-section {
+	margin-top: 30px;
+	padding: 20px;
+	background: var(--background-secondary);
+	border-radius: 8px;
+	border: 1px solid var(--background-modifier-border);
+}
+
+.save-theme-section h3 {
+	margin: 0 0 10px 0;
+	color: var(--text-normal);
+}
+
+.save-theme-section p {
+	margin: 0 0 15px 0;
+	color: var(--text-muted);
+	font-size: 14px;
+}
+
 /* Responsive adjustments for mobile */
 @media (max-width: 768px) {
 	.options-grid {
@@ -1279,5 +1437,24 @@
 	.profile-picture-options,
 	.comments-options {
 		padding: 10px;
+	}
+	
+	.color-preview-container {
+		gap: 6px;
+	}
+	
+	.color-box {
+		width: 18px;
+		height: 18px;
+	}
+	
+	.simple-color-input {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 8px;
+	}
+	
+	.simple-color-input label {
+		min-width: auto;
 	}
 }

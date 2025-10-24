@@ -8,6 +8,9 @@ export interface AstroModularSettings {
 	customThemeFile?: string;
 	contentOrganization: ContentOrganizationType;
 	
+	// Theme color extraction
+	themeColors: ThemeColorSettings;
+	
 	// Site information
 	siteInfo: SiteInformation;
 	
@@ -346,6 +349,38 @@ export interface ObsidianAppSettings {
 	useMarkdownLinks?: boolean;
 }
 
+// Theme color extraction types
+export interface ThemeColorSettings {
+	mode: 'simple' | 'advanced';
+	extractedColors?: ThemeColors;
+	simpleColors?: SimpleThemeColors;
+	lastExtracted?: string; // ISO timestamp
+}
+
+export interface ThemeColors {
+	primary: ColorScale;
+	highlight: ColorScale;
+}
+
+export interface SimpleThemeColors {
+	accent: string;
+	background: string;
+}
+
+export interface ColorScale {
+	50: string;
+	100: string;
+	200: string;
+	300: string;
+	400: string;
+	500: string;
+	600: string;
+	700: string;
+	800: string;
+	900: string;
+	950?: string; // Only for primary colors
+}
+
 export const FONT_OPTIONS = [
 	'Inter', 'Roboto', 'Open Sans', 'Lato', 'Poppins', 'Source Sans Pro', 'Nunito', 'Montserrat',
 	'Playfair Display', 'Merriweather', 'Lora', 'Crimson Text', 'PT Serif', 'Libre Baskerville',
@@ -358,6 +393,15 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 	currentTheme: 'oxygen',
 	customThemeFile: 'custom',
 	contentOrganization: 'file-based',
+	themeColors: {
+		mode: 'simple',
+		extractedColors: undefined,
+		simpleColors: {
+			accent: '#5865f2',
+			background: '#1e1e1e'
+		},
+		lastExtracted: undefined
+	},
 	siteInfo: {
 		site: 'https://astro-modular.netlify.app',
 		title: 'Astro Modular',
