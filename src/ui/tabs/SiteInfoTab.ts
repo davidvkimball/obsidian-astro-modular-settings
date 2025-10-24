@@ -8,8 +8,6 @@ export class SiteInfoTab extends TabRenderer {
 
 		// Settings section header
 		const settingsSection = container.createDiv('settings-section');
-		const header = settingsSection.createEl('h2', { text: 'Site Information' });
-		const description = settingsSection.createEl('p', { text: 'Configure your site metadata and basic information. Changes are applied to your config.ts file immediately.' });
 
 		// Site URL
 		this.createTextSetting(

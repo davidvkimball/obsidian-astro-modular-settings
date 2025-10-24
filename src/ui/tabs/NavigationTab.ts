@@ -10,8 +10,6 @@ export class NavigationTab extends TabRenderer {
 
 		// Settings section header
 		const settingsSection = container.createDiv('settings-section');
-		const header = settingsSection.createEl('h2', { text: 'Navigation' });
-		const description = settingsSection.createEl('p', { text: 'Configure your site navigation pages and social links. Changes are applied to your config.ts file immediately.' });
 
 		// Navigation pages section
 		const pagesSection = container.createDiv('settings-section');
@@ -52,7 +50,7 @@ export class NavigationTab extends TabRenderer {
 		// Social links section
 		const socialSection = container.createDiv('settings-section');
 		socialSection.createEl('h3', { text: 'Social Links' });
-		socialSection.createEl('p', { text: 'Configure your social media links in the footer.' });
+		socialSection.createEl('p', { text: 'Add or remove social media links.' });
 
 		// Display existing social links using innerHTML like the wizard
 		const socialList = socialSection.createDiv('nav-items');
@@ -104,7 +102,6 @@ export class NavigationTab extends TabRenderer {
 		navOptionsSection.style.paddingTop = '20px';
 		navOptionsSection.style.borderTop = '2px solid var(--background-modifier-border)';
 		navOptionsSection.createEl('h3', { text: 'Navigation Options' });
-		navOptionsSection.createEl('p', { text: 'Configure how navigation appears on your site.' });
 
 		// Show navigation toggle
 		new Setting(navOptionsSection)

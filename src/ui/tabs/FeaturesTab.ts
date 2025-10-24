@@ -8,8 +8,6 @@ export class FeaturesTab extends TabRenderer {
 
 		// Settings section header
 		const settingsSection = container.createDiv('settings-section');
-		const header = settingsSection.createEl('h2', { text: 'Feature Configuration' });
-		const description = settingsSection.createEl('p', { text: 'Enable or disable specific features for your site. Changes are applied to your config.ts file immediately when you toggle them.' });
 
 		// ═══════════════════════════════════════════════════════════════════
 		// GLOBAL OPTIONS

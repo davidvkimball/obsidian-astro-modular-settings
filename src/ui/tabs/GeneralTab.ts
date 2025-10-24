@@ -12,8 +12,6 @@ export class GeneralTab extends TabRenderer {
 
 		// Settings section header
 		const settingsSection = container.createDiv('settings-section');
-		const header = settingsSection.createEl('h2', { text: 'General Settings' });
-		const description = settingsSection.createEl('p', { text: 'Configure basic plugin behavior and view current status.' });
 
 		// Current configuration display (moved to top)
 		const configDisplay = container.createDiv('config-display');

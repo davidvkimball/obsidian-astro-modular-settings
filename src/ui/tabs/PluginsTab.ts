@@ -8,8 +8,6 @@ export class PluginsTab extends TabRenderer {
 
 		// Settings section header
 		const settingsSection = container.createDiv('settings-section');
-		const header = settingsSection.createEl('h2', { text: 'Plugin Configuration' });
-		const description = settingsSection.createEl('p', { text: 'Manage your Obsidian plugins and their settings.' });
 
 		// Get plugin status
 		const pluginStatus = await (this.plugin as any).pluginManager.getPluginStatus();

@@ -9,8 +9,6 @@ export class AdvancedTab extends TabRenderer {
 
 		// Settings section header
 		const settingsSection = container.createDiv('settings-section');
-		const header = settingsSection.createEl('h2', { text: 'Advanced Settings' });
-		const description = settingsSection.createEl('p', { text: 'Advanced configuration options and utilities.' });
 
 		// Sync from config.ts button (at the top)
 		new Setting(container)

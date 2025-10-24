@@ -721,21 +721,45 @@ export class ConfigPresetModifier {
 		if (settings.availableThemes !== undefined) {
 			console.log('🔧 Attempting to update availableThemes to:', settings.availableThemes);
 			let availableThemesValue: string;
-			if (settings.availableThemes === 'all') {
-				availableThemesValue = '"all"';
+			if (settings.availableThemes === 'default') {
+				availableThemesValue = '"default"';
 			} else {
-				// Convert array to string format
-				const themesArray = settings.availableThemes.map(theme => `"${theme}"`).join(', ');
-				availableThemesValue = `[${themesArray}]`;
+				// Convert array to string format and merge with custom themes if they exist
+				let themesArray = [...settings.availableThemes];
+				
+				// If custom themes are specified, add them to the array
+				if (settings.customThemes && settings.customThemes.trim()) {
+					const customThemesList = settings.customThemes.split(',').map(theme => theme.trim()).filter(theme => theme);
+					themesArray = [...themesArray, ...customThemesList] as any;
+					console.log('🔧 Merged custom themes into availableThemes:', customThemesList);
+				}
+				
+				const themesString = themesArray.map(theme => `"${theme}"`).join(', ');
+				availableThemesValue = `[${themesString}]`;
 			}
 			
-			const availableThemesRegex = /\/\/ \[CONFIG:AVAILABLE_THEMES\]\s*\n\s*availableThemes:\s*(?:"all"|\[[^\]]*\])/;
+			const availableThemesRegex = /\/\/ \[CONFIG:AVAILABLE_THEMES\]\s*\n\s*availableThemes:\s*(?:"default"|\[[^\]]*\])/;
 			const availableThemesMatch = modifiedConfig.match(availableThemesRegex);
 			console.log('🔧 AvailableThemes regex match:', availableThemesMatch);
 			
 			modifiedConfig = modifiedConfig.replace(
 				availableThemesRegex,
 				`// [CONFIG:AVAILABLE_THEMES]\n  availableThemes: ${availableThemesValue}`
+			);
+		}
+		
+		// Update custom themes
+		if (settings.customThemes !== undefined) {
+			console.log('🔧 Attempting to update customThemes to:', settings.customThemes);
+			const customThemesValue = settings.customThemes ? `"${settings.customThemes}"` : '""';
+			
+			const customThemesRegex = /\/\/ \[CONFIG:CUSTOM_THEMES\]\s*\n\s*customThemes:\s*"[^"]*"/;
+			const customThemesMatch = modifiedConfig.match(customThemesRegex);
+			console.log('🔧 CustomThemes regex match:', customThemesMatch);
+			
+			modifiedConfig = modifiedConfig.replace(
+				customThemesRegex,
+				`// [CONFIG:CUSTOM_THEMES]\n  customThemes: ${customThemesValue}`
 			);
 		}
 		

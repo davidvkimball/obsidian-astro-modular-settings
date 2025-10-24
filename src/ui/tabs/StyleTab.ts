@@ -13,8 +13,7 @@ export class StyleTab extends TabRenderer {
 
 		// Settings section header
 		const settingsSection = container.createDiv('settings-section');
-		const header = settingsSection.createEl('h2', { text: 'Style' });
-		const description = settingsSection.createEl('p', { text: 'Configure your theme and typography settings. Changes are applied to your config.ts file immediately.' });
+		const header = settingsSection.createEl('h2', { text: 'Colors' });
 
 		// Theme selector
 		new Setting(container)
@@ -48,18 +47,6 @@ export class StyleTab extends TabRenderer {
 				});
 			});
 
-		// Custom theme file (only show when theme is 'custom')
-		if (settings.currentTheme === 'custom') {
-			this.createTextSetting(
-				container,
-				'Theme file',
-				'Filename in src/themes/custom/ (without .ts extension)',
-				settings.customThemeFile || 'custom',
-				(value) => {
-					settings.customThemeFile = value;
-				}
-			);
-		}
 
 		// Available themes customization
 		new Setting(container)
@@ -74,8 +61,8 @@ export class StyleTab extends TabRenderer {
 						const allThemes = THEME_OPTIONS.filter(theme => theme.id !== 'custom').map(theme => theme.id);
 						settings.availableThemes = allThemes as any;
 					} else {
-						// Disable customization - set to "all"
-						settings.availableThemes = 'all';
+						// Disable customization - set to "default"
+						settings.availableThemes = 'default';
 					}
 					await this.plugin.saveData(settings);
 					// Reload settings to ensure the plugin has the latest values
@@ -89,7 +76,7 @@ export class StyleTab extends TabRenderer {
 					// Apply changes immediately to config.ts
 					try {
 						await this.applyCurrentConfiguration();
-						new Notice(`Available themes ${value ? 'customized' : 'set to all'} and applied to config.ts`);
+						new Notice(`Available themes ${value ? 'customized' : 'set to default'} and applied to config.ts`);
 					} catch (error) {
 						new Notice(`Failed to apply available themes change: ${error instanceof Error ? error.message : String(error)}`);
 					}
@@ -103,7 +90,7 @@ export class StyleTab extends TabRenderer {
 			themePillsContainer.style.marginBottom = '20px';
 			
 			const pillsHeader = themePillsContainer.createEl('p', { 
-				text: 'Selected themes (click × to remove):',
+				text: 'Available themes (click to toggle selection):',
 				cls: 'theme-pills-header'
 			});
 			pillsHeader.style.fontSize = '14px';
@@ -115,45 +102,49 @@ export class StyleTab extends TabRenderer {
 			pillsWrapper.style.flexWrap = 'wrap';
 			pillsWrapper.style.gap = '8px';
 			
-			// Show each selected theme as a pill
-			settings.availableThemes.forEach(themeId => {
-				const theme = THEME_OPTIONS.find(t => t.id === themeId);
-				if (theme) {
+			// Show all themes (except custom) with selection state
+			const allThemes = THEME_OPTIONS.filter(theme => theme.id !== 'custom');
+			allThemes.forEach(theme => {
+				const isSelected = (settings.availableThemes as string[]).includes(theme.id);
+				
 					const pill = pillsWrapper.createDiv('theme-pill');
 					pill.style.display = 'inline-flex';
 					pill.style.alignItems = 'center';
 					pill.style.padding = '4px 8px';
-					pill.style.backgroundColor = 'var(--interactive-accent)';
-					pill.style.color = 'var(--text-on-accent)';
 					pill.style.borderRadius = '12px';
 					pill.style.fontSize = '12px';
 					pill.style.gap = '6px';
+				pill.style.cursor = 'pointer';
+				pill.style.transition = 'all 0.2s ease';
+				
+				// Style based on selection state
+				if (isSelected) {
+					pill.style.backgroundColor = 'var(--interactive-accent)';
+					pill.style.color = 'var(--text-on-accent)';
+					pill.style.border = '1px solid var(--interactive-accent)';
+				} else {
+					pill.style.backgroundColor = 'var(--background-secondary)';
+					pill.style.color = 'var(--text-muted)';
+					pill.style.border = '1px solid var(--background-modifier-border)';
+				}
 					
 					pill.createSpan({ text: theme.name });
 					
-					const removeBtn = pill.createEl('button', { text: '×' });
-					removeBtn.style.background = 'none';
-					removeBtn.style.border = 'none';
-					removeBtn.style.color = 'inherit';
-					removeBtn.style.cursor = 'pointer';
-					removeBtn.style.fontSize = '14px';
-					removeBtn.style.padding = '0';
-					removeBtn.style.width = '16px';
-					removeBtn.style.height = '16px';
-					removeBtn.style.borderRadius = '50%';
-					removeBtn.style.display = 'flex';
-					removeBtn.style.alignItems = 'center';
-					removeBtn.style.justifyContent = 'center';
-					
-					removeBtn.addEventListener('click', async () => {
-						// Remove theme from array (we know it's an array because we're in this block)
+				// Add selection indicator
+				const indicator = pill.createSpan({ text: isSelected ? '✓' : '○' });
+				indicator.style.fontSize = '10px';
+				indicator.style.opacity = '0.8';
+				
+				pill.addEventListener('click', async () => {
 						const currentThemes = settings.availableThemes as string[];
-						const newThemes = currentThemes.filter((id: string) => id !== themeId);
-						
-						// Ensure at least one theme remains
-						if (newThemes.length === 0) {
-							new Notice('At least one theme must be available. Adding "oxygen" as default.');
-							newThemes.push('oxygen');
+					let newThemes: string[];
+					
+					if (isSelected) {
+						// Remove theme from selection
+						newThemes = currentThemes.filter((id: string) => id !== theme.id);
+					} else {
+						// Add theme to selection
+						newThemes = [...currentThemes, theme.id];
 						}
 						
 						settings.availableThemes = newThemes as any;
@@ -169,58 +160,156 @@ export class StyleTab extends TabRenderer {
 						// Apply changes immediately to config.ts
 						try {
 							await this.applyCurrentConfiguration();
-							new Notice(`Theme "${theme.name}" removed from available themes`);
-						} catch (error) {
-							new Notice(`Failed to apply theme removal: ${error instanceof Error ? error.message : String(error)}`);
-						}
-					});
+						new Notice(`Theme "${theme.name}" ${isSelected ? 'removed from' : 'added to'} available themes`);
+					} catch (error) {
+						new Notice(`Failed to apply theme change: ${error instanceof Error ? error.message : String(error)}`);
+					}
+				});
+			});
+			
+			// Add custom themes input field
+			const customThemesSection = themePillsContainer.createDiv('custom-themes-section');
+			customThemesSection.style.marginTop = '15px';
+			customThemesSection.style.padding = '10px';
+			customThemesSection.style.backgroundColor = 'var(--background-secondary)';
+			customThemesSection.style.borderRadius = '6px';
+			customThemesSection.style.border = '1px solid var(--background-modifier-border)';
+			
+			const customThemesLabel = customThemesSection.createEl('label', { 
+				text: 'Custom themes (comma-separated):',
+				cls: 'custom-themes-label'
+			});
+			customThemesLabel.style.display = 'block';
+			customThemesLabel.style.fontSize = '12px';
+			customThemesLabel.style.color = 'var(--text-muted)';
+			customThemesLabel.style.marginBottom = '6px';
+			
+			// Create input container with folder button
+			const inputContainer = customThemesSection.createDiv('custom-themes-input-container');
+			inputContainer.style.display = 'flex';
+			inputContainer.style.gap = '6px';
+			inputContainer.style.alignItems = 'center';
+			
+			const customThemesInput = inputContainer.createEl('input', {
+				type: 'text',
+				placeholder: 'custom,obsidinite',
+				value: settings.customThemes || '',
+				attr: {
+					spellcheck: 'false'
 				}
+			});
+			customThemesInput.style.flex = '1';
+			customThemesInput.style.padding = '6px 8px';
+			customThemesInput.style.border = '1px solid var(--background-modifier-border)';
+			customThemesInput.style.borderRadius = '4px';
+			customThemesInput.style.backgroundColor = 'var(--background-primary)';
+			customThemesInput.style.color = 'var(--text-normal)';
+			customThemesInput.style.fontSize = '12px';
+			
+			// Add folder button
+			const folderButton = inputContainer.createEl('button', {
+				cls: 'clickable-icon',
+				attr: {
+					'aria-label': 'Open themes folder'
+				}
+			});
+			folderButton.style.padding = '4px';
+			folderButton.style.border = 'none';
+			folderButton.style.backgroundColor = 'transparent';
+			folderButton.style.color = 'var(--text-normal)';
+			folderButton.style.display = 'flex';
+			folderButton.style.alignItems = 'center';
+			folderButton.style.justifyContent = 'center';
+			folderButton.style.marginTop = '2px';
+			
+			// Add folder icon using Obsidian's icon system
+			const folderIcon = folderButton.createDiv();
+			folderIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"></path></svg>';
+			
+			// Add click handler for folder button
+			folderButton.addEventListener('click', async () => {
+				try {
+					// Open file explorer to the themes/custom directory
+					// Path: go up two levels from vault (src/content) to project root, then down to src/themes/custom
+					const themesPath = '../../src/themes/custom';
+					await (this.app as any).openWithDefaultApp(themesPath);
+				} catch (error) {
+					new Notice(`Failed to open themes folder: ${error instanceof Error ? error.message : String(error)}`);
+				}
+			});
+			
+			// Use debounced input like other text fields
+			let timeoutId: number | null = null;
+			customThemesInput.addEventListener('input', async () => {
+				// Update the value immediately for UI responsiveness
+				settings.customThemes = customThemesInput.value.trim();
+				await this.plugin.saveData(settings);
+				await (this.plugin as any).loadSettings();
+				
+				// Clear existing timeout
+				if (timeoutId) {
+					clearTimeout(timeoutId);
+				}
+				
+				// Debounce the configuration application
+				timeoutId = window.setTimeout(async () => {
+					try {
+						await this.applyCurrentConfiguration();
+						new Notice('Custom themes updated and applied to config.ts');
+					} catch (error) {
+						new Notice(`Failed to apply custom themes: ${error instanceof Error ? error.message : String(error)}`);
+					}
+				}, 1000); // 1 second debounce
 			});
 		}
 
 		// Custom Theme Section
 		const customThemeSection = container.createDiv('settings-section');
-		customThemeSection.createEl('h3', { text: 'Custom Theme' });
-		customThemeSection.createEl('p', { text: 'Extract colors from your current Obsidian theme and create a custom theme file.' });
 
-		// Use custom theme toggle
+		// Generate custom theme toggle
 		new Setting(customThemeSection)
-			.setName('Use custom theme')
-			.setDesc('Enable to use a custom theme extracted from your Obsidian theme')
+			.setName('Generate custom theme')
+			.setDesc('Enable to extract colors from your Obsidian theme and generate custom theme files')
 			.addToggle(toggle => {
-				const isCustomTheme = settings.currentTheme === 'custom';
-				toggle.setValue(isCustomTheme);
+				toggle.setValue(settings.customThemeGenerationEnabled || false);
 				toggle.onChange(async (value) => {
+					settings.customThemeGenerationEnabled = value;
+					
 					if (value) {
-						// Switch to custom theme
-						settings.currentTheme = 'custom';
-						settings.customThemeFile = 'custom';
-					} else {
-						// Switch back to oxygen theme
-						settings.currentTheme = 'oxygen';
+						// Initialize custom theme settings if they don't exist
+						if (!settings.themeColors) {
+							settings.themeColors = {
+								mode: 'simple',
+								extractedColors: undefined,
+								simpleColors: {
+									accent: '#5865f2',
+									background: '#1e1e1e'
+								},
+								lastExtracted: undefined
+							};
+						}
 					}
 					await this.plugin.saveData(settings);
 					await (this.plugin as any).loadSettings();
 					
 					// Re-render to show/hide custom theme options
 					this.render(container);
-					
-					// Apply theme change to config.ts
-					try {
-						const success = await (this.plugin as any).configManager.updateThemeOnly(settings.currentTheme);
-						if (success) {
-							new Notice(`Theme changed to ${settings.currentTheme} and applied to config.ts`);
-						} else {
-							new Notice(`Failed to apply theme change to config.ts`);
-						}
-					} catch (error) {
-						new Notice(`Failed to apply theme change: ${error instanceof Error ? error.message : String(error)}`);
-					}
 				});
 			});
 
 		// Show custom theme options when enabled
-		if (settings.currentTheme === 'custom') {
+		if (settings.customThemeGenerationEnabled) {
+			// Theme file name input (always visible when custom theme generation is enabled)
+			this.createTextSetting(
+				customThemeSection,
+				'Custom theme file name',
+				'Filename for the generated theme file (without .ts extension)',
+				settings.customThemeFile || 'custom',
+				(value) => {
+					settings.customThemeFile = value;
+				}
+			);
+
 			// Extract from Obsidian button
 			new Setting(customThemeSection)
 				.setName('Extract from Obsidian Theme')
@@ -301,18 +390,25 @@ export class StyleTab extends TabRenderer {
 								return;
 							}
 
-							// Generate theme file content
-							const themeContent = ThemeColorExtractor.generateThemeFileContent(settings.themeColors.extractedColors, 'custom');
+							// Get the custom theme filename from settings
+							const themeFileName = settings.customThemeFile || 'custom';
 							
-							// Save to custom theme file - use the correct path (two levels up from vault)
-							const filePath = '../../src/themes/custom/custom.ts';
+							// Generate theme file content with the custom theme name
+							const themeContent = ThemeColorExtractor.generateThemeFileContent(settings.themeColors.extractedColors, themeFileName);
+							
+							// Save to custom theme file - use the custom filename
+							const filePath = `../../src/themes/custom/${themeFileName}.ts`;
 							await this.app.vault.adapter.write(filePath, themeContent);
 							
-							// Apply theme change to config.ts
+							// Update settings with the custom theme file name
+							settings.customThemeFile = themeFileName;
+							await this.plugin.saveData(settings);
+							
+							// Apply theme and customThemeFile changes to config.ts
 							try {
-								const success = await (this.plugin as any).configManager.updateThemeOnly('custom');
+								const success = await (this.plugin as any).configManager.updateIndividualFeatures(settings);
 								if (success) {
-									new Notice('Custom theme file saved and applied successfully!');
+									new Notice(`${themeFileName}.ts saved successfully! Use the main theme dropdown to switch to "custom" if you want to use this theme.`);
 								} else {
 									new Notice('Theme file saved but failed to apply to config.ts');
 								}
@@ -323,13 +419,12 @@ export class StyleTab extends TabRenderer {
 							new Notice(`Failed to save theme file: ${error instanceof Error ? error.message : String(error)}`);
 						}
 					});
-				});
+			});
 		}
 
 		// Typography section
 		const typographySection = container.createDiv('settings-section');
 		typographySection.createEl('h3', { text: 'Typography' });
-		typographySection.createEl('p', { text: 'Configure your font settings.' });
 
 		// Heading font dropdown
 		new Setting(typographySection)

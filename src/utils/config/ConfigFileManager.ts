@@ -165,16 +165,23 @@ export class ConfigFileManager {
 		}
 
 		// Extract available themes
-		const availableThemesMatch = configContent.match(/\/\/ \[CONFIG:AVAILABLE_THEMES\]\s*\n\s*availableThemes:\s*(?:"all"|\[[^\]]*\])/);
+		const availableThemesMatch = configContent.match(/\/\/ \[CONFIG:AVAILABLE_THEMES\]\s*\n\s*availableThemes:\s*(?:"default"|\[[^\]]*\])/);
 		if (availableThemesMatch) {
 			const value = availableThemesMatch[0].match(/availableThemes:\s*(.+)$/)?.[1];
-			if (value === '"all"') {
-				config.availableThemes = 'all';
+			if (value === '"default"') {
+				config.availableThemes = 'default';
 			} else if (value?.startsWith('[') && value?.endsWith(']')) {
 				// Parse array format: ["oxygen", "minimal", "nord"]
 				const themesArray = value.slice(1, -1).split(',').map(theme => theme.trim().replace(/"/g, ''));
 				config.availableThemes = themesArray as any;
 			}
+		}
+
+		// Extract custom themes
+		const customThemesMatch = configContent.match(/\/\/ \[CONFIG:CUSTOM_THEMES\]\s*\n\s*customThemes:\s*"[^"]*"/);
+		if (customThemesMatch) {
+			const value = customThemesMatch[0].match(/customThemes:\s*"([^"]*)"/)?.[1];
+			config.customThemes = value || '';
 		}
 
 		// Extract typography settings

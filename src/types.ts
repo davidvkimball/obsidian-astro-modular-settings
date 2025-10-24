@@ -60,7 +60,11 @@ export interface AstroModularSettings {
 	};
 
 	// Available themes customization
-	availableThemes: "all" | Array<Exclude<ThemeType, 'custom'>>;
+	availableThemes: "default" | Array<Exclude<ThemeType, 'custom'>>;
+	customThemes?: string; // Comma-separated custom theme names
+	
+	// Custom theme generation
+	customThemeGenerationEnabled?: boolean;
 }
 
 export interface SiteInformation {
@@ -605,7 +609,9 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 		projects: true, // Will be overridden based on template
 		docs: true, // Will be overridden based on template
 	},
-	availableThemes: 'all',
+	availableThemes: 'default',
+	customThemes: '',
+	customThemeGenerationEnabled: false,
 };
 
 export const THEME_OPTIONS: ThemeOption[] = [

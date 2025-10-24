@@ -10,8 +10,6 @@ export class ConfigTab extends TabRenderer {
 
 		// Settings section header
 		const settingsSection = container.createDiv('settings-section');
-		const header = settingsSection.createEl('h2', { text: 'Configuration' });
-		const description = settingsSection.createEl('p', { text: 'Configure your template and content organization. Changes are applied to your config.ts file immediately.' });
 
 		// Template selector
 		new Setting(container)

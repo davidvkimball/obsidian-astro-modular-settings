@@ -688,6 +688,11 @@
 	margin-bottom: 0;
 }
 
+/* Remove top border from first setting item when it comes after an empty settings-section */
+.astro-modular-settings .tab-content .settings-section:empty + .setting-item {
+	border-top: none !important;
+}
+
 .astro-modular-settings .setting-item-description {
 	margin: 4px 0 0 0;
 	color: var(--text-muted);
