@@ -6,12 +6,15 @@ export class ThemeStep extends BaseWizardStep {
 		const state = this.getState();
 		const isDarkMode = this.isObsidianDarkMode();
 		
+		// Filter out 'custom' theme from wizard - it's only for advanced users in settings
+		const wizardThemes = THEME_OPTIONS.filter(theme => theme.id !== 'custom');
+		
 		container.innerHTML = `
 			<div class="theme-selection">
 				<h2>Choose your theme</h2>
 				<p>Select a color scheme that matches your style and content.</p>
 				<div class="theme-options">
-					${THEME_OPTIONS.map(theme => `
+					${wizardThemes.map(theme => `
 						<div class="theme-option ${state.selectedTheme === theme.id ? 'selected' : ''}" 
 							 data-theme="${theme.id}" 
 							 style="background: ${isDarkMode ? theme.backgroundColorDark : theme.backgroundColorLight};">

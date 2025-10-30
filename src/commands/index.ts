@@ -18,7 +18,11 @@ export function registerCommands(plugin: Plugin) {
 	plugin.addCommand({
 		id: 'run-setup-wizard',
 		name: 'Run Setup Wizard',
-		callback: () => {
+		callback: async () => {
+			// Reload settings to ensure we have the latest values
+			await plugin.loadData().then((data: any) => {
+				Object.assign((plugin as any).settings, data);
+			});
 			const wizard = new SetupWizardModal(plugin.app, plugin);
 			wizard.open();
 		}

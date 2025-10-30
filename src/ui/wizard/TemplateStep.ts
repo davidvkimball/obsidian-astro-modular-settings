@@ -93,6 +93,9 @@ export class TemplateStep extends BaseWizardStep {
 			return;
 		}
 
+		// CRITICAL: Get full template config including all settings
+		const templateConfig = (this.plugin as any).configManager.getTemplateConfig(template, settings);
+
 		// Update settings from the preset's config
 		// NOTE: We do NOT update theme or contentOrganization - those are separate user choices
 		
@@ -103,6 +106,119 @@ export class TemplateStep extends BaseWizardStep {
 			settings.features = { ...settings.features, ...templatePreset.config.features };
 			settings.features.comments = currentComments;
 			settings.features.profilePicture = currentProfilePicture;
+			
+			// CRITICAL: Sync postOptions with features to maintain data integrity
+			// postOptions.graphView.enabled is the source of truth
+			if (settings.postOptions?.graphView) {
+				settings.postOptions.graphView.enabled = templatePreset.config.features.graphView ?? false;
+				settings.features.graphView = settings.postOptions.graphView.enabled;
+			}
+			
+			// Sync linked mentions
+			if (settings.postOptions?.linkedMentions) {
+				settings.postOptions.linkedMentions.enabled = templatePreset.config.features.linkedMentions ?? false;
+				settings.postOptions.linkedMentions.linkedMentionsCompact = templatePreset.config.features.linkedMentionsCompact ?? false;
+			}
+			
+			// Sync command palette quick actions
+			if (settings.commandPalette?.quickActions && templatePreset.config.features.quickActions) {
+				settings.commandPalette.quickActions = { ...settings.commandPalette.quickActions, ...templatePreset.config.features.quickActions };
+			}
+		}
+		
+		// CRITICAL: Update ALL settings from template config (same as ConfigTab)
+		
+		// Update command palette
+		if (templateConfig.commandPalette) {
+			settings.commandPalette = {
+				...settings.commandPalette,
+				enabled: templateConfig.commandPalette.enabled ?? settings.commandPalette.enabled,
+				placeholder: templateConfig.commandPalette.placeholder ?? settings.commandPalette.placeholder,
+				shortcut: templateConfig.commandPalette.shortcut ?? settings.commandPalette.shortcut,
+				search: {
+					...settings.commandPalette.search,
+					...(templateConfig.commandPalette.search || {})
+				},
+				sections: {
+					...settings.commandPalette.sections,
+					...(templateConfig.commandPalette.sections || {})
+				},
+				quickActions: {
+					...settings.commandPalette.quickActions,
+					...(templatePreset.config.features.quickActions || {})
+				}
+			};
+			
+			if (templatePreset.config.features.quickActions) {
+				settings.features.quickActions = {
+					...settings.features.quickActions,
+					...templatePreset.config.features.quickActions
+				};
+			}
+		}
+		
+		// Update home options
+		if (templateConfig.homeOptions) {
+			settings.homeOptions = {
+				...settings.homeOptions,
+				featuredPost: {
+					...settings.homeOptions.featuredPost,
+					...(templateConfig.homeOptions.featuredPost || {})
+				},
+				recentPosts: {
+					...settings.homeOptions.recentPosts,
+					...(templateConfig.homeOptions.recentPosts || {})
+				},
+				projects: {
+					...settings.homeOptions.projects,
+					...(templateConfig.homeOptions.projects || {})
+				},
+				docs: {
+					...settings.homeOptions.docs,
+					...(templateConfig.homeOptions.docs || {})
+				},
+				blurb: {
+					...settings.homeOptions.blurb,
+					...(templateConfig.homeOptions.blurb || {})
+				}
+			};
+		}
+		
+		// Update post options
+		if (templateConfig.postOptions) {
+			settings.postOptions = {
+				...settings.postOptions,
+				postsPerPage: templateConfig.postOptions.postsPerPage ?? settings.postOptions.postsPerPage,
+				readingTime: templateConfig.postOptions.readingTime ?? settings.postOptions.readingTime,
+				wordCount: templateConfig.postOptions.wordCount ?? settings.postOptions.wordCount,
+				tags: templateConfig.postOptions.tags ?? settings.postOptions.tags,
+				postNavigation: templateConfig.postOptions.postNavigation ?? settings.postOptions.postNavigation,
+				showPostCardCoverImages: templateConfig.postOptions.showPostCardCoverImages ?? settings.postOptions.showPostCardCoverImages,
+				postCardAspectRatio: templateConfig.postOptions.postCardAspectRatio ?? settings.postOptions.postCardAspectRatio,
+				linkedMentions: {
+					...settings.postOptions.linkedMentions,
+					...(templateConfig.postOptions.linkedMentions || {})
+				},
+				graphView: {
+					...settings.postOptions.graphView,
+					enabled: templateConfig.postOptions.graphView?.enabled ?? settings.postOptions.graphView.enabled,
+					showInSidebar: templateConfig.postOptions.graphView?.showInSidebar ?? settings.postOptions.graphView.showInSidebar,
+					maxNodes: templateConfig.postOptions.graphView?.maxNodes ?? settings.postOptions.graphView.maxNodes,
+					showOrphanedPosts: templateConfig.postOptions.graphView?.showOrphanedPosts ?? settings.postOptions.graphView.showOrphanedPosts
+				},
+				comments: settings.postOptions.comments  // Preserve comments
+			};
+		}
+		
+		// Update navigation
+		if (templateConfig.navigation) {
+			settings.navigation = {
+				...settings.navigation,
+				showNavigation: templateConfig.navigation.showNavigation ?? settings.navigation.showNavigation,
+				showMobileMenu: templateConfig.navigation.showMobileMenu ?? settings.navigation.showMobileMenu,
+				style: templateConfig.navigation.style ?? settings.navigation.style
+				// Preserve pages and social arrays from user settings
+			};
 		}
 		
 		// Update table of contents settings from preset
@@ -110,12 +226,23 @@ export class TemplateStep extends BaseWizardStep {
 			settings.tableOfContents = { ...settings.tableOfContents, ...templatePreset.config.tableOfContents };
 		}
 		
-		// Update optional content types
-		const isStandard = template === 'standard';
-		settings.optionalContentTypes = {
-			projects: isStandard,
-			docs: isStandard
-		};
+		// Update optional content types from template config
+		if (templateConfig.optionalContentTypes) {
+			settings.optionalContentTypes = {
+				projects: templateConfig.optionalContentTypes.projects ?? false,
+				docs: templateConfig.optionalContentTypes.docs ?? false
+			};
+		}
+		
+		// CRITICAL: Update footer settings from template config
+		if (templateConfig.footer) {
+			settings.footer = {
+				...settings.footer,
+				showSocialIconsInFooter: templateConfig.footer.showSocialIconsInFooter ?? settings.footer.showSocialIconsInFooter
+			};
+			// Sync features.showSocialIconsInFooter
+			settings.features.showSocialIconsInFooter = templateConfig.footer.showSocialIconsInFooter ?? settings.features.showSocialIconsInFooter;
+		}
 
 		// Save the updated settings
 		await this.plugin.saveData(settings);

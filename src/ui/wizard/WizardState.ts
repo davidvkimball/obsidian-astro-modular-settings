@@ -300,6 +300,10 @@ export class WizardStateManager {
 	buildFinalSettings(): void {
 		// Update plugin.settings directly instead of returning a new object
 		const settings = (this.plugin as any).settings;
+		
+		// Store the original template to detect if it changed
+		const originalTemplate = settings.currentTemplate;
+		
 		settings.currentTemplate = this.state.selectedTemplate;
 		settings.currentTheme = this.state.selectedTheme;
 		settings.contentOrganization = this.state.selectedContentOrg;
@@ -311,21 +315,34 @@ export class WizardStateManager {
 		settings.deployment.platform = this.state.selectedDeployment;
 		settings.runWizardOnStartup = this.state.runWizardOnStartup;
 
-		// Apply template preset changes if template was changed
-		// This ensures template changes are only applied when the wizard is completed
-		const originalSettings = (this.plugin as any).settings;
-		if (this.state.selectedTemplate !== originalSettings.currentTemplate) {
+		// CRITICAL: Sync postOptions and commandPalette with features after wizard completion
+		// This ensures data.json has consistent values
+		if (this.state.selectedFeatures) {
+			// Sync postOptions.graphView with features.graphView
+			if (settings.postOptions?.graphView) {
+				settings.postOptions.graphView.enabled = this.state.selectedFeatures.graphView ?? false;
+			}
+			
+			// Sync linked mentions
+			if (settings.postOptions?.linkedMentions) {
+				settings.postOptions.linkedMentions.enabled = this.state.selectedFeatures.linkedMentions ?? false;
+				settings.postOptions.linkedMentions.linkedMentionsCompact = this.state.selectedFeatures.linkedMentionsCompact ?? false;
+			}
+			
+			// Sync command palette quick actions
+			if (settings.commandPalette?.quickActions && this.state.selectedFeatures.quickActions) {
+				settings.commandPalette.quickActions = { 
+					...settings.commandPalette.quickActions, 
+					...this.state.selectedFeatures.quickActions 
+				};
+			}
+		}
+
+		// ONLY apply template preset changes if the template was actually changed
+		// This prevents reverting user customizations when navigating the wizard
+		if (this.state.selectedTemplate !== originalTemplate) {
 			const templatePreset = (this.plugin as any).configManager.getTemplatePreset(this.state.selectedTemplate);
 			if (templatePreset && templatePreset.config) {
-				// Update features from preset (preserving user preferences for comments/profilePicture)
-				if (templatePreset.config.features) {
-					const currentComments = settings.features.comments;
-					const currentProfilePicture = settings.features.profilePicture;
-					settings.features = { ...settings.features, ...templatePreset.config.features };
-					settings.features.comments = currentComments;
-					settings.features.profilePicture = currentProfilePicture;
-				}
-				
 				// Update table of contents settings from preset
 				if (templatePreset.config.tableOfContents) {
 					settings.tableOfContents = { ...settings.tableOfContents, ...templatePreset.config.tableOfContents };

@@ -120,4 +120,9 @@ export class ConfigManager {
 			return null;
 		}
 	}
+
+	getTemplateConfig(templateName: string, settings: AstroModularSettings): any {
+		// Expose template config from presetModifier for template switching
+		return this.presetModifier.getTemplateConfig(templateName, settings);
+	}
 }

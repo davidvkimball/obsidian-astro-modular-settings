@@ -314,6 +314,77 @@ export class ConfigFileManager {
 		if (commandPaletteMatch) {
 			config.commandPalette.enabled = commandPaletteMatch[1] === 'true';
 		}
+		
+		const commandPalettePlaceholderMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_PLACEHOLDER\]\s*placeholder:\s*['"`]([^'"`]+)['"`]/);
+		if (commandPalettePlaceholderMatch) {
+			config.commandPalette.placeholder = commandPalettePlaceholderMatch[1];
+		}
+		
+		const commandPaletteShortcutMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_SHORTCUT\]\s*shortcut:\s*['"`]([^'"`]+)['"`]/);
+		if (commandPaletteShortcutMatch) {
+			config.commandPalette.shortcut = commandPaletteShortcutMatch[1];
+		}
+		
+		// Command palette search options
+		config.commandPalette.search = {};
+		const searchPostsMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_SEARCH_POSTS\]\s*posts:\s*(true|false)/);
+		if (searchPostsMatch) {
+			config.commandPalette.search.posts = searchPostsMatch[1] === 'true';
+		}
+		
+		const searchPagesMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_SEARCH_PAGES\]\s*pages:\s*(true|false)/);
+		if (searchPagesMatch) {
+			config.commandPalette.search.pages = searchPagesMatch[1] === 'true';
+		}
+		
+		const searchProjectsMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_SEARCH_PROJECTS\]\s*projects:\s*(true|false)/);
+		if (searchProjectsMatch) {
+			config.commandPalette.search.projects = searchProjectsMatch[1] === 'true';
+		}
+		
+		const searchDocsMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_SEARCH_DOCS\]\s*docs:\s*(true|false)/);
+		if (searchDocsMatch) {
+			config.commandPalette.search.docs = searchDocsMatch[1] === 'true';
+		}
+		
+		// Command palette sections
+		config.commandPalette.sections = {};
+		const sectionsQuickActionsMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_SECTIONS_QUICK_ACTIONS\]\s*quickActions:\s*(true|false)/);
+		if (sectionsQuickActionsMatch) {
+			config.commandPalette.sections.quickActions = sectionsQuickActionsMatch[1] === 'true';
+		}
+		
+		const sectionsPagesMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_SECTIONS_PAGES\]\s*pages:\s*(true|false)/);
+		if (sectionsPagesMatch) {
+			config.commandPalette.sections.pages = sectionsPagesMatch[1] === 'true';
+		}
+		
+		const sectionsSocialMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_SECTIONS_SOCIAL\]\s*social:\s*(true|false)/);
+		if (sectionsSocialMatch) {
+			config.commandPalette.sections.social = sectionsSocialMatch[1] === 'true';
+		}
+		
+		// Command palette quick actions
+		config.commandPalette.quickActions = {};
+		const qaEnabledMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_ENABLED\]\s*enabled:\s*(true|false)/);
+		if (qaEnabledMatch) {
+			config.commandPalette.quickActions.enabled = qaEnabledMatch[1] === 'true';
+		}
+		
+		const qaToggleModeMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_TOGGLE_MODE\]\s*toggleMode:\s*(true|false)/);
+		if (qaToggleModeMatch) {
+			config.commandPalette.quickActions.toggleMode = qaToggleModeMatch[1] === 'true';
+		}
+		
+		const qaGraphViewMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_GRAPH_VIEW\]\s*graphView:\s*(true|false)/);
+		if (qaGraphViewMatch) {
+			config.commandPalette.quickActions.graphView = qaGraphViewMatch[1] === 'true';
+		}
+		
+		const qaChangeThemeMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_CHANGE_THEME\]\s*changeTheme:\s*(true|false)/);
+		if (qaChangeThemeMatch) {
+			config.commandPalette.quickActions.changeTheme = qaChangeThemeMatch[1] === 'true';
+		}
 
 		// Extract site information
 		const siteMatch = configContent.match(/\/\/ \[CONFIG:SITE_URL\]\s*site:\s*['"`]([^'"`]+)['"`]/);

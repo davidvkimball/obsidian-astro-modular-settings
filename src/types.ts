@@ -152,6 +152,9 @@ export interface PostOptions {
 		enabled: boolean;
 		linkedMentionsCompact: boolean;
 	};
+	// Graph view settings - postOptions.graphView.enabled is the SOURCE OF TRUTH
+	// features.graphView is synced from this for UI convenience
+	// quickActions.graphView only controls command palette appearance
 	graphView: {
 		enabled: boolean;
 		showInSidebar: boolean;
@@ -171,6 +174,7 @@ export interface FeatureSettings {
 	linkedMentions: boolean;
 	linkedMentionsCompact: boolean;
 	comments: boolean;
+	// graphView synced FROM postOptions.graphView.enabled (not the other way around)
 	graphView: boolean;
 	postNavigation: boolean;
 	hideScrollBar: boolean;
@@ -187,6 +191,7 @@ export interface FeatureSettings {
 export interface QuickActionsSettings {
 	enabled: boolean;
 	toggleMode: boolean;
+	// graphView here only controls command palette appearance, not the feature itself
 	graphView: boolean;
 	changeTheme: boolean;
 }

@@ -11,6 +11,11 @@ export class ConfigPresetModifier {
 		this.markerValidator = new ConfigMarkerValidator();
 	}
 
+	getTemplateConfig(templateName: string, settings: any): any {
+		// Expose template config for external use
+		return this.templateManager.getTemplateConfig(templateName, settings);
+	}
+
 	updateThemeInConfig(currentConfig: string, theme: string): string {
 		// Update only the theme setting in the config file
 		const themeMarkerExists = currentConfig.includes('// [CONFIG:THEME]');
@@ -1209,10 +1214,11 @@ export class ConfigPresetModifier {
 			}
 		}
 		
-		// Update graph view enabled
+		// Update graph view enabled - use postOptions.graphView.enabled as source of truth
+		// NOT features.graphView which only controls the UI toggle
 		modifiedConfig = modifiedConfig.replace(
 			/\/\/ \[CONFIG:POST_OPTIONS_GRAPH_VIEW_ENABLED\]\s*enabled:\s*(true|false)/,
-			`// [CONFIG:POST_OPTIONS_GRAPH_VIEW_ENABLED]\n      enabled: ${settings.features.graphView}`
+			`// [CONFIG:POST_OPTIONS_GRAPH_VIEW_ENABLED]\n      enabled: ${settings.postOptions?.graphView?.enabled ?? settings.features.graphView}`
 		);
 		
 		// Update post navigation

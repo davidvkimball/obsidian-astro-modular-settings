@@ -102,9 +102,51 @@ export class AdvancedTab extends TabRenderer {
 							settings.features.showSocialIconsInFooter = currentConfig.footer.showSocialIconsInFooter ?? false;
 						}
 						
-						// Update command palette
+						// Update command palette - comprehensive sync
 						if (currentConfig.commandPalette) {
 							settings.features.commandPalette = currentConfig.commandPalette.enabled ?? false;
+							
+							// Sync all command palette settings
+							if (!settings.commandPalette) {
+								settings.commandPalette = {
+									enabled: true,
+									shortcut: 'ctrl+K',
+									placeholder: 'Search posts',
+									search: { posts: true, pages: false, projects: false, docs: false },
+									sections: { quickActions: true, pages: true, social: true },
+									quickActions: { enabled: true, toggleMode: true, graphView: true, changeTheme: true }
+								};
+							}
+							
+							settings.commandPalette.enabled = currentConfig.commandPalette.enabled ?? settings.commandPalette.enabled;
+							settings.commandPalette.placeholder = currentConfig.commandPalette.placeholder ?? settings.commandPalette.placeholder;
+							settings.commandPalette.shortcut = currentConfig.commandPalette.shortcut ?? settings.commandPalette.shortcut;
+							
+							if (currentConfig.commandPalette.search) {
+								settings.commandPalette.search = {
+									...settings.commandPalette.search,
+									...currentConfig.commandPalette.search
+								};
+							}
+							
+							if (currentConfig.commandPalette.sections) {
+								settings.commandPalette.sections = {
+									...settings.commandPalette.sections,
+									...currentConfig.commandPalette.sections
+								};
+							}
+							
+							if (currentConfig.commandPalette.quickActions) {
+								settings.commandPalette.quickActions = {
+									...settings.commandPalette.quickActions,
+									...currentConfig.commandPalette.quickActions
+								};
+								// Sync to features.quickActions for consistency
+								settings.features.quickActions = {
+									...settings.features.quickActions,
+									...currentConfig.commandPalette.quickActions
+								};
+							}
 						}
 						
 						// Update theme
@@ -138,7 +180,7 @@ export class AdvancedTab extends TabRenderer {
 						await this.plugin.saveData(settings);
 						
 						// Refresh the settings tab to show the synced values
-						(this.plugin as any).triggerSettingsRefresh();
+						await (this.plugin as any).triggerSettingsRefresh();
 						
 						new Notice('Settings synced from config.ts successfully');
 					} catch (error) {
@@ -160,7 +202,7 @@ export class AdvancedTab extends TabRenderer {
 					
 					const contentDiv = confirmModal.contentEl.createDiv();
 					contentDiv.createEl('p', { text: 'Are you sure you want to reset all configuration settings to defaults?' });
-					contentDiv.createEl('p', { text: 'This will preserve your site info and navigation settings.' });
+					contentDiv.createEl('p', { text: 'This will preserve your site info and navigation pages/links.' });
 					
 					const buttonContainer = contentDiv.createDiv();
 					buttonContainer.style.marginTop = '20px';
@@ -181,17 +223,20 @@ export class AdvancedTab extends TabRenderer {
 					confirmButton.addEventListener('click', async () => {
 						confirmModal.close();
 						
-						// Reset only configuration settings, preserve site info and navigation
+						// Reset only configuration settings, preserve site info and navigation pages/links
 						const settings = this.getSettings();
 						const preservedSiteInfo = settings.siteInfo;
-						const preservedNavigation = settings.navigation;
+						const preservedNavigationPages = settings.navigation.pages;
+						const preservedNavigationSocial = settings.navigation.social;
 						
 						// Reset to defaults
 						const resetSettings = { ...DEFAULT_SETTINGS };
 						
 						// Restore preserved settings
 						resetSettings.siteInfo = preservedSiteInfo;
-						resetSettings.navigation = preservedNavigation;
+						// Preserve only user's pages and social links, reset display settings to defaults
+						resetSettings.navigation.pages = preservedNavigationPages;
+						resetSettings.navigation.social = preservedNavigationSocial;
 						
 						// Update the plugin's main settings object
 						(this.plugin as any).settings = resetSettings;
@@ -204,13 +249,13 @@ export class AdvancedTab extends TabRenderer {
 						// Apply the reset configuration to config.ts
 						try {
 							await this.applyCurrentConfiguration();
-							new Notice('Configuration reset to defaults and applied to config.ts (site info and navigation preserved)');
+							new Notice('Configuration reset to defaults and applied to config.ts (site info and navigation pages/links preserved)');
 						} catch (error) {
 							new Notice(`Configuration reset but failed to apply to config.ts: ${error instanceof Error ? error.message : String(error)}`);
 						}
 						
 						// Refresh the settings tab to show the reset values
-						(this.plugin as any).triggerSettingsRefresh();
+						await (this.plugin as any).triggerSettingsRefresh();
 					});
 					
 					// Focus the confirm button

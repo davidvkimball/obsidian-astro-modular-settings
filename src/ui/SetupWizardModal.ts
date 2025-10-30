@@ -77,6 +77,9 @@ export class SetupWizardModal extends Modal {
 
 		// Render footer
 		this.renderFooter(contentEl);
+		
+		// Scroll to top of the modal content after rendering
+		contentEl.scrollTop = 0;
 	}
 
 	private renderHeader(container: HTMLElement) {
@@ -152,8 +155,11 @@ export class SetupWizardModal extends Modal {
 				// Save the final settings
 				await this.plugin.saveData((this.plugin as any).settings);
 				
+				// CRITICAL: Reload settings from disk to ensure everything is synchronized
+				await (this.plugin as any).loadSettings();
+				
 				// Trigger settings tab refresh to show updated values
-				(this.plugin as any).triggerSettingsRefresh();
+				await (this.plugin as any).triggerSettingsRefresh();
 				
 				this.close();
 			});

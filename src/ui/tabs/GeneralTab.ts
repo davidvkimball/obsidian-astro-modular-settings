@@ -51,7 +51,10 @@ export class GeneralTab extends TabRenderer {
 				.setButtonText('Run Setup Wizard')
 				.setCta()
 				.onClick(async () => {
-					// Use the plugin's settings directly - no need to reload
+					// Reload settings to ensure we have the latest values
+					await this.plugin.loadData().then((data: any) => {
+						Object.assign((this.plugin as any).settings, data);
+					});
 					const wizard = new SetupWizardModal(this.app, this.plugin);
 					wizard.open();
 				}));
