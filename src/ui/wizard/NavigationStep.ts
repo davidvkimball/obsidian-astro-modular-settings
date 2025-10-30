@@ -64,48 +64,90 @@ export class NavigationStep extends BaseWizardStep {
 		const state = this.getState();
 
 		// Page handlers - work with selected navigation
-		container.querySelector('#pages-list')?.addEventListener('input', (e) => {
-			const target = e.target as HTMLInputElement;
-			if (target.classList.contains('nav-title') || target.classList.contains('nav-url')) {
-				const item = target.closest('.nav-item');
-				const index = parseInt(item?.getAttribute('data-index') || '0');
-				const field = target.classList.contains('nav-title') ? 'title' : 'url';
-				
-				state.selectedNavigation.pages[index][field] = target.value;
+		const pagesList = container.querySelector('#pages-list');
+		if (pagesList) {
+			const pagesInputHandler = (e: Event) => {
+				const target = e.target as HTMLInputElement;
+				if (target.classList.contains('nav-title') || target.classList.contains('nav-url')) {
+					const item = target.closest('.nav-item');
+					const index = parseInt(item?.getAttribute('data-index') || '0');
+					const field = target.classList.contains('nav-title') ? 'title' : 'url';
+					
+					state.selectedNavigation.pages[index][field] = target.value;
+				}
+			};
+			// Remove old handler if exists
+			if ((pagesList as any)._inputHandler) {
+				pagesList.removeEventListener('input', (pagesList as any)._inputHandler);
 			}
-		});
+			(pagesList as any)._inputHandler = pagesInputHandler;
+			pagesList.addEventListener('input', pagesInputHandler);
+		}
 
 		// Social handlers - work with selected navigation
-		container.querySelector('#social-list')?.addEventListener('input', (e) => {
-			const target = e.target as HTMLInputElement;
-			if (target.classList.contains('nav-title') || target.classList.contains('nav-url') || target.classList.contains('nav-icon')) {
-				const item = target.closest('.nav-item');
-				const index = parseInt(item?.getAttribute('data-index') || '0');
-				const field = target.classList.contains('nav-title') ? 'title' : 
-							 target.classList.contains('nav-url') ? 'url' : 'icon';
-				
-				state.selectedNavigation.social[index][field] = target.value;
+		const socialList = container.querySelector('#social-list');
+		if (socialList) {
+			const socialInputHandler = (e: Event) => {
+				const target = e.target as HTMLInputElement;
+				if (target.classList.contains('nav-title') || target.classList.contains('nav-url') || target.classList.contains('nav-icon')) {
+					const item = target.closest('.nav-item');
+					const index = parseInt(item?.getAttribute('data-index') || '0');
+					const field = target.classList.contains('nav-title') ? 'title' : 
+								 target.classList.contains('nav-url') ? 'url' : 'icon';
+					
+					state.selectedNavigation.social[index][field] = target.value;
+				}
+			};
+			// Remove old handler if exists
+			if ((socialList as any)._inputHandler) {
+				socialList.removeEventListener('input', (socialList as any)._inputHandler);
 			}
-		});
+			(socialList as any)._inputHandler = socialInputHandler;
+			socialList.addEventListener('input', socialInputHandler);
+		}
 
 		// Add page button
-		container.querySelector('#add-page')?.addEventListener('click', () => {
-			state.selectedNavigation.pages.push({ title: 'New Page', url: '/new-page' });
-			this.render(container);
-		});
+		const addPageBtn = container.querySelector('#add-page');
+		if (addPageBtn) {
+			const addPageHandler = () => {
+				state.selectedNavigation.pages.push({ title: 'New Page', url: '/new-page' });
+				this.render(container);
+			};
+			// Remove old handler if exists
+			if ((addPageBtn as any)._clickHandler) {
+				addPageBtn.removeEventListener('click', (addPageBtn as any)._clickHandler);
+			}
+			(addPageBtn as any)._clickHandler = addPageHandler;
+			addPageBtn.addEventListener('click', addPageHandler);
+		}
 
 		// Add social button
-		container.querySelector('#add-social')?.addEventListener('click', () => {
-			state.selectedNavigation.social.push({ title: 'New Social', url: 'https://example.com', icon: '' });
-			this.render(container);
-		});
+		const addSocialBtn = container.querySelector('#add-social');
+		if (addSocialBtn) {
+			const addSocialHandler = () => {
+				state.selectedNavigation.social.push({ title: 'New Social', url: 'https://example.com', icon: '' });
+				this.render(container);
+			};
+			// Remove old handler if exists
+			if ((addSocialBtn as any)._clickHandler) {
+				addSocialBtn.removeEventListener('click', (addSocialBtn as any)._clickHandler);
+			}
+			(addSocialBtn as any)._clickHandler = addSocialHandler;
+			addSocialBtn.addEventListener('click', addSocialHandler);
+		}
 
 		// Remove buttons - work with selected navigation
-		container.addEventListener('click', (e) => {
-			const target = e.target as HTMLButtonElement;
+		// Use event delegation to prevent duplicate handlers
+		const removeHandler = (e: Event) => {
+			const target = e.target as HTMLElement;
 			if (target.classList.contains('nav-remove')) {
+				e.preventDefault();
+				e.stopPropagation();
+				
 				const index = parseInt(target.getAttribute('data-index') || '0');
 				const isPage = target.closest('#pages-list');
+				
+				console.log('Remove clicked:', { index, isPage: !!isPage, target });
 				
 				if (isPage) {
 					state.selectedNavigation.pages.splice(index, 1);
@@ -114,7 +156,14 @@ export class NavigationStep extends BaseWizardStep {
 				}
 				this.render(container);
 			}
-		});
+		};
+		
+		// Remove old handler if exists
+		if ((container as any)._removeHandler) {
+			container.removeEventListener('click', (container as any)._removeHandler);
+		}
+		(container as any)._removeHandler = removeHandler;
+		container.addEventListener('click', removeHandler);
 
 		// Drag and drop functionality
 		this.setupDragAndDrop(container);
@@ -124,26 +173,24 @@ export class NavigationStep extends BaseWizardStep {
 		const state = this.getState();
 		let draggedElement: HTMLElement | null = null;
 
-		// Drag start
-		container.addEventListener('dragstart', (e) => {
+		// Create handlers
+		const dragStartHandler = (e: DragEvent) => {
 			const target = e.target as HTMLElement;
 			if (target.classList.contains('nav-item')) {
 				draggedElement = target;
 				target.style.opacity = '0.5';
 			}
-		});
+		};
 
-		// Drag end
-		container.addEventListener('dragend', (e) => {
+		const dragEndHandler = (e: DragEvent) => {
 			const target = e.target as HTMLElement;
 			if (target.classList.contains('nav-item')) {
 				target.style.opacity = '1';
 				draggedElement = null;
 			}
-		});
+		};
 
-		// Drag over
-		container.addEventListener('dragover', (e) => {
+		const dragOverHandler = (e: DragEvent) => {
 			e.preventDefault();
 			const target = e.target as HTMLElement;
 			if (target.classList.contains('nav-item') && draggedElement && target !== draggedElement) {
@@ -158,19 +205,17 @@ export class NavigationStep extends BaseWizardStep {
 					target.style.borderTop = 'none';
 				}
 			}
-		});
+		};
 
-		// Drag leave
-		container.addEventListener('dragleave', (e) => {
+		const dragLeaveHandler = (e: DragEvent) => {
 			const target = e.target as HTMLElement;
 			if (target.classList.contains('nav-item')) {
 				target.style.borderTop = 'none';
 				target.style.borderBottom = 'none';
 			}
-		});
+		};
 
-		// Drop
-		container.addEventListener('drop', (e) => {
+		const dropHandler = (e: DragEvent) => {
 			e.preventDefault();
 			const target = e.target as HTMLElement;
 			
@@ -195,6 +240,29 @@ export class NavigationStep extends BaseWizardStep {
 					this.render(container);
 				}
 			}
-		});
+		};
+
+		// Remove old handlers if they exist
+		if ((container as any)._dragStartHandler) {
+			container.removeEventListener('dragstart', (container as any)._dragStartHandler);
+			container.removeEventListener('dragend', (container as any)._dragEndHandler);
+			container.removeEventListener('dragover', (container as any)._dragOverHandler);
+			container.removeEventListener('dragleave', (container as any)._dragLeaveHandler);
+			container.removeEventListener('drop', (container as any)._dropHandler);
+		}
+
+		// Store handlers for later removal
+		(container as any)._dragStartHandler = dragStartHandler;
+		(container as any)._dragEndHandler = dragEndHandler;
+		(container as any)._dragOverHandler = dragOverHandler;
+		(container as any)._dragLeaveHandler = dragLeaveHandler;
+		(container as any)._dropHandler = dropHandler;
+
+		// Add new handlers
+		container.addEventListener('dragstart', dragStartHandler);
+		container.addEventListener('dragend', dragEndHandler);
+		container.addEventListener('dragover', dragOverHandler);
+		container.addEventListener('dragleave', dragLeaveHandler);
+		container.addEventListener('drop', dropHandler);
 	}
 }

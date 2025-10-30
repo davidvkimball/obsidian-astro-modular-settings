@@ -3,9 +3,12 @@ import { TabRenderer } from '../common/TabRenderer';
 
 export class NavigationTab extends TabRenderer {
 	private saveTimeoutId: number | null = null;
+	private listenersAttached: boolean = false;
 
 	render(container: HTMLElement): void {
+		// Clear the container and reset listeners flag
 		container.empty();
+		this.listenersAttached = false;
 		const settings = this.getSettings();
 
 		// Settings section header
@@ -90,12 +93,6 @@ export class NavigationTab extends TabRenderer {
 					}));
 
 
-		// Setup event delegation for input fields and remove buttons
-		this.setupEventDelegation(container);
-		
-		// Drag and drop functionality - EXACT copy from wizard
-		this.setupDragAndDrop(container);
-
 		// Navigation Options section
 		const navOptionsSection = container.createDiv('settings-section');
 		navOptionsSection.style.marginTop = '30px';
@@ -149,31 +146,36 @@ export class NavigationTab extends TabRenderer {
 				await this.applyCurrentConfiguration();
 					new Notice(`Mobile menu ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
 				}));
+
+		// Setup event delegation for input fields and remove buttons
+		// This must be done AFTER all DOM elements are created
+		this.setupEventDelegation(container);
+		
+		// Drag and drop functionality
+		this.setupDragAndDrop(container);
 	}
 
 	private setupDragAndDrop(container: HTMLElement): void {
 		let draggedElement: HTMLElement | null = null;
 
-		// Drag start
-		container.addEventListener('dragstart', (e) => {
+		// Create handlers
+		const dragStartHandler = (e: DragEvent) => {
 			const target = e.target as HTMLElement;
 			if (target.classList.contains('nav-item')) {
 				draggedElement = target;
 				target.style.opacity = '0.5';
 			}
-		});
+		};
 
-		// Drag end
-		container.addEventListener('dragend', (e) => {
+		const dragEndHandler = (e: DragEvent) => {
 			const target = e.target as HTMLElement;
 			if (target.classList.contains('nav-item')) {
 				target.style.opacity = '1';
 				draggedElement = null;
 			}
-		});
+		};
 
-		// Drag over
-		container.addEventListener('dragover', (e) => {
+		const dragOverHandler = (e: DragEvent) => {
 			e.preventDefault();
 			const target = e.target as HTMLElement;
 			if (target.classList.contains('nav-item') && draggedElement && target !== draggedElement) {
@@ -188,19 +190,17 @@ export class NavigationTab extends TabRenderer {
 					target.style.borderTop = 'none';
 				}
 			}
-		});
+		};
 
-		// Drag leave
-		container.addEventListener('dragleave', (e) => {
+		const dragLeaveHandler = (e: DragEvent) => {
 			const target = e.target as HTMLElement;
 			if (target.classList.contains('nav-item')) {
 				target.style.borderTop = 'none';
 				target.style.borderBottom = 'none';
 			}
-		});
+		};
 
-		// Drop
-		container.addEventListener('drop', async (e) => {
+		const dropHandler = async (e: DragEvent) => {
 			e.preventDefault();
 			const target = e.target as HTMLElement;
 			
@@ -215,83 +215,131 @@ export class NavigationTab extends TabRenderer {
 				target.style.borderBottom = 'none';
 				
 				if (targetIndex !== draggedIndex) {
-					const settings = this.getSettings();
+					const currentSettings = this.getSettings();
 					if (isPage) {
-						const newPages = [...settings.navigation.pages];
+						const newPages = [...currentSettings.navigation.pages];
 						const draggedItem = newPages.splice(draggedIndex, 1)[0];
 						newPages.splice(targetIndex, 0, draggedItem);
 						
-						settings.navigation.pages = newPages;
+						currentSettings.navigation.pages = newPages;
 					} else if (isSocial) {
-						const newSocial = [...settings.navigation.social];
+						const newSocial = [...currentSettings.navigation.social];
 						const draggedItem = newSocial.splice(draggedIndex, 1)[0];
 						newSocial.splice(targetIndex, 0, draggedItem);
 						
-						settings.navigation.social = newSocial;
+						currentSettings.navigation.social = newSocial;
 					}
 					
 					// Save changes
-					await this.plugin.saveData(settings);
+					await this.plugin.saveData(currentSettings);
 					await this.applyCurrentConfiguration();
 					
 					// Re-render to update data indices and visual order
 					this.render(container);
 				}
 			}
-		});
+		};
+
+		// Remove old handlers if they exist
+		if ((container as any)._dragStartHandler) {
+			container.removeEventListener('dragstart', (container as any)._dragStartHandler);
+			container.removeEventListener('dragend', (container as any)._dragEndHandler);
+			container.removeEventListener('dragover', (container as any)._dragOverHandler);
+			container.removeEventListener('dragleave', (container as any)._dragLeaveHandler);
+			container.removeEventListener('drop', (container as any)._dropHandler);
+		}
+
+		// Store handlers for later removal
+		(container as any)._dragStartHandler = dragStartHandler;
+		(container as any)._dragEndHandler = dragEndHandler;
+		(container as any)._dragOverHandler = dragOverHandler;
+		(container as any)._dragLeaveHandler = dragLeaveHandler;
+		(container as any)._dropHandler = dropHandler;
+
+		// Add new handlers
+		container.addEventListener('dragstart', dragStartHandler);
+		container.addEventListener('dragend', dragEndHandler);
+		container.addEventListener('dragover', dragOverHandler);
+		container.addEventListener('dragleave', dragLeaveHandler);
+		container.addEventListener('drop', dropHandler);
 	}
 
 	private setupEventDelegation(container: HTMLElement): void {
 		const settings = this.getSettings();
 		
-		// Handle input changes for pages
-		container.querySelector('#pages-list')?.addEventListener('input', (e) => {
-			const target = e.target as HTMLInputElement;
-			if (target.classList.contains('nav-title') || target.classList.contains('nav-url')) {
-				const item = target.closest('.nav-item');
-				const index = parseInt(item?.getAttribute('data-index') || '0');
-				const field = target.classList.contains('nav-title') ? 'title' : 'url';
-				
-				settings.navigation.pages[index][field] = target.value;
-				this.debouncedSave();
-			}
+		// Find the lists
+		const pagesList = container.querySelector('#pages-list');
+		const socialList = container.querySelector('#social-list');
+		
+		// Debug logging
+		console.log('Setting up event delegation:', {
+			pagesList: pagesList ? 'found' : 'NOT FOUND',
+			socialList: socialList ? 'found' : 'NOT FOUND'
 		});
+		
+		// Handle input changes for pages
+		if (pagesList) {
+			pagesList.addEventListener('input', (e) => {
+				const target = e.target as HTMLInputElement;
+				if (target.classList.contains('nav-title') || target.classList.contains('nav-url')) {
+					const item = target.closest('.nav-item');
+					const index = parseInt(item?.getAttribute('data-index') || '0');
+					const field = target.classList.contains('nav-title') ? 'title' : 'url';
+					
+					settings.navigation.pages[index][field] = target.value;
+					this.debouncedSave();
+				}
+			});
+		}
 
 		// Handle input changes for social links
-		container.querySelector('#social-list')?.addEventListener('input', (e) => {
-			const target = e.target as HTMLInputElement;
-			if (target.classList.contains('nav-title') || target.classList.contains('nav-url') || target.classList.contains('nav-icon')) {
-				const item = target.closest('.nav-item');
-				const index = parseInt(item?.getAttribute('data-index') || '0');
-				const field = target.classList.contains('nav-title') ? 'title' : 
-							 target.classList.contains('nav-url') ? 'url' : 'icon';
-				
-				settings.navigation.social[index][field] = target.value;
-				this.debouncedSave();
-			}
-		});
+		if (socialList) {
+			socialList.addEventListener('input', (e) => {
+				const target = e.target as HTMLInputElement;
+				if (target.classList.contains('nav-title') || target.classList.contains('nav-url') || target.classList.contains('nav-icon')) {
+					const item = target.closest('.nav-item');
+					const index = parseInt(item?.getAttribute('data-index') || '0');
+					const field = target.classList.contains('nav-title') ? 'title' : 
+								 target.classList.contains('nav-url') ? 'url' : 'icon';
+					
+					settings.navigation.social[index][field] = target.value;
+					this.debouncedSave();
+				}
+			});
+		}
 
-		// Handle remove button clicks
-		container.addEventListener('click', async (e) => {
-			const target = e.target as HTMLButtonElement;
+		// Handle remove button clicks - use event delegation on container
+		// This is more reliable than attaching to each button
+		const removeHandler = async (e: MouseEvent) => {
+			const target = e.target as HTMLElement;
 			if (target.classList.contains('nav-remove')) {
+				e.preventDefault();
+				e.stopPropagation();
+				
 				const item = target.closest('.nav-item');
 				const index = parseInt(item?.getAttribute('data-index') || '0');
 				const isPage = item?.closest('#pages-list');
+				const currentSettings = this.getSettings(); // Get fresh settings
 				
 				if (isPage) {
-					settings.navigation.pages.splice(index, 1);
+					currentSettings.navigation.pages.splice(index, 1);
 				} else {
-					settings.navigation.social.splice(index, 1);
+					currentSettings.navigation.social.splice(index, 1);
 				}
 				
-				await this.plugin.saveData(settings);
+				await this.plugin.saveData(currentSettings);
 				// Reload settings to ensure the plugin has the latest values
 				await (this.plugin as any).loadSettings();
 				await this.applyCurrentConfiguration();
 				this.render(container); // Re-render to update indices
 			}
-		});
+		};
+		
+		// Remove any existing remove handler to prevent duplicates
+		container.removeEventListener('click', (container as any)._removeHandler);
+		// Store the handler so we can remove it later
+		(container as any)._removeHandler = removeHandler;
+		container.addEventListener('click', removeHandler);
 	}
 
 	private debouncedSave(): void {
