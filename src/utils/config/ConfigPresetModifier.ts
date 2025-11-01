@@ -649,6 +649,54 @@ export class ConfigPresetModifier {
 			`// [CONFIG:SITE_LANGUAGE]\n  language: "${settings.siteInfo.language}"`
 		);
 		
+		// Update favicon theme adaptive
+		if (settings.siteInfo.faviconThemeAdaptive !== undefined) {
+			modifiedConfig = modifiedConfig.replace(
+				/\/\/ \[CONFIG:FAVICON_THEME_ADAPTIVE\]\s*\n\s*faviconThemeAdaptive:\s*(true|false)/,
+				`// [CONFIG:FAVICON_THEME_ADAPTIVE]\n  faviconThemeAdaptive: ${settings.siteInfo.faviconThemeAdaptive}`
+			);
+		}
+		
+		// Update default OG image alt text
+		if (settings.siteInfo.defaultOgImageAlt) {
+			modifiedConfig = modifiedConfig.replace(
+				/\/\/ \[CONFIG:DEFAULT_OG_IMAGE_ALT\]\s*\n\s*defaultOgImageAlt:\s*"[^"]*"/,
+				`// [CONFIG:DEFAULT_OG_IMAGE_ALT]\n  defaultOgImageAlt: "${settings.siteInfo.defaultOgImageAlt}"`
+			);
+		}
+		
+		// Update OG image path (if marker exists)
+		if (settings.siteInfo.ogImage) {
+			modifiedConfig = modifiedConfig.replace(
+				/\/\/ \[CONFIG:OG_IMAGE\]\s*\n\s*ogImage:\s*"[^"]*"/,
+				`// [CONFIG:OG_IMAGE]\n  ogImage: "${settings.siteInfo.ogImage}"`
+			);
+		}
+		
+		// Update favicon path (if marker exists)
+		if (settings.siteInfo.favicon) {
+			modifiedConfig = modifiedConfig.replace(
+				/\/\/ \[CONFIG:FAVICON\]\s*\n\s*favicon:\s*"[^"]*"/,
+				`// [CONFIG:FAVICON]\n  favicon: "${settings.siteInfo.favicon}"`
+			);
+		}
+		
+		// Update favicon light path (if marker exists)
+		if (settings.siteInfo.faviconLight) {
+			modifiedConfig = modifiedConfig.replace(
+				/\/\/ \[CONFIG:FAVICON_LIGHT\]\s*\n\s*faviconLight:\s*"[^"]*"/,
+				`// [CONFIG:FAVICON_LIGHT]\n  faviconLight: "${settings.siteInfo.faviconLight}"`
+			);
+		}
+		
+		// Update favicon dark path (if marker exists)
+		if (settings.siteInfo.faviconDark) {
+			modifiedConfig = modifiedConfig.replace(
+				/\/\/ \[CONFIG:FAVICON_DARK\]\s*\n\s*faviconDark:\s*"[^"]*"/,
+				`// [CONFIG:FAVICON_DARK]\n  faviconDark: "${settings.siteInfo.faviconDark}"`
+			);
+		}
+		
 		// Update navigation pages
 		const pagesArray = settings.navigation.pages.map(page => 
 			`      { title: "${page.title}", url: "${page.url}" }`
@@ -846,11 +894,17 @@ export class ConfigPresetModifier {
 			}
 		}
 		
-		// Update SEO settings
-		if (settings.seo?.defaultOgImageAlt) {
+		// Update SEO settings (backwards compatibility - also check siteInfo)
+		const defaultOgImageAlt = settings.siteInfo?.defaultOgImageAlt || settings.seo?.defaultOgImageAlt;
+		if (defaultOgImageAlt) {
+			// Try both marker formats for backwards compatibility
 			modifiedConfig = modifiedConfig.replace(
 				/\/\/ \[CONFIG:SEO_DEFAULT_OG_IMAGE_ALT\]\s*\n\s*defaultOgImageAlt:\s*"[^"]*"/,
-				`// [CONFIG:SEO_DEFAULT_OG_IMAGE_ALT]\n    defaultOgImageAlt: "${settings.seo.defaultOgImageAlt}"`
+				`// [CONFIG:SEO_DEFAULT_OG_IMAGE_ALT]\n    defaultOgImageAlt: "${defaultOgImageAlt}"`
+			);
+			modifiedConfig = modifiedConfig.replace(
+				/\/\/ \[CONFIG:DEFAULT_OG_IMAGE_ALT\]\s*\n\s*defaultOgImageAlt:\s*"[^"]*"/,
+				`// [CONFIG:DEFAULT_OG_IMAGE_ALT]\n  defaultOgImageAlt: "${defaultOgImageAlt}"`
 			);
 		}
 		

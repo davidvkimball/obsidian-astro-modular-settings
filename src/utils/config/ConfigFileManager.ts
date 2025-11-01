@@ -157,6 +157,36 @@ export class ConfigFileManager {
 		if (siteLangMatch) {
 			config.siteInfo.language = siteLangMatch[1];
 		}
+		
+		const faviconThemeAdaptiveMatch = configContent.match(/\/\/ \[CONFIG:FAVICON_THEME_ADAPTIVE\]\s*\n\s*faviconThemeAdaptive:\s*(true|false)/);
+		if (faviconThemeAdaptiveMatch) {
+			config.faviconThemeAdaptive = faviconThemeAdaptiveMatch[1] === 'true';
+		}
+		
+		const defaultOgImageAltMatch = configContent.match(/\/\/ \[CONFIG:DEFAULT_OG_IMAGE_ALT\]\s*\n\s*defaultOgImageAlt:\s*"([^"]*)"/);
+		if (defaultOgImageAltMatch) {
+			config.defaultOgImageAlt = defaultOgImageAltMatch[1];
+		}
+		
+		const ogImageMatch = configContent.match(/\/\/ \[CONFIG:OG_IMAGE\]\s*\n\s*ogImage:\s*"([^"]*)"/);
+		if (ogImageMatch) {
+			config.ogImage = ogImageMatch[1];
+		}
+		
+		const faviconMatch = configContent.match(/\/\/ \[CONFIG:FAVICON\]\s*\n\s*favicon:\s*"([^"]*)"/);
+		if (faviconMatch) {
+			config.favicon = faviconMatch[1];
+		}
+		
+		const faviconLightMatch = configContent.match(/\/\/ \[CONFIG:FAVICON_LIGHT\]\s*\n\s*faviconLight:\s*"([^"]*)"/);
+		if (faviconLightMatch) {
+			config.faviconLight = faviconLightMatch[1];
+		}
+		
+		const faviconDarkMatch = configContent.match(/\/\/ \[CONFIG:FAVICON_DARK\]\s*\n\s*faviconDark:\s*"([^"]*)"/);
+		if (faviconDarkMatch) {
+			config.faviconDark = faviconDarkMatch[1];
+		}
 
 		// Extract theme
 		const themeMatch = configContent.match(/\/\/ \[CONFIG:THEME\]\s*\n\s*theme:\s*"([^"]*)"/);

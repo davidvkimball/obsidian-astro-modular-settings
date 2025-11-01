@@ -215,20 +215,6 @@ export class FeaturesTab extends TabRenderer {
 					new Notice(`Scroll to top ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
 				}));
 
-		// SEO: Default OG Image Alt
-		this.createTextSetting(
-			globalSection,
-			'Default OG image alt text',
-			'Alternative text for the default Open Graph image (public/open-graph.png)',
-			settings.seo?.defaultOgImageAlt || 'Astro Modular logo.',
-			(value) => {
-				if (!settings.seo) {
-					settings.seo = { defaultOgImageAlt: '' };
-				}
-				settings.seo.defaultOgImageAlt = value;
-			}
-		);
-
 		// Feature button
 		new Setting(globalSection)
 			.setName('Feature button')

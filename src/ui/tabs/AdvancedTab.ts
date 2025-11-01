@@ -49,6 +49,31 @@ export class AdvancedTab extends TabRenderer {
 							settings.siteInfo.language = currentConfig.siteInfo.language ?? settings.siteInfo.language;
 						}
 						
+						// Update favicon and OG image settings from top-level config (they're at the top level in config.ts)
+						if (currentConfig.faviconThemeAdaptive !== undefined) {
+							settings.siteInfo.faviconThemeAdaptive = currentConfig.faviconThemeAdaptive;
+						}
+						if (currentConfig.defaultOgImageAlt) {
+							settings.siteInfo.defaultOgImageAlt = currentConfig.defaultOgImageAlt;
+							// Also update seo for backwards compatibility
+							if (!settings.seo) {
+								settings.seo = { defaultOgImageAlt: '' };
+							}
+							settings.seo.defaultOgImageAlt = currentConfig.defaultOgImageAlt;
+						}
+						if (currentConfig.ogImage) {
+							settings.siteInfo.ogImage = currentConfig.ogImage;
+						}
+						if (currentConfig.favicon) {
+							settings.siteInfo.favicon = currentConfig.favicon;
+						}
+						if (currentConfig.faviconLight) {
+							settings.siteInfo.faviconLight = currentConfig.faviconLight;
+						}
+						if (currentConfig.faviconDark) {
+							settings.siteInfo.faviconDark = currentConfig.faviconDark;
+						}
+						
 						// Update navigation settings
 						if (currentConfig.navigation) {
 							if (currentConfig.navigation.pages) {

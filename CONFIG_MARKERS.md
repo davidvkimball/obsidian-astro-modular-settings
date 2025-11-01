@@ -28,6 +28,12 @@ These markers allow the plugin to find and update specific configuration values 
 - `CONFIG:SITE_DESCRIPTION` - Site description
 - `CONFIG:SITE_AUTHOR` - Author name
 - `CONFIG:SITE_LANGUAGE` - Site language
+- `CONFIG:FAVICON_THEME_ADAPTIVE` - Enable/disable theme-adaptive favicon (switches between light/dark based on browser preference)
+- `CONFIG:DEFAULT_OG_IMAGE_ALT` - Alternative text for the default Open Graph image
+- `CONFIG:OG_IMAGE` - Path to Open Graph image (placed in public/ folder)
+- `CONFIG:FAVICON` - Path to favicon (placed in public/ folder, only used when theme-adaptive is disabled)
+- `CONFIG:FAVICON_LIGHT` - Path to light theme favicon (placed in public/ folder)
+- `CONFIG:FAVICON_DARK` - Path to dark theme favicon (placed in public/ folder)
 
 ### Global Settings
 - `CONFIG:THEME` - Theme selection
@@ -47,7 +53,6 @@ These markers allow the plugin to find and update specific configuration values 
 - `CONFIG:HIDE_SCROLL_BAR` - Hide browser scroll bar
 - `CONFIG:SCROLL_TO_TOP` - Scroll to top button
 - `CONFIG:FEATURE_BUTTON` - Feature button type (mode/graph/theme/none)
-- `CONFIG:SEO_DEFAULT_OG_IMAGE_ALT` - Default Open Graph image alt text
 - `CONFIG:DEPLOYMENT_PLATFORM` - Deployment platform
 
 ### Command Palette

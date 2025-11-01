@@ -73,6 +73,12 @@ export interface SiteInformation {
 	description: string;
 	author: string;
 	language: string;
+	faviconThemeAdaptive?: boolean;
+	defaultOgImageAlt?: string;
+	ogImage?: string;
+	favicon?: string;
+	faviconLight?: string;
+	faviconDark?: string;
 }
 
 export interface LayoutSettings {
@@ -417,6 +423,12 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 		description: 'A flexible blog theme designed for Obsidian users.',
 		author: 'David V. Kimball',
 		language: 'en',
+		faviconThemeAdaptive: true,
+		defaultOgImageAlt: 'Astro Modular logo.',
+		ogImage: '/open-graph.png',
+		favicon: '/favicon.png',
+		faviconLight: '/favicon-light.png',
+		faviconDark: '/favicon-dark.png',
 	},
 	layout: {
 		contentWidth: '45rem',
