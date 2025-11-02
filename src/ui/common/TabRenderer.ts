@@ -23,11 +23,6 @@ export abstract class TabRenderer {
 	protected async applyCurrentConfiguration(showNotice: boolean = false): Promise<void> {
 		try {
 			const settings = this.getSettings();
-			console.log('🔧 applyCurrentConfiguration called with settings:', {
-				currentTheme: settings.currentTheme,
-				optionalContentTypes: settings.optionalContentTypes,
-				features: settings.features
-			});
 			
 			// Apply the current settings to the config file using individual features
 			const success = await (this.plugin as any).configManager.updateIndividualFeatures(settings);

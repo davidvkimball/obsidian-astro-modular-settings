@@ -60,17 +60,6 @@ export class ThemeColorExtractor {
 	 * Extract highlight color scale from Obsidian theme
 	 */
 	private static extractHighlightColors(styles: CSSStyleDeclaration): ColorScale {
-		// Debug: Let's see what colors are actually available in this theme
-		console.log('=== THEME COLOR DEBUG ===');
-		console.log('--text-accent:', styles.getPropertyValue('--text-accent'));
-		console.log('--interactive-accent:', styles.getPropertyValue('--interactive-accent'));
-		console.log('--text-accent-hover:', styles.getPropertyValue('--text-accent-hover'));
-		console.log('--text-a:', styles.getPropertyValue('--text-a'));
-		console.log('--text-link:', styles.getPropertyValue('--text-link'));
-		console.log('--ax1:', styles.getPropertyValue('--ax1'));
-		console.log('--ax2:', styles.getPropertyValue('--ax2'));
-		console.log('--ax3:', styles.getPropertyValue('--ax3'));
-		
 		// Try multiple color sources in order of preference
 		const baseColor = this.getColorValue(styles, '--text-accent') || 
 						  this.getColorValue(styles, '--interactive-accent') ||
@@ -80,10 +69,6 @@ export class ThemeColorExtractor {
 		const hoverColor = this.getColorValue(styles, '--text-accent-hover') || 
 						   this.getColorValue(styles, '--text-a-hover') ||
 						   baseColor;
-		
-		console.log('Base color:', baseColor);
-		console.log('Hover color:', hoverColor);
-		console.log('=== END DEBUG ===');
 		
 		// Use the raw colors directly in the scale
 		return {

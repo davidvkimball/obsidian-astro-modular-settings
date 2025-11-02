@@ -147,8 +147,6 @@ export class NavigationStep extends BaseWizardStep {
 				const index = parseInt(target.getAttribute('data-index') || '0');
 				const isPage = target.closest('#pages-list');
 				
-				console.log('Remove clicked:', { index, isPage: !!isPage, target });
-				
 				if (isPage) {
 					state.selectedNavigation.pages.splice(index, 1);
 				} else {

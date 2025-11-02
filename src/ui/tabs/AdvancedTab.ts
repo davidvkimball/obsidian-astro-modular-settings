@@ -61,18 +61,6 @@ export class AdvancedTab extends TabRenderer {
 							}
 							settings.seo.defaultOgImageAlt = currentConfig.defaultOgImageAlt;
 						}
-						if (currentConfig.ogImage) {
-							settings.siteInfo.ogImage = currentConfig.ogImage;
-						}
-						if (currentConfig.favicon) {
-							settings.siteInfo.favicon = currentConfig.favicon;
-						}
-						if (currentConfig.faviconLight) {
-							settings.siteInfo.faviconLight = currentConfig.faviconLight;
-						}
-						if (currentConfig.faviconDark) {
-							settings.siteInfo.faviconDark = currentConfig.faviconDark;
-						}
 						
 						// Update navigation settings
 						if (currentConfig.navigation) {

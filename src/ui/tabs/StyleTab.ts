@@ -694,9 +694,6 @@ export class StyleTab extends TabRenderer {
 		const accentColor = settings.themeColors.extractedColors?.highlight?.[500] || '#5865f2';
 		const backgroundColor = settings.themeColors.extractedColors?.primary?.[800] || '#1e1e1e';
 		
-		console.log('Simple editor - accent color:', accentColor);
-		console.log('Simple editor - background color:', backgroundColor);
-		
 		settings.themeColors.simpleColors = {
 			accent: accentColor,
 			background: backgroundColor

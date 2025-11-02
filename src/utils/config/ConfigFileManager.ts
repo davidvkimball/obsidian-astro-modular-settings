@@ -78,8 +78,6 @@ export class ConfigFileManager {
 	}
 
 	async writeConfig(content: string): Promise<boolean> {
-		console.log('🔧 writeConfig called with content length:', content.length);
-		
 		// Try to write the file outside the vault using Node.js fs
 		try {
 			const fs = require('fs');
@@ -92,12 +90,8 @@ export class ConfigFileManager {
 			const vaultPathString = typeof vaultPath === 'string' ? vaultPath : (vaultPath ? String(vaultPath) : '');
 			
 			const configPath = path.join(vaultPathString, '..', '..', 'src', 'config.ts');
-			console.log('🔧 Vault path:', vaultPathString);
-			console.log('🔧 Config path:', configPath);
-			console.log('🔧 Config file exists:', fs.existsSync(configPath));
 			
 			fs.writeFileSync(configPath, content, 'utf8');
-			console.log('✅ Config file written successfully');
 			return true;
 		} catch (error) {
 			console.error('❌ Error writing config:', error);
@@ -166,26 +160,6 @@ export class ConfigFileManager {
 		const defaultOgImageAltMatch = configContent.match(/\/\/ \[CONFIG:DEFAULT_OG_IMAGE_ALT\]\s*\n\s*defaultOgImageAlt:\s*"([^"]*)"/);
 		if (defaultOgImageAltMatch) {
 			config.defaultOgImageAlt = defaultOgImageAltMatch[1];
-		}
-		
-		const ogImageMatch = configContent.match(/\/\/ \[CONFIG:OG_IMAGE\]\s*\n\s*ogImage:\s*"([^"]*)"/);
-		if (ogImageMatch) {
-			config.ogImage = ogImageMatch[1];
-		}
-		
-		const faviconMatch = configContent.match(/\/\/ \[CONFIG:FAVICON\]\s*\n\s*favicon:\s*"([^"]*)"/);
-		if (faviconMatch) {
-			config.favicon = faviconMatch[1];
-		}
-		
-		const faviconLightMatch = configContent.match(/\/\/ \[CONFIG:FAVICON_LIGHT\]\s*\n\s*faviconLight:\s*"([^"]*)"/);
-		if (faviconLightMatch) {
-			config.faviconLight = faviconLightMatch[1];
-		}
-		
-		const faviconDarkMatch = configContent.match(/\/\/ \[CONFIG:FAVICON_DARK\]\s*\n\s*faviconDark:\s*"([^"]*)"/);
-		if (faviconDarkMatch) {
-			config.faviconDark = faviconDarkMatch[1];
 		}
 
 		// Extract theme

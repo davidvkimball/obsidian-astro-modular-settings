@@ -23,16 +23,13 @@ export class FeaturesTab extends TabRenderer {
 			.addToggle(toggle => toggle
 				.setValue(settings.optionalContentTypes?.projects ?? true)
 				.onChange(async (value) => {
-					console.log('🔧 Projects toggle changed to:', value);
 					if (!settings.optionalContentTypes) {
 						settings.optionalContentTypes = { projects: true, docs: true };
 					}
 					settings.optionalContentTypes.projects = value;
-					console.log('🔧 Settings after projects change:', settings.optionalContentTypes);
 					await this.plugin.saveData(settings);
 					// Reload settings to ensure the plugin has the latest values
 					await (this.plugin as any).loadSettings();
-					console.log('🔧 Settings saved and reloaded, calling applyCurrentConfiguration');
 						await this.applyCurrentConfiguration();
 						new Notice(`Projects ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
 				}));
@@ -44,16 +41,13 @@ export class FeaturesTab extends TabRenderer {
 			.addToggle(toggle => toggle
 				.setValue(settings.optionalContentTypes?.docs ?? true)
 				.onChange(async (value) => {
-					console.log('🔧 Docs toggle changed to:', value);
 					if (!settings.optionalContentTypes) {
 						settings.optionalContentTypes = { projects: true, docs: true };
 					}
 					settings.optionalContentTypes.docs = value;
-					console.log('🔧 Settings after docs change:', settings.optionalContentTypes);
 					await this.plugin.saveData(settings);
 					// Reload settings to ensure the plugin has the latest values
 					await (this.plugin as any).loadSettings();
-					console.log('🔧 Settings saved and reloaded, calling applyCurrentConfiguration');
 						await this.applyCurrentConfiguration();
 						new Notice(`Docs ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
 				}));
@@ -182,20 +176,10 @@ export class FeaturesTab extends TabRenderer {
 			.addToggle(toggle => toggle
 				.setValue(settings.features?.hideScrollBar ?? false)
 				.onChange(async (value) => {
-					console.log('🔧 hideScrollBar UI onChange:', {
-						value: value,
-						type: typeof value,
-						settingsBefore: settings.features?.hideScrollBar
-					});
 					settings.features.hideScrollBar = value;
-					console.log('🔧 hideScrollBar after setting:', {
-						value: settings.features.hideScrollBar,
-						type: typeof settings.features.hideScrollBar
-					});
 					await this.plugin.saveData(settings);
 					// Reload settings to ensure the plugin has the latest values
 					await (this.plugin as any).loadSettings();
-					console.log('🔧 Settings saved and reloaded, calling applyCurrentConfiguration');
 					await this.applyCurrentConfiguration();
 					new Notice(`Hide scroll bar ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
 				}));
@@ -1123,7 +1107,7 @@ export class FeaturesTab extends TabRenderer {
 		this.createTextSetting(
 			optionsGrid,
 			'Image path',
-			'Path to the profile picture image',
+			'Path to the profile picture image (in the public folder)',
 			profileSettings.image,
 			(value) => {
 				profileSettings.image = value;

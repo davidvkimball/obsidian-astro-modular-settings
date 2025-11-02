@@ -271,12 +271,6 @@ export class NavigationTab extends TabRenderer {
 		const pagesList = container.querySelector('#pages-list');
 		const socialList = container.querySelector('#social-list');
 		
-		// Debug logging
-		console.log('Setting up event delegation:', {
-			pagesList: pagesList ? 'found' : 'NOT FOUND',
-			socialList: socialList ? 'found' : 'NOT FOUND'
-		});
-		
 		// Handle input changes for pages
 		if (pagesList) {
 			pagesList.addEventListener('input', (e) => {

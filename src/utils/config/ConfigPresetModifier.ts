@@ -53,7 +53,6 @@ export class ConfigPresetModifier {
 		// Update only the specific feature setting in the config file
 		// This is a simplified version - in reality, we'd need to map feature names to config markers
 		// For now, return unchanged to avoid breaking things
-		console.log(`updateFeatureInConfig called with ${featureName}: ${value} - not implemented yet`);
 		return currentConfig;
 	}
 
@@ -114,12 +113,8 @@ export class ConfigPresetModifier {
 
 		// Update optional content types
 		if (settings.optionalContentTypes) {
-			console.log('🔧 Optional content types:', settings.optionalContentTypes);
 			if (settings.optionalContentTypes.projects !== undefined) {
-				console.log('🔧 Attempting to update projects to:', settings.optionalContentTypes.projects);
 				const projectsRegex = /\/\/ \[CONFIG:OPTIONAL_CONTENT_TYPES_PROJECTS\]\s*\n\s*projects:\s*(true|false)/;
-				const projectsMatch = modifiedConfig.match(projectsRegex);
-				console.log('🔧 Projects regex match:', projectsMatch);
 				
 				modifiedConfig = modifiedConfig.replace(
 					projectsRegex,
@@ -127,10 +122,7 @@ export class ConfigPresetModifier {
 				);
 			}
 			if (settings.optionalContentTypes.docs !== undefined) {
-				console.log('🔧 Attempting to update docs to:', settings.optionalContentTypes.docs);
 				const docsRegex = /\/\/ \[CONFIG:OPTIONAL_CONTENT_TYPES_DOCS\]\s*\n\s*docs:\s*(true|false)/;
-				const docsMatch = modifiedConfig.match(docsRegex);
-				console.log('🔧 Docs regex match:', docsMatch);
 				
 				modifiedConfig = modifiedConfig.replace(
 					docsRegex,
@@ -665,38 +657,6 @@ export class ConfigPresetModifier {
 			);
 		}
 		
-		// Update OG image path (if marker exists)
-		if (settings.siteInfo.ogImage) {
-			modifiedConfig = modifiedConfig.replace(
-				/\/\/ \[CONFIG:OG_IMAGE\]\s*\n\s*ogImage:\s*"[^"]*"/,
-				`// [CONFIG:OG_IMAGE]\n  ogImage: "${settings.siteInfo.ogImage}"`
-			);
-		}
-		
-		// Update favicon path (if marker exists)
-		if (settings.siteInfo.favicon) {
-			modifiedConfig = modifiedConfig.replace(
-				/\/\/ \[CONFIG:FAVICON\]\s*\n\s*favicon:\s*"[^"]*"/,
-				`// [CONFIG:FAVICON]\n  favicon: "${settings.siteInfo.favicon}"`
-			);
-		}
-		
-		// Update favicon light path (if marker exists)
-		if (settings.siteInfo.faviconLight) {
-			modifiedConfig = modifiedConfig.replace(
-				/\/\/ \[CONFIG:FAVICON_LIGHT\]\s*\n\s*faviconLight:\s*"[^"]*"/,
-				`// [CONFIG:FAVICON_LIGHT]\n  faviconLight: "${settings.siteInfo.faviconLight}"`
-			);
-		}
-		
-		// Update favicon dark path (if marker exists)
-		if (settings.siteInfo.faviconDark) {
-			modifiedConfig = modifiedConfig.replace(
-				/\/\/ \[CONFIG:FAVICON_DARK\]\s*\n\s*faviconDark:\s*"[^"]*"/,
-				`// [CONFIG:FAVICON_DARK]\n  faviconDark: "${settings.siteInfo.faviconDark}"`
-			);
-		}
-		
 		// Update navigation pages
 		const pagesArray = settings.navigation.pages.map(page => 
 			`      { title: "${page.title}", url: "${page.url}" }`
@@ -719,16 +679,10 @@ export class ConfigPresetModifier {
 	}
 
 	modifyConfigFromFeatures(settings: AstroModularSettings, currentConfig: string): string {
-		console.log('🔧 modifyConfigFromFeatures called with settings:', Object.keys(settings));
-		console.log('🔧 Current config length:', currentConfig.length);
-		
 		let modifiedConfig = currentConfig;
 		
 		// Update theme
-		console.log('🔧 Attempting to update theme to:', settings.currentTheme);
 		const themeRegex = /\/\/ \[CONFIG:THEME\]\s*\n\s*theme:\s*"[^"]*"/;
-		const themeMatch = modifiedConfig.match(themeRegex);
-		console.log('🔧 Theme regex match:', themeMatch);
 		
 		modifiedConfig = modifiedConfig.replace(
 			themeRegex,
@@ -745,12 +699,8 @@ export class ConfigPresetModifier {
 		
 		// Update optional content types
 		if (settings.optionalContentTypes) {
-			console.log('🔧 Optional content types:', settings.optionalContentTypes);
 			if (settings.optionalContentTypes.projects !== undefined) {
-				console.log('🔧 Attempting to update projects to:', settings.optionalContentTypes.projects);
 				const projectsRegex = /\/\/ \[CONFIG:OPTIONAL_CONTENT_TYPES_PROJECTS\]\s*\n\s*projects:\s*(true|false)/;
-				const projectsMatch = modifiedConfig.match(projectsRegex);
-				console.log('🔧 Projects regex match:', projectsMatch);
 				
 				modifiedConfig = modifiedConfig.replace(
 					projectsRegex,
@@ -758,10 +708,7 @@ export class ConfigPresetModifier {
 				);
 			}
 			if (settings.optionalContentTypes.docs !== undefined) {
-				console.log('🔧 Attempting to update docs to:', settings.optionalContentTypes.docs);
 				const docsRegex = /\/\/ \[CONFIG:OPTIONAL_CONTENT_TYPES_DOCS\]\s*\n\s*docs:\s*(true|false)/;
-				const docsMatch = modifiedConfig.match(docsRegex);
-				console.log('🔧 Docs regex match:', docsMatch);
 				
 				modifiedConfig = modifiedConfig.replace(
 					docsRegex,
@@ -772,7 +719,6 @@ export class ConfigPresetModifier {
 		
 		// Update available themes
 		if (settings.availableThemes !== undefined) {
-			console.log('🔧 Attempting to update availableThemes to:', settings.availableThemes);
 			let availableThemesValue: string;
 			if (settings.availableThemes === 'default') {
 				availableThemesValue = '"default"';
@@ -784,7 +730,6 @@ export class ConfigPresetModifier {
 				if (settings.customThemes && settings.customThemes.trim()) {
 					const customThemesList = settings.customThemes.split(',').map(theme => theme.trim()).filter(theme => theme);
 					themesArray = [...themesArray, ...customThemesList] as any;
-					console.log('🔧 Merged custom themes into availableThemes:', customThemesList);
 				}
 				
 				const themesString = themesArray.map(theme => `"${theme}"`).join(', ');
@@ -792,8 +737,6 @@ export class ConfigPresetModifier {
 			}
 			
 			const availableThemesRegex = /\/\/ \[CONFIG:AVAILABLE_THEMES\]\s*\n\s*availableThemes:\s*(?:"default"|\[[^\]]*\])/;
-			const availableThemesMatch = modifiedConfig.match(availableThemesRegex);
-			console.log('🔧 AvailableThemes regex match:', availableThemesMatch);
 			
 			modifiedConfig = modifiedConfig.replace(
 				availableThemesRegex,
@@ -803,12 +746,9 @@ export class ConfigPresetModifier {
 		
 		// Update custom themes
 		if (settings.customThemes !== undefined) {
-			console.log('🔧 Attempting to update customThemes to:', settings.customThemes);
 			const customThemesValue = settings.customThemes ? `"${settings.customThemes}"` : '""';
 			
 			const customThemesRegex = /\/\/ \[CONFIG:CUSTOM_THEMES\]\s*\n\s*customThemes:\s*"[^"]*"/;
-			const customThemesMatch = modifiedConfig.match(customThemesRegex);
-			console.log('🔧 CustomThemes regex match:', customThemesMatch);
 			
 			modifiedConfig = modifiedConfig.replace(
 				customThemesRegex,
@@ -892,6 +832,14 @@ export class ConfigPresetModifier {
 					`// [CONFIG:FOOTER_SHOW_SOCIAL_ICONS]\n    showSocialIconsInFooter: ${settings.footer.showSocialIconsInFooter}`
 				);
 			}
+		}
+		
+		// Update favicon theme adaptive
+		if (settings.siteInfo?.faviconThemeAdaptive !== undefined) {
+			modifiedConfig = modifiedConfig.replace(
+				/\/\/ \[CONFIG:FAVICON_THEME_ADAPTIVE\]\s*\n\s*faviconThemeAdaptive:\s*(true|false)/,
+				`// [CONFIG:FAVICON_THEME_ADAPTIVE]\n  faviconThemeAdaptive: ${settings.siteInfo.faviconThemeAdaptive}`
+			);
 		}
 		
 		// Update SEO settings (backwards compatibility - also check siteInfo)
@@ -1282,14 +1230,6 @@ export class ConfigPresetModifier {
 		);
 		
 		// Update hide scroll bar
-		console.log('🔧 hideScrollBar debug:', {
-			value: settings.features.hideScrollBar,
-			type: typeof settings.features.hideScrollBar,
-			isUndefined: settings.features.hideScrollBar === undefined,
-			isNull: settings.features.hideScrollBar === null,
-			stringValue: String(settings.features.hideScrollBar)
-		});
-		
 		modifiedConfig = modifiedConfig.replace(
 			/\/\/\s*\[CONFIG:HIDE_SCROLL_BAR\]\s*hideScrollBar:\s*(true|false)/,
 			`//[CONFIG:HIDE_SCROLL_BAR]\n  hideScrollBar: ${settings.features.hideScrollBar}`
@@ -1395,9 +1335,6 @@ export class ConfigPresetModifier {
 				`// [CONFIG:PROFILE_PICTURE_STYLE]\n    style: "${settings.optionalFeatures.profilePicture.style}"`
 			);
 		}
-		
-		console.log('🔧 modifyConfigFromFeatures returning modified config, length:', modifiedConfig.length);
-		console.log('🔧 Config changed:', modifiedConfig !== currentConfig);
 		
 		return modifiedConfig;
 	}
