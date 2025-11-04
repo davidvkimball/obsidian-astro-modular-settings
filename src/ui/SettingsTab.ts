@@ -7,7 +7,6 @@ import { NavigationTab } from './tabs/NavigationTab';
 import { ConfigTab } from './tabs/ConfigTab';
 import { StyleTab } from './tabs/StyleTab';
 import { FeaturesTab } from './tabs/FeaturesTab';
-import { PluginsTab } from './tabs/PluginsTab';
 import { AdvancedTab } from './tabs/AdvancedTab';
 
 export class AstroModularSettingsTab extends PluginSettingTab {
@@ -65,11 +64,6 @@ export class AstroModularSettingsTab extends PluginSettingTab {
 				renderer: new FeaturesTab(this.app, this.plugin)
 			},
 			{ 
-				id: 'plugins', 
-				name: 'Plugins', 
-				renderer: new PluginsTab(this.app, this.plugin)
-			},
-			{ 
 				id: 'advanced', 
 				name: 'Advanced', 
 				renderer: new AdvancedTab(this.app, this.plugin)
@@ -84,22 +78,27 @@ export class AstroModularSettingsTab extends PluginSettingTab {
 			});
 			
 			
-				button.addEventListener('click', () => {
+				button.addEventListener('click', async () => {
 					// Remove active class from all buttons
 					tabNav.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
 					// Add active class to clicked button
 					button.classList.add('active');
 					// Render tab content with animation
 					tabContent.style.opacity = '0';
-					setTimeout(() => {
+					setTimeout(async () => {
 						tabContent.empty();
-						tab.renderer.render(tabContent);
+						await tab.renderer.render(tabContent);
 						tabContent.style.opacity = '1';
 					}, 150);
 				});
 		});
 
 		// Render the first tab by default
-		tabs[0].renderer.render(tabContent);
+		const renderResult = tabs[0].renderer.render(tabContent) as void | Promise<void>;
+		if (renderResult && typeof (renderResult as any).then === 'function') {
+			(renderResult as Promise<void>).catch((err: any) => {
+				console.error('Error rendering initial tab:', err);
+			});
+		}
 	}
 }

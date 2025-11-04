@@ -1,6 +1,6 @@
 import { Setting, Notice, Modal } from 'obsidian';
 import { TabRenderer } from '../common/TabRenderer';
-import { DEFAULT_SETTINGS } from '../../types';
+import { DEFAULT_SETTINGS, TEMPLATE_OPTIONS } from '../../types';
 
 export class AdvancedTab extends TabRenderer {
 	render(container: HTMLElement): void {
@@ -10,7 +10,17 @@ export class AdvancedTab extends TabRenderer {
 		// Settings section header
 		const settingsSection = container.createDiv('settings-section');
 
-		// Sync from config.ts button (at the top)
+		// Edit config.ts directly button
+		new Setting(container)
+			.setName('Edit config.ts directly')
+			.setDesc('Open your Astro configuration file in the editor')
+			.addButton(button => button
+				.setButtonText('Open config.ts')
+				.onClick(async () => {
+					await this.openConfigFile();
+				}));
+
+		// Sync from config.ts button
 		new Setting(container)
 			.setName('Sync from config.ts')
 			.setDesc('Read current config.ts file and update plugin settings to match')
@@ -201,6 +211,82 @@ export class AdvancedTab extends TabRenderer {
 					}
 				}));
 
+		// Reset to Template button
+		new Setting(container)
+			.setName('Reset to Template')
+			.setDesc(`Reset all settings to the current template (${TEMPLATE_OPTIONS.find(t => t.id === settings.currentTemplate)?.name})`)
+			.addButton(button => button
+				.setButtonText('Reset to Template')
+				.setWarning()
+				.onClick(async () => {
+					// Reset settings to template defaults
+					try {
+						// Load the template preset
+						const templatePreset = (this.plugin as any).configManager.getTemplatePreset(settings.currentTemplate);
+						if (templatePreset && templatePreset.config) {
+							// Preserve user-specific settings that shouldn't be reset
+							const preservedSiteInfo = settings.siteInfo;
+							const preservedNavigation = settings.navigation;
+							const preservedTheme = settings.currentTheme;
+							const preservedContentOrg = settings.contentOrganization;
+							const preservedTypography = settings.typography;
+							const preservedOptionalFeatures = settings.optionalFeatures;
+							const preservedRunWizardOnStartup = settings.runWizardOnStartup;
+							
+							// Apply template features and table of contents from preset
+							if (templatePreset.config.features) {
+								settings.features = { ...settings.features, ...templatePreset.config.features };
+								
+								// CRITICAL: Sync postOptions with features to maintain data integrity
+								// postOptions.graphView.enabled is the source of truth
+								if (settings.postOptions?.graphView) {
+									settings.postOptions.graphView.enabled = templatePreset.config.features.graphView ?? false;
+									settings.features.graphView = settings.postOptions.graphView.enabled;
+								}
+								
+								// Sync linked mentions
+								if (settings.postOptions?.linkedMentions) {
+									settings.postOptions.linkedMentions.enabled = templatePreset.config.features.linkedMentions ?? false;
+									settings.postOptions.linkedMentions.linkedMentionsCompact = templatePreset.config.features.linkedMentionsCompact ?? false;
+								}
+								
+								// Sync command palette quick actions
+								if (settings.commandPalette?.quickActions && templatePreset.config.features.quickActions) {
+									settings.commandPalette.quickActions = { ...settings.commandPalette.quickActions, ...templatePreset.config.features.quickActions };
+								}
+							}
+							
+							if (templatePreset.config.tableOfContents) {
+								settings.tableOfContents = { ...settings.tableOfContents, ...templatePreset.config.tableOfContents };
+							}
+							
+							// Set template name
+							settings.currentTemplate = templatePreset.config.currentTemplate || settings.currentTemplate;
+							
+							// Restore preserved settings
+							settings.siteInfo = preservedSiteInfo;
+							settings.navigation = preservedNavigation;
+							settings.currentTheme = preservedTheme;
+							settings.contentOrganization = preservedContentOrg;
+							settings.typography = preservedTypography;
+							settings.optionalFeatures = preservedOptionalFeatures;
+							settings.runWizardOnStartup = preservedRunWizardOnStartup;
+							
+							await this.plugin.saveData(settings);
+							// Reload settings to ensure the plugin has the latest values
+							await (this.plugin as any).loadSettings();
+							
+							// Apply to config file
+							await this.applyCurrentConfiguration(true);
+							new Notice(`Reset to ${settings.currentTemplate} template and applied to config.ts`);
+						} else {
+							new Notice('Template not found');
+						}
+					} catch (error) {
+						new Notice(`Failed to reset to template: ${error instanceof Error ? error.message : String(error)}`);
+					}
+				}));
+
 		// Reset to defaults
 		new Setting(container)
 			.setName('Reset to defaults')
@@ -339,5 +425,27 @@ export class AdvancedTab extends TabRenderer {
 			}
 		};
 		input.click();
+	}
+
+	private async openConfigFile(): Promise<void> {
+		try {
+			const fs = require('fs');
+			const path = require('path');
+			const { shell } = require('electron');
+			
+			// Get the actual vault path string from the adapter
+			const vaultPath = (this.app.vault.adapter as any).basePath || (this.app.vault.adapter as any).path;
+			const vaultPathString = typeof vaultPath === 'string' ? vaultPath : vaultPath.toString();
+			const configPath = path.join(vaultPathString, '..', 'config.ts');
+			
+			if (fs.existsSync(configPath)) {
+				// Use Electron's shell to open the file with the default editor
+				shell.openPath(configPath);
+			} else {
+				new Notice(`Config file not found at: ${configPath}`);
+			}
+		} catch (error) {
+			new Notice(`Error opening config file: ${error instanceof Error ? error.message : String(error)}`);
+		}
 	}
 }

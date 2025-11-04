@@ -5,8 +5,9 @@ export class PluginConfigStep extends BaseWizardStep {
 	async render(container: HTMLElement): Promise<void> {
 		const state = this.getState();
 		
-		// Get plugin status
-		const pluginStatus = await (this.plugin as any).pluginManager.getPluginStatus();
+		// Get plugin status (pass content org from wizard state)
+		const contentOrg = state.selectedContentOrg;
+		const pluginStatus = await (this.plugin as any).pluginManager.getPluginStatus(contentOrg);
 		
 		container.innerHTML = `
 			<div class="plugin-config">
@@ -14,20 +15,27 @@ export class PluginConfigStep extends BaseWizardStep {
 				<p>Configure your Obsidian plugins for optimal integration.</p>
 				
 				<div class="plugin-status">
-      ${pluginStatus.map((plugin: any) => `
-						<div class="plugin-item ${plugin.installed ? 'installed' : 'missing'}">
+      ${pluginStatus.map((plugin: any) => {
+						const isSettingsCheck = plugin.name === 'Plugin-compatible Obsidian settings';
+						const isConfigured = plugin.installed; // For settings, installed means configured
+						return `
+						<div class="plugin-item ${isConfigured ? 'installed' : 'missing'}">
 							<div class="plugin-icon">
-								${plugin.installed 
+								${isConfigured 
 									? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'
 									: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>'
 								}
 							</div>
 							<div class="plugin-info">
 								<h3>${plugin.name}</h3>
-								<p>${plugin.installed ? (plugin.enabled ? 'Enabled' : 'Disabled') : 'Not installed'}</p>
+								<p>${isSettingsCheck 
+									? (isConfigured ? 'Configured' : 'Doesn\'t match')
+									: (plugin.installed ? (plugin.enabled ? 'Enabled' : 'Not enabled') : 'Not enabled')
+								}</p>
 							</div>
 						</div>
-					`).join('')}
+					`;
+					}).join('')}
 				</div>
 				
 				<div class="config-options">

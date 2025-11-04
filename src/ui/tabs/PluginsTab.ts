@@ -10,22 +10,30 @@ export class PluginsTab extends TabRenderer {
 		const settingsSection = container.createDiv('settings-section');
 
 		// Get plugin status
-		const pluginStatus = await (this.plugin as any).pluginManager.getPluginStatus();
+		const contentOrg = settings.contentOrganization;
+		const pluginStatus = await (this.plugin as any).pluginManager.getPluginStatus(contentOrg);
 
 		// Display plugin status
 		const statusContainer = container.createDiv('plugin-status-container');
 		const pluginStatusDiv = statusContainer.createDiv('plugin-status');
 		
 		for (const plugin of pluginStatus) {
-			const pluginItem = pluginStatusDiv.createDiv(`plugin-item ${plugin.installed ? 'installed' : 'missing'}`);
+			const isSettingsCheck = plugin.name === 'Plugin-compatible Obsidian settings';
+			const isConfigured = plugin.installed; // For settings, installed means configured
+			const pluginItem = pluginStatusDiv.createDiv(`plugin-item ${isConfigured ? 'installed' : 'missing'}`);
 			const icon = pluginItem.createDiv('plugin-icon');
-			icon.innerHTML = plugin.installed 
+			icon.innerHTML = isConfigured 
 				? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'
 				: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
 			
 			const info = pluginItem.createDiv('plugin-info');
 			info.createEl('h3', { text: plugin.name });
-			const statusText = plugin.installed ? (plugin.enabled ? 'Enabled' : 'Disabled') : 'Not installed';
+			let statusText: string;
+			if (isSettingsCheck) {
+				statusText = isConfigured ? 'Configured' : 'Doesn\'t match';
+			} else {
+				statusText = plugin.installed ? (plugin.enabled ? 'Enabled' : 'Not enabled') : 'Not enabled';
+			}
 			info.createEl('p', { text: statusText });
 		}
 

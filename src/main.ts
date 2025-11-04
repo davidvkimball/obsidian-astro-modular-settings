@@ -19,7 +19,7 @@ export default class AstroModularSettingsPlugin extends Plugin {
 
 		// Initialize managers
 		this.configManager = new ConfigManager(this.app);
-		this.pluginManager = new PluginManager(this.app);
+		this.pluginManager = new PluginManager(this.app, () => this.settings.contentOrganization);
 
 		// Register commands
 		registerCommands(this);

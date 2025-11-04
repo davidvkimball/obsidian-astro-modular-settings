@@ -1,10 +1,10 @@
-import { Setting, Notice } from 'obsidian';
+import { Setting, Notice, Modal } from 'obsidian';
 import { TabRenderer } from '../common/TabRenderer';
 import { TEMPLATE_OPTIONS } from '../../types';
 import { PresetWarningModal } from '../PresetWarningModal';
 
 export class ConfigTab extends TabRenderer {
-	render(container: HTMLElement): void {
+	async render(container: HTMLElement): Promise<void> {
 		container.empty();
 		const settings = this.getSettings();
 
@@ -67,6 +67,31 @@ export class ConfigTab extends TabRenderer {
 				});
 			});
 
+		// Deployment platform
+		new Setting(container)
+			.setName('Deployment')
+			.setDesc('Choose your deployment platform')
+			.addDropdown(dropdown => {
+				dropdown.addOption('netlify', 'Netlify');
+				dropdown.addOption('vercel', 'Vercel');
+				dropdown.addOption('github-pages', 'GitHub Pages');
+				dropdown.setValue(settings.deployment.platform);
+				dropdown.onChange(async (value) => {
+				settings.deployment.platform = value as any;
+				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				
+				// Apply changes immediately to config.ts
+				try {
+					await this.applyCurrentConfiguration();
+						new Notice(`Deployment platform changed to ${value} and applied to config.ts`);
+					} catch (error) {
+						new Notice(`Failed to apply deployment platform change: ${error instanceof Error ? error.message : String(error)}`);
+					}
+				});
+			});
+
 		// Content organization
 		new Setting(container)
 			.setName('Content organization')
@@ -114,138 +139,202 @@ export class ConfigTab extends TabRenderer {
 				});
 			});
 
-		// Deployment platform
-		new Setting(container)
-			.setName('Deployment')
-			.setDesc('Choose your deployment platform')
-			.addDropdown(dropdown => {
-				dropdown.addOption('netlify', 'Netlify');
-				dropdown.addOption('vercel', 'Vercel');
-				dropdown.addOption('github-pages', 'GitHub Pages');
-				dropdown.setValue(settings.deployment.platform);
-				dropdown.onChange(async (value) => {
-				settings.deployment.platform = value as any;
-				await this.plugin.saveData(settings);
-				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
-				
-				// Apply changes immediately to config.ts
-				try {
-					await this.applyCurrentConfiguration();
-						new Notice(`Deployment platform changed to ${value} and applied to config.ts`);
-					} catch (error) {
-						new Notice(`Failed to apply deployment platform change: ${error instanceof Error ? error.message : String(error)}`);
-					}
-				});
-			});
+		// Plugin configuration section
+		container.createEl('h2', { text: 'Plugin configuration' });
+		
+		// Get plugin status (async, so we need to handle this)
+		this.renderPluginStatus(container, settings);
+	}
 
-		// Reset to Template button
+	private async renderPluginStatus(container: HTMLElement, settings: any): Promise<void> {
+		// Get plugin status
+		const contentOrg = settings.contentOrganization;
+		const pluginStatus = await (this.plugin as any).pluginManager.getPluginStatus(contentOrg);
+
+		// Display plugin status
+		const statusContainer = container.createDiv('plugin-status-container');
+		const pluginStatusDiv = statusContainer.createDiv('plugin-status');
+		
+		for (const plugin of pluginStatus) {
+			const isSettingsCheck = plugin.name === 'Plugin-compatible Obsidian settings';
+			const isConfigured = plugin.installed; // For settings, installed means configured
+			const pluginItem = pluginStatusDiv.createDiv(`plugin-item ${isConfigured ? 'installed' : 'missing'}`);
+			const icon = pluginItem.createDiv('plugin-icon');
+			icon.innerHTML = isConfigured 
+				? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'
+				: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+			
+			const info = pluginItem.createDiv('plugin-info');
+			info.createEl('h3', { text: plugin.name });
+			let statusText: string;
+			if (isSettingsCheck) {
+				statusText = isConfigured ? 'Configured' : 'Doesn\'t match';
+			} else {
+				statusText = plugin.installed ? (plugin.enabled ? 'Enabled' : 'Not enabled') : 'Not enabled';
+			}
+			info.createEl('p', { text: statusText });
+		}
+
+		// Re-apply configuration button
 		new Setting(container)
-			.setName('Reset to Template')
-			.setDesc(`Reset all settings to the current template (${TEMPLATE_OPTIONS.find(t => t.id === settings.currentTemplate)?.name})`)
+			.setName('Re-apply configuration')
+			.setDesc('Re-apply plugin settings based on your content organization choice (useful if settings were changed manually or configuration failed)')
 			.addButton(button => button
-				.setButtonText('Reset to Template')
-				.setWarning()
+				.setButtonText('Re-apply Configuration')
+				.setCta()
 				.onClick(async () => {
-					// Reset settings to template defaults
-					try {
-						// Load the template preset
-						const templatePreset = (this.plugin as any).configManager.getTemplatePreset(settings.currentTemplate);
-						if (templatePreset && templatePreset.config) {
-							// Preserve user-specific settings that shouldn't be reset
-							const preservedSiteInfo = settings.siteInfo;
-							const preservedNavigation = settings.navigation;
-							const preservedTheme = settings.currentTheme;
-							const preservedContentOrg = settings.contentOrganization;
-							const preservedTypography = settings.typography;
-							const preservedOptionalFeatures = settings.optionalFeatures;
-							const preservedRunWizardOnStartup = settings.runWizardOnStartup;
-							
-							// Apply template features and table of contents from preset
-							if (templatePreset.config.features) {
-								settings.features = { ...settings.features, ...templatePreset.config.features };
-								
-								// CRITICAL: Sync postOptions with features to maintain data integrity
-								// postOptions.graphView.enabled is the source of truth
-								if (settings.postOptions?.graphView) {
-									settings.postOptions.graphView.enabled = templatePreset.config.features.graphView ?? false;
-									settings.features.graphView = settings.postOptions.graphView.enabled;
-								}
-								
-								// Sync linked mentions
-								if (settings.postOptions?.linkedMentions) {
-									settings.postOptions.linkedMentions.enabled = templatePreset.config.features.linkedMentions ?? false;
-									settings.postOptions.linkedMentions.linkedMentionsCompact = templatePreset.config.features.linkedMentionsCompact ?? false;
-								}
-								
-								// Sync command palette quick actions
-								if (settings.commandPalette?.quickActions && templatePreset.config.features.quickActions) {
-									settings.commandPalette.quickActions = { ...settings.commandPalette.quickActions, ...templatePreset.config.features.quickActions };
-								}
-							}
-							
-							if (templatePreset.config.tableOfContents) {
-								settings.tableOfContents = { ...settings.tableOfContents, ...templatePreset.config.tableOfContents };
-							}
-							
-							// Set template name
-							settings.currentTemplate = templatePreset.config.currentTemplate || settings.currentTemplate;
-							
-							// Restore preserved settings
-							settings.siteInfo = preservedSiteInfo;
-							settings.navigation = preservedNavigation;
-							settings.currentTheme = preservedTheme;
-							settings.contentOrganization = preservedContentOrg;
-							settings.typography = preservedTypography;
-							settings.optionalFeatures = preservedOptionalFeatures;
-							settings.runWizardOnStartup = preservedRunWizardOnStartup;
-							
-							await this.plugin.saveData(settings);
-							// Reload settings to ensure the plugin has the latest values
-							await (this.plugin as any).loadSettings();
-							
-							// Apply to config file
-							await this.applyCurrentConfiguration(true);
-							new Notice(`Reset to ${settings.currentTemplate} template and applied to config.ts`);
-						} else {
-							new Notice('Template not found');
+					// Create configuration based on current content organization choice
+					const contentOrg = settings.contentOrganization;
+					const config = {
+						obsidianSettings: {
+							attachmentLocation: contentOrg === 'file-based' ? 'subfolder' : 'same-folder',
+							subfolderName: 'attachments'
+						},
+						astroComposerSettings: {
+							creationMode: contentOrg === 'file-based' ? 'file' : 'folder',
+							indexFileName: 'index'
+						},
+						imageInserterSettings: {
+							valueFormat: contentOrg === 'file-based' 
+								? '[[attachments/{image-url}]]' 
+								: '[[{image-url}]]',
+							insertFormat: contentOrg === 'file-based' 
+								? '[[attachments/{image-url}]]' 
+								: '[[{image-url}]]'
 						}
-					} catch (error) {
-						new Notice(`Failed to reset to template: ${error instanceof Error ? error.message : String(error)}`);
+					};
+
+					const success = await (this.plugin as any).pluginManager.configurePlugins(config);
+					if (success) {
+						// Show detailed success message
+						const contentOrg = settings.contentOrganization;
+						const attachmentLocation = contentOrg === 'file-based' ? 'subfolder (attachments/)' : 'same folder';
+						const creationMode = contentOrg === 'file-based' ? 'file' : 'folder';
+						
+						new Notice(`Configuration re-applied successfully!\n\n• Obsidian: Attachments → ${attachmentLocation}\n• Astro Composer: Creation mode → ${creationMode}\n• Image Inserter: Format updated for ${contentOrg}`, 8000);
+						// Refresh the plugin status display
+						const statusContainerEl = container.querySelector('.plugin-status-container');
+						if (statusContainerEl) {
+							statusContainerEl.remove();
+							await this.renderPluginStatus(container, settings);
+						}
+					} else {
+						new Notice('⚠️ Some plugins could not be configured automatically. Check console for details.', 5000);
 					}
 				}));
 
-		// Edit config.ts directly button
+		// Show manual instructions button
 		new Setting(container)
-			.setName('Edit config.ts directly')
-			.setDesc('Open your Astro configuration file in the editor')
+			.setName('Show manual instructions')
+			.setDesc('Get step-by-step instructions for manual configuration')
 			.addButton(button => button
-				.setButtonText('Open config.ts')
+				.setButtonText('Show Manual Instructions')
 				.onClick(async () => {
-					await this.openConfigFile();
+					// Create configuration based on current content organization choice
+					const contentOrg = settings.contentOrganization;
+					const config = {
+						obsidianSettings: {
+							attachmentLocation: contentOrg === 'file-based' ? 'subfolder' : 'same-folder',
+							subfolderName: 'attachments'
+						},
+						astroComposerSettings: {
+							creationMode: contentOrg === 'file-based' ? 'file' : 'folder',
+							indexFileName: 'index'
+						},
+						imageInserterSettings: {
+							valueFormat: contentOrg === 'file-based' 
+								? '[[attachments/{image-url}]]' 
+								: '[[{image-url}]]',
+							insertFormat: contentOrg === 'file-based' 
+								? '[[attachments/{image-url}]]' 
+								: '[[{image-url}]]'
+						}
+					};
+
+					const instructions = await (this.plugin as any).pluginManager.getManualConfigurationInstructions(config);
+					
+					// Create a modal to show instructions
+					const instructionModal = new Modal(this.app);
+					instructionModal.titleEl.setText('Manual Configuration Instructions');
+					
+					// Create a container for the instructions
+					const contentDiv = instructionModal.contentEl.createDiv();
+					contentDiv.style.padding = '20px';
+					contentDiv.style.lineHeight = '1.6';
+					
+					// Parse instructions line by line and create proper DOM elements
+					const lines = instructions.split('\n');
+					let currentList: HTMLElement | null = null;
+					
+					lines.forEach((line: string) => {
+						const trimmedLine = line.trim();
+						
+						if (trimmedLine === '') {
+							// Empty line - add spacing
+							contentDiv.createEl('br');
+						} else if (trimmedLine.startsWith('## ')) {
+							// Sub heading
+							if (currentList) {
+								currentList = null; // End current list
+							}
+							const h2 = contentDiv.createEl('h2');
+							h2.setText(trimmedLine.substring(3));
+							h2.style.marginTop = '20px';
+							h2.style.marginBottom = '10px';
+							h2.style.fontSize = '1.2em';
+							h2.style.fontWeight = 'bold';
+						} else if (trimmedLine.match(/^\d+\.\s/)) {
+							// Numbered list item
+							if (!currentList) {
+								currentList = contentDiv.createEl('ol');
+								currentList.style.marginLeft = '20px';
+								currentList.style.marginBottom = '15px';
+							}
+							const li = currentList!.createEl('li');
+							li.style.marginBottom = '5px';
+							// Parse bold text in the line
+							this.parseBoldText(li, trimmedLine.replace(/^\d+\.\s/, ''));
+						} else if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ')) {
+							// Bullet list item
+							if (!currentList) {
+								currentList = contentDiv.createEl('ul');
+								currentList.style.marginLeft = '20px';
+								currentList.style.marginBottom = '15px';
+							}
+							const li = currentList!.createEl('li');
+							li.style.marginBottom = '5px';
+							// Parse bold text in the line
+							this.parseBoldText(li, trimmedLine.substring(2));
+						} else {
+							// Regular paragraph
+							if (currentList) {
+								currentList = null; // End current list
+							}
+							const p = contentDiv.createEl('p');
+							p.style.marginBottom = '10px';
+							// Parse bold text in the line
+							this.parseBoldText(p, trimmedLine);
+						}
+					});
+					
+					instructionModal.open();
 				}));
 	}
 
-	private async openConfigFile(): Promise<void> {
-		try {
-			const fs = require('fs');
-			const path = require('path');
-			const { shell } = require('electron');
-			
-			// Get the actual vault path string from the adapter
-			const vaultPath = (this.app.vault.adapter as any).basePath || (this.app.vault.adapter as any).path;
-			const vaultPathString = typeof vaultPath === 'string' ? vaultPath : vaultPath.toString();
-			const configPath = path.join(vaultPathString, '..', 'config.ts');
-			
-			if (fs.existsSync(configPath)) {
-				// Use Electron's shell to open the file with the default editor
-				shell.openPath(configPath);
-			} else {
-				new Notice(`Config file not found at: ${configPath}`);
+	private parseBoldText(container: HTMLElement, text: string): void {
+		// Simple bold text parser - handles **text** patterns
+		const parts = text.split(/(\*\*.*?\*\*)/g);
+		
+		parts.forEach(part => {
+			if (part.startsWith('**') && part.endsWith('**')) {
+				// Bold text
+				const strong = container.createEl('strong');
+				strong.setText(part.substring(2, part.length - 2));
+			} else if (part.trim() !== '') {
+				// Regular text
+				container.appendText(part);
 			}
-		} catch (error) {
-			new Notice(`Error opening config file: ${error instanceof Error ? error.message : String(error)}`);
-		}
+		});
 	}
 
 	private async updatePluginSettingsWithTemplate(template: string): Promise<void> {

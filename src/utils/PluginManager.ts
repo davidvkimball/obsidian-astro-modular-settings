@@ -1,24 +1,29 @@
 import { App, Plugin } from 'obsidian';
-import type { PluginStatus, PluginConfiguration, ObsidianPlugins, ObsidianVaultConfig, ObsidianAppSettings } from '../types';
+import type { PluginStatus, PluginConfiguration, ObsidianPlugins, ObsidianVaultConfig, ObsidianAppSettings, ContentOrganizationType } from '../types';
 
 export class PluginManager {
 	private app: App;
+	private getContentOrganization?: () => ContentOrganizationType;
 
-	constructor(app: App) {
+	constructor(app: App, getContentOrganization?: () => ContentOrganizationType) {
 		this.app = app;
+		this.getContentOrganization = getContentOrganization;
 	}
 
-	async getPluginStatus(): Promise<PluginStatus[]> {
+	async getPluginStatus(contentOrg?: ContentOrganizationType): Promise<PluginStatus[]> {
 		const plugins = (this.app as any).plugins as ObsidianPlugins;
 		const requiredPlugins = [
 			'astro-composer',
-			'insert-unsplash-image',
-			'obsidian-shellcommands'
+			'insert-unsplash-image'
 		];
-
 
 		const status: PluginStatus[] = [];
 
+		// Add Obsidian settings check first
+		const obsidianSettingsStatus = this.checkObsidianSettings(contentOrg);
+		status.push(obsidianSettingsStatus);
+
+		// Then add plugin checks
 		for (const pluginId of requiredPlugins) {
 			const plugin = plugins?.plugins?.[pluginId];
 			const isInEnabledSet = plugins?.enabledPlugins && plugins.enabledPlugins.has(pluginId);
@@ -56,10 +61,49 @@ export class PluginManager {
 	private getPluginDisplayName(pluginId: string): string {
 		const names: Record<string, string> = {
 			'astro-composer': 'Astro Composer',
-			'insert-unsplash-image': 'Image Inserter',
-			'obsidian-shellcommands': 'Shell Commands'
+			'insert-unsplash-image': 'Image Inserter'
 		};
 		return names[pluginId] || pluginId;
+	}
+
+	private checkObsidianSettings(contentOrg?: ContentOrganizationType): PluginStatus {
+		const contentOrgValue = contentOrg || this.getContentOrganization?.() || 'file-based';
+		const vaultConfig = (this.app.vault as any).config as ObsidianVaultConfig;
+		
+		// Get the expected attachment location based on content organization
+		const expectedLocation = contentOrgValue === 'file-based' ? 'subfolder' : 'same-folder';
+		const expectedSubfolder = 'attachments';
+		
+		// Check if settings match
+		let isConfigured = false;
+		
+		// Normalize the attachment path for comparison
+		const attachmentPath = (vaultConfig.attachmentFolderPath || '').trim();
+		const normalizedPath = attachmentPath.replace(/\/+$/, ''); // Remove trailing slashes
+		
+		if (expectedLocation === 'subfolder') {
+			// For file-based: should be "./attachments" or "attachments"
+			// Check various formats that Obsidian might use
+			isConfigured = normalizedPath === `./${expectedSubfolder}` || 
+			               normalizedPath === `${expectedSubfolder}` ||
+			               normalizedPath.endsWith(`/${expectedSubfolder}`) ||
+			               normalizedPath === `.${expectedSubfolder}`;
+		} else {
+			// For folder-based: should be "./" or empty (same folder)
+			// Obsidian stores empty string or "./" for "same folder as current file"
+			isConfigured = normalizedPath === './' || 
+			               normalizedPath === '' || 
+			               normalizedPath === '.' ||
+			               normalizedPath === undefined;
+		}
+		
+		return {
+			name: 'Plugin-compatible Obsidian settings',
+			installed: isConfigured, // Use installed field to indicate configured status
+			enabled: false, // Not applicable for settings
+			configurable: true,
+			currentSettings: undefined
+		};
 	}
 
 	private isPluginConfigurable(pluginId: string): boolean {
