@@ -46,7 +46,8 @@ export class NavigationTab extends TabRenderer {
 					.onClick(async () => {
 						settings.navigation.pages.push({ title: 'New Page', url: '/new-page' });
 						await this.plugin.saveData(settings);
-						await this.applyCurrentConfiguration();
+						await this.applyCurrentConfiguration(false);
+						new Notice('Navigation page added and applied to config.ts');
 						this.render(container); // Re-render
 					}));
 
@@ -88,7 +89,8 @@ export class NavigationTab extends TabRenderer {
 					.onClick(async () => {
 						settings.navigation.social.push({ title: 'New Social', url: 'https://example.com', icon: '' });
 						await this.plugin.saveData(settings);
-						await this.applyCurrentConfiguration();
+						await this.applyCurrentConfiguration(false);
+						new Notice('Social link added and applied to config.ts');
 						this.render(container); // Re-render
 					}));
 
@@ -317,15 +319,21 @@ export class NavigationTab extends TabRenderer {
 				
 				if (isPage) {
 					currentSettings.navigation.pages.splice(index, 1);
+					await this.plugin.saveData(currentSettings);
+					// Reload settings to ensure the plugin has the latest values
+					await (this.plugin as any).loadSettings();
+					await this.applyCurrentConfiguration(false);
+					new Notice('Navigation page removed and applied to config.ts');
+					this.render(container); // Re-render to update indices
 				} else {
 					currentSettings.navigation.social.splice(index, 1);
+					await this.plugin.saveData(currentSettings);
+					// Reload settings to ensure the plugin has the latest values
+					await (this.plugin as any).loadSettings();
+					await this.applyCurrentConfiguration(false);
+					new Notice('Social link removed and applied to config.ts');
+					this.render(container); // Re-render to update indices
 				}
-				
-				await this.plugin.saveData(currentSettings);
-				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
-				await this.applyCurrentConfiguration();
-				this.render(container); // Re-render to update indices
 			}
 		};
 		

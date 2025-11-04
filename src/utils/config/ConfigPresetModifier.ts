@@ -876,6 +876,28 @@ export class ConfigPresetModifier {
 					`// [CONFIG:NAVIGATION_SHOW_MOBILE_MENU]\n    showMobileMenu: ${settings.navigation.showMobileMenu}`
 				);
 			}
+			// Update navigation pages
+			if (settings.navigation.pages) {
+				const pagesArray = settings.navigation.pages.map(page => 
+					`      { title: "${page.title}", url: "${page.url}" }`
+				).join(',\n');
+				const pagesValue = pagesArray ? `[\n${pagesArray},\n    ]` : '[]';
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:NAVIGATION_PAGES\]\s*\n\s*pages:\s*\[[\s\S]*?\]/,
+					`// [CONFIG:NAVIGATION_PAGES]\n    pages: ${pagesValue}`
+				);
+			}
+			// Update navigation social
+			if (settings.navigation.social) {
+				const socialArray = settings.navigation.social.map(social => 
+					`      {\n        title: "${social.title}",\n        url: "${social.url}",\n        icon: "${social.icon}",\n      }`
+				).join(',\n');
+				const socialValue = socialArray ? `[\n${socialArray},\n    ]` : '[]';
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:NAVIGATION_SOCIAL\]\s*\n\s*social:\s*\[[\s\S]*?\]/,
+					`// [CONFIG:NAVIGATION_SOCIAL]\n    social: ${socialValue}`
+				);
+			}
 		}
 		
 		// Update command palette settings
