@@ -79,6 +79,8 @@ export class GeneralTab extends TabRenderer {
 				return 'Vercel';
 			case 'github-pages':
 				return 'GitHub Pages';
+			case 'cloudflare-pages':
+				return 'Cloudflare Pages';
 			default:
 				return deployment;
 		}

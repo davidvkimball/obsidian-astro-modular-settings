@@ -109,6 +109,8 @@ export class FinalizeStep extends BaseWizardStep {
 				return 'Vercel';
 			case 'github-pages':
 				return 'GitHub Pages';
+			case 'cloudflare-pages':
+				return 'Cloudflare Pages';
 			default:
 				return deployment;
 		}

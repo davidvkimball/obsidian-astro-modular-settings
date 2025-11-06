@@ -30,6 +30,13 @@ export class DeploymentStep extends BaseWizardStep {
 						</div>
 						<p>Free hosting directly from your GitHub repository.</p>
 					</div>
+					<div class="deployment-option ${state.selectedDeployment === 'cloudflare-pages' ? 'selected' : ''}" 
+						 data-deployment="cloudflare-pages">
+						<div class="deployment-header">
+							<h3>Cloudflare Pages</h3>
+						</div>
+						<p>Static site hosting with custom headers support on all plans (same format as GitHub Pages).</p>
+					</div>
 				</div>
 			</div>
 		`;
@@ -40,7 +47,7 @@ export class DeploymentStep extends BaseWizardStep {
 				const deployment = option.getAttribute('data-deployment');
 				if (deployment) {
 					this.updateState({ 
-						selectedDeployment: deployment as 'netlify' | 'vercel' | 'github-pages' 
+						selectedDeployment: deployment as 'netlify' | 'vercel' | 'github-pages' | 'cloudflare-pages' 
 					});
 					this.render(container);
 				}
