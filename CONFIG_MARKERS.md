@@ -2,6 +2,18 @@
 
 This document explains the marker system used by the Astro Modular Settings Obsidian plugin to reliably update configuration values in `config.ts`.
 
+## File Location
+
+The `config.ts` file is located at:
+- **Path relative to Obsidian vault root**: `../../src/config.ts`
+- **Full path structure**: `{vault-root}/../src/config.ts`
+
+This means the config file is two levels up from your Obsidian vault root, then in the `src` directory. For example:
+- If your vault is at: `/path/to/project/src/content/` (where `src/content/` is your vault)
+- Then config.ts is at: `/path/to/project/src/config.ts`
+
+You can use the **"Open config.ts"** button in the plugin settings (Advanced tab) or the command palette to open the file directly.
+
 ## What Are Config Markers?
 
 Config markers are special comment lines in `config.ts` that look like this:
@@ -146,6 +158,11 @@ If markers are missing, you have two options:
 If you have the markers in a previous commit:
 ```bash
 git checkout HEAD~1 -- src/config.ts
+```
+
+Note: This assumes you're running the command from the project root. If you're in your Obsidian vault directory, use:
+```bash
+git checkout HEAD~1 -- ../../src/config.ts
 ```
 
 ### Option 2: Add Markers Manually

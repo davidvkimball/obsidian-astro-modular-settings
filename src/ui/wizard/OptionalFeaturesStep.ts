@@ -216,7 +216,29 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 			
 			if (!scriptContent) {
 				validationDiv.innerHTML = '';
-				this.updateCommentSetting('rawScript', '', state);
+				// Clear all comment settings when script is deleted
+				const currentState = this.getState();
+				this.updateState({
+					selectedOptionalFeatures: {
+						...currentState.selectedOptionalFeatures,
+						comments: {
+							...currentState.selectedOptionalFeatures?.comments,
+							rawScript: '',
+							repo: '',
+							repoId: '',
+							category: '',
+							categoryId: '',
+							mapping: '',
+							strict: '',
+							reactions: '',
+							metadata: '',
+							inputPosition: '',
+							theme: '',
+							lang: '',
+							loading: ''
+						}
+					}
+				});
 				return;
 			}
 			

@@ -46,13 +46,24 @@ export class ConfigManager {
 	}
 
 	async updateIndividualFeatures(settings: AstroModularSettings): Promise<boolean> {
+		console.log('[ConfigManager] updateIndividualFeatures called');
+		console.log('[ConfigManager] Settings optionalFeatures.comments:', settings.optionalFeatures?.comments ? {
+			repo: settings.optionalFeatures.comments.repo,
+			repoId: settings.optionalFeatures.comments.repoId,
+			enabled: settings.optionalFeatures.comments.enabled
+		} : 'MISSING');
+		
 		// Read the existing config file
 		const currentConfig = await this.readConfig();
+		console.log('[ConfigManager] Config file read, length:', currentConfig.length);
 		
 		// Modify the existing config based on individual features
 		const modifiedConfig = this.presetModifier.modifyConfigFromFeatures(settings, currentConfig);
+		console.log('[ConfigManager] Config modified, length:', modifiedConfig.length);
+		console.log('[ConfigManager] Config changed:', currentConfig !== modifiedConfig);
 		
 		const writeResult = await this.writeConfig(modifiedConfig);
+		console.log('[ConfigManager] Write result:', writeResult);
 		
 		return writeResult;
 	}

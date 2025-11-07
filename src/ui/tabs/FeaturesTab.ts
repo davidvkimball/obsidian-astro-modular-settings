@@ -1350,13 +1350,60 @@ export class FeaturesTab extends TabRenderer {
 		validationDiv.style.marginTop = '8px';
 		validationDiv.style.fontSize = '12px';
 		
-		const updateValidation = async () => {
+		// Debounce timeout ID
+		let debounceTimeoutId: number | null = null;
+		
+		const updateValidation = async (showNotification: boolean = false) => {
 			const scriptContent = textarea.value.trim();
 			
 			if (!scriptContent) {
 				validationDiv.innerHTML = '';
-				commentsSettings.rawScript = '';
+				// Get the current enabled state from the actual settings (not the local variable)
+				const currentEnabled = settings.optionalFeatures?.comments?.enabled ?? settings.features?.comments ?? settings.postOptions?.comments?.enabled ?? false;
+				
+				// Clear all comment settings when script is deleted (but preserve enabled state)
+				if (!settings.optionalFeatures) {
+					settings.optionalFeatures = { profilePicture: { enabled: false, image: '/profile.jpg', alt: 'Profile picture', size: 'md', url: '', placement: 'footer', style: 'circle' }, comments: { enabled: currentEnabled, provider: 'giscus', rawScript: '', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
+				} else {
+					settings.optionalFeatures.comments = {
+						...settings.optionalFeatures.comments,
+						rawScript: '',
+						repo: '',
+						repoId: '',
+						category: '',
+						categoryId: '',
+						mapping: '',
+						strict: '',
+						reactions: '',
+						metadata: '',
+						inputPosition: '',
+						theme: '',
+						lang: '',
+						loading: '',
+						enabled: currentEnabled // Preserve enabled state
+					};
+				}
+				
+				// Also update postOptions.comments
+				if (!settings.postOptions) {
+					settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tableOfContents: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures.comments };
+				} else {
+					settings.postOptions.comments = { ...settings.optionalFeatures.comments };
+				}
+				
+				// Ensure features.comments is in sync
+				if (!settings.features) {
+					settings.features = {} as any;
+				}
+				settings.features.comments = currentEnabled;
+				
 				await this.plugin.saveData(settings);
+				// Reload settings to ensure the plugin has the latest values
+				await (this.plugin as any).loadSettings();
+				if (showNotification) {
+					await this.applyCurrentConfiguration();
+					new Notice('Giscus script cleared and applied to config.ts');
+				}
 				return;
 			}
 			
@@ -1370,11 +1417,10 @@ export class FeaturesTab extends TabRenderer {
 				// Parse and update all settings
 				const parsed = GiscusScriptParser.parseScript(scriptContent);
 				if (parsed) {
-					// Store the script data but don't automatically enable comments
-					// The user can toggle comments on/off independently
+					// Get the current enabled state from the actual settings (not the local variable)
+					const currentEnabled = settings.optionalFeatures?.comments?.enabled ?? settings.features?.comments ?? settings.postOptions?.comments?.enabled ?? false;
 					
 					// Update the commentsSettings object with parsed data
-					commentsSettings.enabled = true;
 					commentsSettings.rawScript = scriptContent;
 					commentsSettings.repo = parsed.repo;
 					commentsSettings.repoId = parsed.repoId;
@@ -1388,6 +1434,8 @@ export class FeaturesTab extends TabRenderer {
 					commentsSettings.theme = parsed.theme;
 					commentsSettings.lang = parsed.lang;
 					commentsSettings.loading = parsed.loading;
+					// Preserve the enabled state - don't force it to true
+					commentsSettings.enabled = currentEnabled;
 					
 					// Update optionalFeatures.comments (this is what modifyConfigFromFeatures reads)
 					if (!settings.optionalFeatures) {
@@ -1401,17 +1449,64 @@ export class FeaturesTab extends TabRenderer {
 					}
 					settings.postOptions.comments = { ...commentsSettings };
 					
+					// Ensure features.comments is in sync so modifyConfigFromFeatures can apply the parsed values
+					// This is required because modifyConfigFromFeatures checks both settings.features.comments AND settings.optionalFeatures.comments
+					if (!settings.features) {
+						settings.features = {} as any;
+					}
+					settings.features.comments = currentEnabled;
+					
+					// Save settings immediately
 					await this.plugin.saveData(settings);
-					await this.applyCurrentConfiguration();
+					// Reload settings to ensure the plugin has the latest values
+					await (this.plugin as any).loadSettings();
+					
+					// Apply configuration if notification is requested (debounced or on blur)
+					if (showNotification) {
+						try {
+							await this.applyCurrentConfiguration();
+							const statusMessage = currentEnabled 
+								? 'Giscus script parsed and applied to config.ts' 
+								: 'Giscus script parsed and saved. Enable comments to apply to config.ts';
+							new Notice(statusMessage);
+						} catch (error) {
+							new Notice(`Failed to apply Giscus script to config.ts: ${error instanceof Error ? error.message : String(error)}`);
+						}
+					}
 				}
 			} else {
 				validationDiv.innerHTML = `<span style="color: var(--text-error)">✗ ${validation.error}</span>`;
 			}
 		};
 		
-		textarea.addEventListener('input', updateValidation);
+		// Debounced input handler (1 second debounce like other text fields)
+		textarea.addEventListener('input', () => {
+			// Clear existing timeout
+			if (debounceTimeoutId) {
+				clearTimeout(debounceTimeoutId);
+			}
+			
+			// Update validation immediately (for UI feedback)
+			updateValidation(false);
+			
+			// Debounce the configuration application and notification
+			debounceTimeoutId = window.setTimeout(async () => {
+				await updateValidation(true);
+			}, 1000); // 1 second debounce
+		});
 		
-		// Initial validation
-		updateValidation();
+		// Apply immediately on blur (when user leaves the field)
+		textarea.addEventListener('blur', async () => {
+			// Clear any pending timeout
+			if (debounceTimeoutId) {
+				clearTimeout(debounceTimeoutId);
+				debounceTimeoutId = null;
+			}
+			// Apply immediately when leaving the field
+			await updateValidation(true);
+		});
+		
+		// Initial validation (no notification on load)
+		updateValidation(false);
 	}
 }

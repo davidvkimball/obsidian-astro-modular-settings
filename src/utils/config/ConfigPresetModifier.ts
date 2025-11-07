@@ -1137,103 +1137,105 @@ export class ConfigPresetModifier {
 			`// [CONFIG:POST_OPTIONS_LINKED_MENTIONS_COMPACT]\n      linkedMentionsCompact: ${settings.features.linkedMentionsCompact ?? false}`
 		);
 		
-		// Update comments enabled
-		modifiedConfig = modifiedConfig.replace(
-			/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_ENABLED\]\s*enabled:\s*(true|false)/,
-			`// [CONFIG:POST_OPTIONS_COMMENTS_ENABLED]\n      enabled: ${settings.features.comments}`
-		);
+		// Update comments enabled - use optionalFeatures.comments.enabled like profile picture
+		if (settings.optionalFeatures?.comments?.enabled !== undefined) {
+			modifiedConfig = modifiedConfig.replace(
+				/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_ENABLED\]\s*enabled:\s*(true|false)/,
+				`// [CONFIG:POST_OPTIONS_COMMENTS_ENABLED]\n      enabled: ${settings.optionalFeatures.comments.enabled}`
+			);
+		}
 		
-		// Update other comments settings only if enabled
-		if (settings.features.comments && settings.optionalFeatures?.comments) {
-			// Update provider
-			if (settings.optionalFeatures.comments.provider) {
+		// Update other comments settings only if comments exist
+		if (settings.optionalFeatures?.comments) {
+			// Update provider - always update if it exists in settings (even if empty)
+			if (settings.optionalFeatures.comments.provider !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_PROVIDER\]\s*provider:\s*"[^"]*"/,
-					`// [CONFIG:POST_OPTIONS_COMMENTS_PROVIDER]\n      provider: "${settings.optionalFeatures.comments.provider}"`
+					`// [CONFIG:POST_OPTIONS_COMMENTS_PROVIDER]\n      provider: "${settings.optionalFeatures.comments.provider || ''}"`
 				);
 			}
-			// Update repo
-			if (settings.optionalFeatures.comments.repo) {
+			// Update repo - always update if it exists in settings (even if empty)
+			if (settings.optionalFeatures.comments.repo !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_REPO\]\s*repo:\s*"[^"]*"/,
-					`// [CONFIG:POST_OPTIONS_COMMENTS_REPO]\n      repo: "${settings.optionalFeatures.comments.repo}"`
+					`// [CONFIG:POST_OPTIONS_COMMENTS_REPO]\n      repo: "${settings.optionalFeatures.comments.repo || ''}"`
 				);
 			}
-			// Update repoId
-			if (settings.optionalFeatures.comments.repoId) {
+			// Update repoId - always update if it exists in settings (even if empty)
+			if (settings.optionalFeatures.comments.repoId !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_REPO_ID\]\s*repoId:\s*"[^"]*"/,
-					`// [CONFIG:POST_OPTIONS_COMMENTS_REPO_ID]\n      repoId: "${settings.optionalFeatures.comments.repoId}"`
+					`// [CONFIG:POST_OPTIONS_COMMENTS_REPO_ID]\n      repoId: "${settings.optionalFeatures.comments.repoId || ''}"`
 				);
 			}
-			// Update category
-			if (settings.optionalFeatures.comments.category) {
+			// Update category - always update if it exists in settings (even if empty)
+			if (settings.optionalFeatures.comments.category !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_CATEGORY\]\s*category:\s*"[^"]*"/,
-					`// [CONFIG:POST_OPTIONS_COMMENTS_CATEGORY]\n      category: "${settings.optionalFeatures.comments.category}"`
+					`// [CONFIG:POST_OPTIONS_COMMENTS_CATEGORY]\n      category: "${settings.optionalFeatures.comments.category || ''}"`
 				);
 			}
-			// Update categoryId
-			if (settings.optionalFeatures.comments.categoryId) {
+			// Update categoryId - always update if it exists in settings (even if empty)
+			if (settings.optionalFeatures.comments.categoryId !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_CATEGORY_ID\]\s*categoryId:\s*"[^"]*"/,
-					`// [CONFIG:POST_OPTIONS_COMMENTS_CATEGORY_ID]\n      categoryId: "${settings.optionalFeatures.comments.categoryId}"`
+					`// [CONFIG:POST_OPTIONS_COMMENTS_CATEGORY_ID]\n      categoryId: "${settings.optionalFeatures.comments.categoryId || ''}"`
 				);
 			}
-			// Update mapping
-			if (settings.optionalFeatures.comments.mapping) {
+			// Update mapping - always update if it exists in settings (even if empty)
+			if (settings.optionalFeatures.comments.mapping !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_MAPPING\]\s*mapping:\s*"[^"]*"/,
-					`// [CONFIG:POST_OPTIONS_COMMENTS_MAPPING]\n      mapping: "${settings.optionalFeatures.comments.mapping}"`
+					`// [CONFIG:POST_OPTIONS_COMMENTS_MAPPING]\n      mapping: "${settings.optionalFeatures.comments.mapping || ''}"`
 				);
 			}
-			// Update strict
-			if (settings.optionalFeatures.comments.strict) {
+			// Update strict - always update if it exists in settings (even if empty)
+			if (settings.optionalFeatures.comments.strict !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_STRICT\]\s*strict:\s*"[^"]*"/,
-					`// [CONFIG:POST_OPTIONS_COMMENTS_STRICT]\n      strict: "${settings.optionalFeatures.comments.strict}"`
+					`// [CONFIG:POST_OPTIONS_COMMENTS_STRICT]\n      strict: "${settings.optionalFeatures.comments.strict || ''}"`
 				);
 			}
-			// Update reactions
-			if (settings.optionalFeatures.comments.reactions) {
+			// Update reactions - always update if it exists in settings (even if empty)
+			if (settings.optionalFeatures.comments.reactions !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_REACTIONS\]\s*reactions:\s*"[^"]*"/,
-					`// [CONFIG:POST_OPTIONS_COMMENTS_REACTIONS]\n      reactions: "${settings.optionalFeatures.comments.reactions}"`
+					`// [CONFIG:POST_OPTIONS_COMMENTS_REACTIONS]\n      reactions: "${settings.optionalFeatures.comments.reactions || ''}"`
 				);
 			}
-			// Update metadata
-			if (settings.optionalFeatures.comments.metadata) {
+			// Update metadata - always update if it exists in settings (even if empty)
+			if (settings.optionalFeatures.comments.metadata !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_METADATA\]\s*metadata:\s*"[^"]*"/,
-					`// [CONFIG:POST_OPTIONS_COMMENTS_METADATA]\n      metadata: "${settings.optionalFeatures.comments.metadata}"`
+					`// [CONFIG:POST_OPTIONS_COMMENTS_METADATA]\n      metadata: "${settings.optionalFeatures.comments.metadata || ''}"`
 				);
 			}
-			// Update inputPosition
-			if (settings.optionalFeatures.comments.inputPosition) {
+			// Update inputPosition - always update if it exists in settings (even if empty)
+			if (settings.optionalFeatures.comments.inputPosition !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_INPUT_POSITION\]\s*inputPosition:\s*"[^"]*"/,
-					`// [CONFIG:POST_OPTIONS_COMMENTS_INPUT_POSITION]\n      inputPosition: "${settings.optionalFeatures.comments.inputPosition}"`
+					`// [CONFIG:POST_OPTIONS_COMMENTS_INPUT_POSITION]\n      inputPosition: "${settings.optionalFeatures.comments.inputPosition || ''}"`
 				);
 			}
-			// Update theme
-			if (settings.optionalFeatures.comments.theme) {
+			// Update theme - always update if it exists in settings (even if empty)
+			if (settings.optionalFeatures.comments.theme !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_THEME\]\s*theme:\s*"[^"]*"/,
-					`// [CONFIG:POST_OPTIONS_COMMENTS_THEME]\n      theme: "${settings.optionalFeatures.comments.theme}"`
+					`// [CONFIG:POST_OPTIONS_COMMENTS_THEME]\n      theme: "${settings.optionalFeatures.comments.theme || ''}"`
 				);
 			}
-			// Update lang
-			if (settings.optionalFeatures.comments.lang) {
+			// Update lang - always update if it exists in settings (even if empty)
+			if (settings.optionalFeatures.comments.lang !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_LANG\]\s*lang:\s*"[^"]*"/,
-					`// [CONFIG:POST_OPTIONS_COMMENTS_LANG]\n      lang: "${settings.optionalFeatures.comments.lang}"`
+					`// [CONFIG:POST_OPTIONS_COMMENTS_LANG]\n      lang: "${settings.optionalFeatures.comments.lang || ''}"`
 				);
 			}
-			// Update loading
-			if (settings.optionalFeatures.comments.loading) {
+			// Update loading - always update if it exists in settings (even if empty)
+			if (settings.optionalFeatures.comments.loading !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_LOADING\]\s*loading:\s*"[^"]*"/,
-					`// [CONFIG:POST_OPTIONS_COMMENTS_LOADING]\n      loading: "${settings.optionalFeatures.comments.loading}"`
+					`// [CONFIG:POST_OPTIONS_COMMENTS_LOADING]\n      loading: "${settings.optionalFeatures.comments.loading || ''}"`
 				);
 			}
 		}

@@ -40,19 +40,21 @@ export class GiscusScriptParser {
 			}
 			
 			// Map the attributes to our expected format
+			// Only use defaults for truly required fields, leave optional ones empty if missing
 			const config: ParsedGiscusConfig = {
 				repo: dataAttributes['repo'] || '',
 				repoId: dataAttributes['repo-id'] || '',
 				category: dataAttributes['category'] || '',
 				categoryId: dataAttributes['category-id'] || '',
-				mapping: dataAttributes['mapping'] || 'pathname',
-				strict: dataAttributes['strict'] || '0',
-				reactions: dataAttributes['reactions-enabled'] || '1',
-				metadata: dataAttributes['emit-metadata'] || '0',
-				inputPosition: dataAttributes['input-position'] || 'bottom',
-				theme: dataAttributes['theme'] || 'preferred_color_scheme',
-				lang: dataAttributes['lang'] || 'en',
-				loading: dataAttributes['loading'] || 'lazy'
+				// Optional attributes - use empty string if not present (so they can be cleared)
+				mapping: dataAttributes['mapping'] !== undefined ? dataAttributes['mapping'] : '',
+				strict: dataAttributes['strict'] !== undefined ? dataAttributes['strict'] : '',
+				reactions: dataAttributes['reactions-enabled'] !== undefined ? dataAttributes['reactions-enabled'] : '',
+				metadata: dataAttributes['emit-metadata'] !== undefined ? dataAttributes['emit-metadata'] : '',
+				inputPosition: dataAttributes['input-position'] !== undefined ? dataAttributes['input-position'] : '',
+				theme: dataAttributes['theme'] !== undefined ? dataAttributes['theme'] : '',
+				lang: dataAttributes['lang'] !== undefined ? dataAttributes['lang'] : '',
+				loading: dataAttributes['loading'] !== undefined ? dataAttributes['loading'] : ''
 			};
 			
 			// Validate that we have the essential fields
