@@ -75,7 +75,7 @@ export class ConfigTab extends TabRenderer {
 				dropdown.addOption('netlify', 'Netlify');
 				dropdown.addOption('vercel', 'Vercel');
 				dropdown.addOption('github-pages', 'GitHub Pages');
-				dropdown.addOption('cloudflare-pages', 'Cloudflare Pages');
+				dropdown.addOption('cloudflare-workers', 'Cloudflare Workers');
 				dropdown.setValue(settings.deployment.platform);
 				dropdown.onChange(async (value) => {
 				settings.deployment.platform = value as any;

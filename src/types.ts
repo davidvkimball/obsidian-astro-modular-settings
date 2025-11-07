@@ -246,7 +246,7 @@ export interface CommentsSettings {
 }
 
 export interface DeploymentSettings {
-	platform: 'netlify' | 'vercel' | 'github-pages' | 'cloudflare-pages';
+	platform: 'netlify' | 'vercel' | 'github-pages' | 'cloudflare-workers';
 }
 
 export interface PluginConfiguration {

@@ -19,7 +19,7 @@ export interface WizardState {
 		projects: boolean;
 		docs: boolean;
 	};
-	selectedDeployment: 'netlify' | 'vercel' | 'github-pages' | 'cloudflare-pages';
+	selectedDeployment: 'netlify' | 'vercel' | 'github-pages' | 'cloudflare-workers';
 	runWizardOnStartup: boolean;
 }
 

@@ -14,28 +14,28 @@ export class DeploymentStep extends BaseWizardStep {
 						<div class="deployment-header">
 							<h3>Netlify</h3>
 						</div>
-						<p>Automatic deployments from Git with built-in form handling and serverless functions.</p>
+						<p>Zero-config deployments with built-in CI/CD and serverless functions.</p>
 					</div>
 					<div class="deployment-option ${state.selectedDeployment === 'vercel' ? 'selected' : ''}" 
 						 data-deployment="vercel">
 						<div class="deployment-header">
 							<h3>Vercel</h3>
 						</div>
-						<p>Excellent performance with edge functions and automatic HTTPS.</p>
+						<p>Edge-optimized platform with instant deployments and global CDN.</p>
 					</div>
 					<div class="deployment-option ${state.selectedDeployment === 'github-pages' ? 'selected' : ''}" 
 						 data-deployment="github-pages">
 						<div class="deployment-header">
 							<h3>GitHub Pages</h3>
 						</div>
-						<p>Free hosting directly from your GitHub repository.</p>
+						<p>Free static hosting integrated directly with your GitHub repository.</p>
 					</div>
-					<div class="deployment-option ${state.selectedDeployment === 'cloudflare-pages' ? 'selected' : ''}" 
-						 data-deployment="cloudflare-pages">
+					<div class="deployment-option ${state.selectedDeployment === 'cloudflare-workers' ? 'selected' : ''}" 
+						 data-deployment="cloudflare-workers">
 						<div class="deployment-header">
-							<h3>Cloudflare Pages</h3>
+							<h3>Cloudflare Workers</h3>
 						</div>
-						<p>Static site hosting with custom headers support on all plans (same format as GitHub Pages).</p>
+						<p>Global edge network with unlimited bandwidth and custom headers on all plans.</p>
 					</div>
 				</div>
 			</div>
@@ -47,7 +47,7 @@ export class DeploymentStep extends BaseWizardStep {
 				const deployment = option.getAttribute('data-deployment');
 				if (deployment) {
 					this.updateState({ 
-						selectedDeployment: deployment as 'netlify' | 'vercel' | 'github-pages' | 'cloudflare-pages' 
+						selectedDeployment: deployment as 'netlify' | 'vercel' | 'github-pages' | 'cloudflare-workers' 
 					});
 					this.render(container);
 				}

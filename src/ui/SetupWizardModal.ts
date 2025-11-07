@@ -11,13 +11,24 @@ import { OptionalFeaturesStep } from './wizard/OptionalFeaturesStep';
 import { DeploymentStep } from './wizard/DeploymentStep';
 import { PluginConfigStep } from './wizard/PluginConfigStep';
 import { FinalizeStep } from './wizard/FinalizeStep';
+import { AstroModularSettings } from '../types';
+import { ConfigManager } from '../utils/ConfigManager';
+
+export interface AstroModularPlugin extends Plugin {
+	settings: AstroModularSettings;
+	configManager: ConfigManager;
+	loadSettings(): Promise<void>;
+	triggerSettingsRefresh(): Promise<void>;
+}
 
 export class SetupWizardModal extends Modal {
 	private stateManager: WizardStateManager;
-	private plugin: Plugin;
+	private plugin: AstroModularPlugin;
 	private steps: BaseWizardStep[];
+	private isCompleting: boolean = false;
+	private initialSettingsSnapshot: Partial<AstroModularSettings> | null = null;
 
-	constructor(app: App, plugin: Plugin) {
+	constructor(app: App, plugin: AstroModularPlugin) {
 		super(app);
 		this.plugin = plugin;
 		this.stateManager = new WizardStateManager(plugin);
@@ -45,16 +56,23 @@ export class SetupWizardModal extends Modal {
 		// Refresh the wizard state with current settings
 		this.stateManager.refreshState();
 		
+		// Store a snapshot of initial settings to detect changes later
+		this.initialSettingsSnapshot = this.createSettingsSnapshot();
+		
 		this.renderCurrentStep();
 	}
 
-	onClose() {
+	async onClose() {
 		const { contentEl } = this;
 		contentEl.empty();
 		
-		// Save any wizard state changes to data.json if modal is closed
+		// Save any wizard state changes to data.json and config.ts if modal is closed
 		// This ensures changes are preserved even if user closes modal without completing wizard
-		this.saveWizardStateToDataJson();
+		// Only show notification if not completing (Complete Setup already shows its own notification)
+		await this.saveWizardStateToDataJson(!this.isCompleting);
+		
+		// Reset the flag
+		this.isCompleting = false;
 	}
 
 	private renderCurrentStep() {
@@ -136,9 +154,9 @@ export class SetupWizardModal extends Modal {
 				text: 'Next',
 				cls: 'mod-button mod-cta'
 			});
-			nextBtn.addEventListener('click', () => {
-				// Save current step changes to wizard state (not to data.json yet)
-				this.saveCurrentStepToWizardState();
+			nextBtn.addEventListener('click', async () => {
+				// Save current step changes to wizard state, data.json, and config.ts
+				await this.saveCurrentStepToWizardState();
 				this.stateManager.nextStep();
 				this.renderCurrentStep();
 			});
@@ -148,18 +166,21 @@ export class SetupWizardModal extends Modal {
 				cls: 'mod-button mod-cta'
 			});
 			completeBtn.addEventListener('click', async () => {
+				// Mark that we're completing the wizard to avoid duplicate notifications
+				this.isCompleting = true;
+				
 				// Complete the wizard
 				const finalStep = this.steps[this.steps.length - 1] as FinalizeStep;
 				await finalStep.completeWizard();
 				
 				// Save the final settings
-				await this.plugin.saveData((this.plugin as any).settings);
+				await this.plugin.saveData(this.plugin.settings);
 				
 				// CRITICAL: Reload settings from disk to ensure everything is synchronized
-				await (this.plugin as any).loadSettings();
+				await this.plugin.loadSettings();
 				
 				// Trigger settings tab refresh to show updated values
-				await (this.plugin as any).triggerSettingsRefresh();
+				await this.plugin.triggerSettingsRefresh();
 				
 				this.close();
 			});
@@ -180,11 +201,33 @@ export class SetupWizardModal extends Modal {
 		}
 	}
 
-	private saveCurrentStepToWizardState(): void {
-		// Save current step changes to wizard state (not to data.json yet)
-		// This is called when NEXT is clicked
-		// The wizard state already contains the changes from user interactions
-		// This method is mainly for any final processing needed before moving to next step
+	private async saveCurrentStepToWizardState(): Promise<void> {
+		// Save current step changes to wizard state, data.json, and config.ts
+		// This is called when NEXT is clicked to ensure data.json and config.ts stay in sync
+		try {
+			// Build final settings from wizard state (updates plugin.settings)
+			this.stateManager.buildFinalSettings();
+			
+			// Save to data.json
+			await this.plugin.saveData(this.plugin.settings);
+			
+			// Reload settings to ensure the plugin has the latest values
+			await this.plugin.loadSettings();
+			
+			// Apply to config.ts to keep it in sync
+			const settings = this.plugin.settings;
+			await this.plugin.configManager.applyPreset({
+				name: settings.currentTemplate,
+				description: '',
+				features: settings.features,
+				theme: settings.currentTheme,
+				contentOrganization: settings.contentOrganization,
+				config: settings
+			});
+		} catch (error) {
+			console.error('Error saving current step to data.json and config.ts:', error);
+			// Don't show error to user - just log it, as this shouldn't block navigation
+		}
 	}
 
 	private discardCurrentStepChanges(): void {
@@ -193,21 +236,88 @@ export class SetupWizardModal extends Modal {
 		this.stateManager.refreshState();
 	}
 
-	private async saveWizardStateToDataJson(): Promise<void> {
-		// Save wizard state changes to data.json when modal is closed
+	private async saveWizardStateToDataJson(showNotification: boolean = true): Promise<void> {
+		// Save wizard state changes to data.json and config.ts when modal is closed
 		// This ensures changes are preserved even if user closes modal without completing wizard
 		try {
 			// Build final settings from wizard state
 			this.stateManager.buildFinalSettings();
 			
+			// Check if any changes were actually made
+			const hasChanges = this.hasSettingsChanged();
+			
 			// Save to data.json
-			await this.plugin.saveData((this.plugin as any).settings);
+			await this.plugin.saveData(this.plugin.settings);
 			
 			// Reload settings to ensure the plugin has the latest values
-			await (this.plugin as any).loadSettings();
+			await this.plugin.loadSettings();
+			
+			// Only apply to config.ts if there were changes
+			if (hasChanges) {
+				const settings = this.plugin.settings;
+				const presetSuccess = await this.plugin.configManager.applyPreset({
+					name: settings.currentTemplate,
+					description: '',
+					features: settings.features,
+					theme: settings.currentTheme,
+					contentOrganization: settings.contentOrganization,
+					config: settings
+				});
+				
+				// Only show notification if requested and changes were made
+				if (showNotification && hasChanges) {
+					if (presetSuccess) {
+						new Notice('Configuration saved to config.ts');
+					} else {
+						new Notice('Failed to save configuration to config.ts');
+					}
+				}
+			}
 		} catch (error) {
-			console.error('Error saving wizard state to data.json:', error);
+			console.error('Error saving wizard state to data.json and config.ts:', error);
+			if (showNotification) {
+				new Notice(`Failed to save configuration: ${error instanceof Error ? error.message : String(error)}`);
+			}
 		}
+	}
+	
+	private createSettingsSnapshot(): Partial<AstroModularSettings> {
+		// Create a deep copy of current settings for comparison
+		const settings = this.plugin.settings;
+		return JSON.parse(JSON.stringify({
+			currentTemplate: settings.currentTemplate,
+			currentTheme: settings.currentTheme,
+			contentOrganization: settings.contentOrganization,
+			siteInfo: settings.siteInfo,
+			navigation: settings.navigation,
+			features: settings.features,
+			typography: settings.typography,
+			optionalFeatures: settings.optionalFeatures,
+			deployment: settings.deployment,
+			optionalContentTypes: settings.optionalContentTypes
+		}));
+	}
+	
+	private hasSettingsChanged(): boolean {
+		if (!this.initialSettingsSnapshot) {
+			return false;
+		}
+		
+		const currentSnapshot = this.createSettingsSnapshot();
+		
+		// Compare key settings that can be changed in the wizard
+		return (
+			currentSnapshot.currentTemplate !== this.initialSettingsSnapshot.currentTemplate ||
+			currentSnapshot.currentTheme !== this.initialSettingsSnapshot.currentTheme ||
+			currentSnapshot.contentOrganization !== this.initialSettingsSnapshot.contentOrganization ||
+			JSON.stringify(currentSnapshot.siteInfo) !== JSON.stringify(this.initialSettingsSnapshot.siteInfo) ||
+			JSON.stringify(currentSnapshot.navigation) !== JSON.stringify(this.initialSettingsSnapshot.navigation) ||
+			JSON.stringify(currentSnapshot.features) !== JSON.stringify(this.initialSettingsSnapshot.features) ||
+			JSON.stringify(currentSnapshot.typography) !== JSON.stringify(this.initialSettingsSnapshot.typography) ||
+			JSON.stringify(currentSnapshot.optionalFeatures) !== JSON.stringify(this.initialSettingsSnapshot.optionalFeatures) ||
+			JSON.stringify(currentSnapshot.deployment) !== JSON.stringify(this.initialSettingsSnapshot.deployment) ||
+			JSON.stringify(currentSnapshot.optionalContentTypes) !== JSON.stringify(this.initialSettingsSnapshot.optionalContentTypes)
+		);
 	}
 
 	private applyDefaultValuesForCurrentStep() {

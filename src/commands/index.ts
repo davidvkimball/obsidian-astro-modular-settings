@@ -25,7 +25,7 @@ export function registerCommands(plugin: Plugin) {
 			await plugin.loadData().then((data: any) => {
 				Object.assign((plugin as any).settings, data);
 			});
-			const wizard = new SetupWizardModal(plugin.app, plugin);
+			const wizard = new SetupWizardModal(plugin.app, plugin as any);
 			wizard.open();
 		}
 	});

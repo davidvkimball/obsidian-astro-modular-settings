@@ -55,7 +55,7 @@ export class GeneralTab extends TabRenderer {
 					await this.plugin.loadData().then((data: any) => {
 						Object.assign((this.plugin as any).settings, data);
 					});
-					const wizard = new SetupWizardModal(this.app, this.plugin);
+					const wizard = new SetupWizardModal(this.app, this.plugin as any);
 					wizard.open();
 				}));
 
@@ -79,8 +79,8 @@ export class GeneralTab extends TabRenderer {
 				return 'Vercel';
 			case 'github-pages':
 				return 'GitHub Pages';
-			case 'cloudflare-pages':
-				return 'Cloudflare Pages';
+			case 'cloudflare-workers':
+				return 'Cloudflare Workers';
 			default:
 				return deployment;
 		}
