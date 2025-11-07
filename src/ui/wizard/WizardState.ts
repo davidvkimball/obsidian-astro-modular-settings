@@ -355,9 +355,21 @@ export class WizardStateManager {
 			settings.features.profilePicture = settings.optionalFeatures.profilePicture.enabled;
 		}
 
-		// Synchronize comments settings between features and optionalFeatures
+		// Synchronize comments settings between features, optionalFeatures, and postOptions
 		if (settings.optionalFeatures?.comments) {
 			settings.features.comments = settings.optionalFeatures.comments.enabled;
+			
+			// Also sync postOptions.comments.enabled to ensure consistency
+			if (!settings.postOptions) {
+				settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tableOfContents: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: { ...settings.optionalFeatures.comments } };
+			} else if (!settings.postOptions.comments) {
+				settings.postOptions.comments = { ...settings.optionalFeatures.comments };
+			} else {
+				// Preserve existing comment settings but update enabled state
+				settings.postOptions.comments.enabled = settings.optionalFeatures.comments.enabled;
+				// Also sync all other comment fields from optionalFeatures
+				Object.assign(settings.postOptions.comments, settings.optionalFeatures.comments);
+			}
 		}
 
 		// Sync optional content types from wizard state

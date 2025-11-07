@@ -216,8 +216,9 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 			
 			if (!scriptContent) {
 				validationDiv.innerHTML = '';
-				// Clear all comment settings when script is deleted
+				// Clear all comment settings when script is deleted, but preserve enabled state
 				const currentState = this.getState();
+				const currentEnabled = currentState.selectedOptionalFeatures?.comments?.enabled ?? false;
 				this.updateState({
 					selectedOptionalFeatures: {
 						...currentState.selectedOptionalFeatures,
@@ -235,7 +236,8 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 							inputPosition: '',
 							theme: '',
 							lang: '',
-							loading: ''
+							loading: '',
+							enabled: currentEnabled // Preserve enabled state
 						}
 					}
 				});
@@ -252,12 +254,16 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 				// Parse and update script settings without forcing comments to be enabled
 				const parsed = GiscusScriptParser.parseScript(scriptContent);
 				if (parsed) {
+					// Get the current enabled state to preserve it
+					const currentState = this.getState();
+					const currentEnabled = currentState.selectedOptionalFeatures?.comments?.enabled ?? false;
+					
 					// Update script data but preserve the current enabled state
 					this.updateState({
 						selectedOptionalFeatures: {
-							...state.selectedOptionalFeatures,
+							...currentState.selectedOptionalFeatures,
 							comments: { 
-								...state.selectedOptionalFeatures?.comments, 
+								...currentState.selectedOptionalFeatures?.comments, 
 								rawScript: scriptContent,
 								repo: parsed.repo,
 								repoId: parsed.repoId,
@@ -270,7 +276,8 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 								inputPosition: parsed.inputPosition,
 								theme: parsed.theme,
 								lang: parsed.lang,
-								loading: parsed.loading
+								loading: parsed.loading,
+								enabled: currentEnabled // Preserve enabled state
 							}
 						}
 					});
