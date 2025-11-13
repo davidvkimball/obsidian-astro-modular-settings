@@ -141,23 +141,50 @@ export class WizardStateManager {
 					placement: settings.optionalFeatures?.profilePicture?.placement || 'footer',
 					style: settings.optionalFeatures?.profilePicture?.style || 'circle',
 				},
-				comments: {
-					enabled: settings.optionalFeatures?.comments?.enabled || false,
-					provider: 'giscus',
-					rawScript: settings.optionalFeatures?.comments?.rawScript || '',
-					repo: settings.optionalFeatures?.comments?.repo || 'davidvkimball/astro-modular',
-					repoId: settings.optionalFeatures?.comments?.repoId || 'R_kgDOPllfKw',
-					category: settings.optionalFeatures?.comments?.category || 'General',
-					categoryId: settings.optionalFeatures?.comments?.categoryId || 'DIC_kwDOPllfK84CvUpx',
-					mapping: settings.optionalFeatures?.comments?.mapping || 'pathname',
-					strict: settings.optionalFeatures?.comments?.strict || '0',
-					reactions: settings.optionalFeatures?.comments?.reactions || '1',
-					metadata: settings.optionalFeatures?.comments?.metadata || '0',
-					inputPosition: settings.optionalFeatures?.comments?.inputPosition || 'bottom',
-					theme: settings.optionalFeatures?.comments?.theme || 'preferred_color_scheme',
-					lang: settings.optionalFeatures?.comments?.lang || 'en',
-					loading: settings.optionalFeatures?.comments?.loading || 'lazy',
-				},
+				comments: (() => {
+					const commentsEnabled = settings.optionalFeatures?.comments?.enabled || false;
+					const existingComments = settings.optionalFeatures?.comments;
+					
+					// If comments are disabled, preserve existing values (don't populate defaults)
+					if (!commentsEnabled) {
+						return {
+							enabled: false,
+							provider: existingComments?.provider || 'giscus',
+							rawScript: existingComments?.rawScript || '',
+							repo: existingComments?.repo || '',
+							repoId: existingComments?.repoId || '',
+							category: existingComments?.category || '',
+							categoryId: existingComments?.categoryId || '',
+							mapping: existingComments?.mapping || '',
+							strict: existingComments?.strict || '',
+							reactions: existingComments?.reactions || '',
+							metadata: existingComments?.metadata || '',
+							inputPosition: existingComments?.inputPosition || '',
+							theme: existingComments?.theme || '',
+							lang: existingComments?.lang || '',
+							loading: existingComments?.loading || '',
+						};
+					}
+					
+					// If comments are enabled, use defaults for missing values
+					return {
+						enabled: true,
+						provider: existingComments?.provider || 'giscus',
+						rawScript: existingComments?.rawScript || '',
+						repo: existingComments?.repo || 'davidvkimball/astro-modular',
+						repoId: existingComments?.repoId || 'R_kgDOPllfKw',
+						category: existingComments?.category || 'General',
+						categoryId: existingComments?.categoryId || 'DIC_kwDOPllfK84CvUpx',
+						mapping: existingComments?.mapping || 'pathname',
+						strict: existingComments?.strict || '0',
+						reactions: existingComments?.reactions || '1',
+						metadata: existingComments?.metadata || '0',
+						inputPosition: existingComments?.inputPosition || 'bottom',
+						theme: existingComments?.theme || 'preferred_color_scheme',
+						lang: existingComments?.lang || 'en',
+						loading: existingComments?.loading || 'lazy',
+					};
+				})(),
 			},
 			selectedOptionalContentTypes: (() => {
 				// Set based on current template: enabled for 'standard', disabled for others
@@ -270,23 +297,50 @@ export class WizardStateManager {
 				placement: settings.optionalFeatures?.profilePicture?.placement || 'footer',
 				style: settings.optionalFeatures?.profilePicture?.style || 'circle',
 			},
-			comments: {
-				enabled: settings.optionalFeatures?.comments?.enabled || false,
-				provider: 'giscus',
-				rawScript: settings.optionalFeatures?.comments?.rawScript || '',
-				repo: settings.optionalFeatures?.comments?.repo || 'davidvkimball/astro-modular',
-				repoId: settings.optionalFeatures?.comments?.repoId || 'R_kgDOPllfKw',
-				category: settings.optionalFeatures?.comments?.category || 'General',
-				categoryId: settings.optionalFeatures?.comments?.categoryId || 'DIC_kwDOPllfK84CvUpx',
-				mapping: settings.optionalFeatures?.comments?.mapping || 'pathname',
-				strict: settings.optionalFeatures?.comments?.strict || '0',
-				reactions: settings.optionalFeatures?.comments?.reactions || '1',
-				metadata: settings.optionalFeatures?.comments?.metadata || '0',
-				inputPosition: settings.optionalFeatures?.comments?.inputPosition || 'bottom',
-				theme: settings.optionalFeatures?.comments?.theme || 'preferred_color_scheme',
-				lang: settings.optionalFeatures?.comments?.lang || 'en',
-				loading: settings.optionalFeatures?.comments?.loading || 'lazy',
-			},
+			comments: (() => {
+				const commentsEnabled = settings.optionalFeatures?.comments?.enabled || false;
+				const existingComments = settings.optionalFeatures?.comments;
+				
+				// If comments are disabled, preserve existing values (don't populate defaults)
+				if (!commentsEnabled) {
+					return {
+						enabled: false,
+						provider: existingComments?.provider || 'giscus',
+						rawScript: existingComments?.rawScript || '',
+						repo: existingComments?.repo || '',
+						repoId: existingComments?.repoId || '',
+						category: existingComments?.category || '',
+						categoryId: existingComments?.categoryId || '',
+						mapping: existingComments?.mapping || '',
+						strict: existingComments?.strict || '',
+						reactions: existingComments?.reactions || '',
+						metadata: existingComments?.metadata || '',
+						inputPosition: existingComments?.inputPosition || '',
+						theme: existingComments?.theme || '',
+						lang: existingComments?.lang || '',
+						loading: existingComments?.loading || '',
+					};
+				}
+				
+				// If comments are enabled, use defaults for missing values
+				return {
+					enabled: true,
+					provider: existingComments?.provider || 'giscus',
+					rawScript: existingComments?.rawScript || '',
+					repo: existingComments?.repo || 'davidvkimball/astro-modular',
+					repoId: existingComments?.repoId || 'R_kgDOPllfKw',
+					category: existingComments?.category || 'General',
+					categoryId: existingComments?.categoryId || 'DIC_kwDOPllfK84CvUpx',
+					mapping: existingComments?.mapping || 'pathname',
+					strict: existingComments?.strict || '0',
+					reactions: existingComments?.reactions || '1',
+					metadata: existingComments?.metadata || '0',
+					inputPosition: existingComments?.inputPosition || 'bottom',
+					theme: existingComments?.theme || 'preferred_color_scheme',
+					lang: existingComments?.lang || 'en',
+					loading: existingComments?.loading || 'lazy',
+				};
+			})(),
 		};
 		
 		// Update optional content types

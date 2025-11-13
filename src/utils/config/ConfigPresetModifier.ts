@@ -1145,8 +1145,9 @@ export class ConfigPresetModifier {
 			);
 		}
 		
-		// Update other comments settings only if comments exist
-		if (settings.optionalFeatures?.comments) {
+		// Update other comments settings only if comments exist AND are enabled
+		// This prevents updating config.ts with comment values when comments are disabled
+		if (settings.optionalFeatures?.comments && settings.optionalFeatures.comments.enabled) {
 			// Update provider - always update if it exists in settings (even if empty)
 			if (settings.optionalFeatures.comments.provider !== undefined) {
 				modifiedConfig = modifiedConfig.replace(

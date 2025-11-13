@@ -246,31 +246,34 @@ export class SetupWizardModal extends Modal {
 			// Check if any changes were actually made
 			const hasChanges = this.hasSettingsChanged();
 			
+			// Only save to data.json and config.ts if there were actual changes
+			if (!hasChanges) {
+				return; // No changes, don't save anything
+			}
+			
 			// Save to data.json
 			await this.plugin.saveData(this.plugin.settings);
 			
 			// Reload settings to ensure the plugin has the latest values
 			await this.plugin.loadSettings();
 			
-			// Only apply to config.ts if there were changes
-			if (hasChanges) {
-				const settings = this.plugin.settings;
-				const presetSuccess = await this.plugin.configManager.applyPreset({
-					name: settings.currentTemplate,
-					description: '',
-					features: settings.features,
-					theme: settings.currentTheme,
-					contentOrganization: settings.contentOrganization,
-					config: settings
-				});
-				
-				// Only show notification if requested and changes were made
-				if (showNotification && hasChanges) {
-					if (presetSuccess) {
-						new Notice('Configuration saved to config.ts');
-					} else {
-						new Notice('Failed to save configuration to config.ts');
-					}
+			// Apply to config.ts
+			const settings = this.plugin.settings;
+			const presetSuccess = await this.plugin.configManager.applyPreset({
+				name: settings.currentTemplate,
+				description: '',
+				features: settings.features,
+				theme: settings.currentTheme,
+				contentOrganization: settings.contentOrganization,
+				config: settings
+			});
+			
+			// Only show notification if requested
+			if (showNotification) {
+				if (presetSuccess) {
+					new Notice('Configuration saved to config.ts');
+				} else {
+					new Notice('Failed to save configuration to config.ts');
 				}
 			}
 		} catch (error) {
