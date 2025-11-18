@@ -545,7 +545,7 @@
 }
 
 /* Finalize Step */
-.config-summary {
+.astro-modular-wizard .config-summary {
 	background: var(--background-secondary);
 	padding: 20px;
 	border-radius: 8px;
@@ -553,17 +553,17 @@
 	margin-bottom: 20px;
 }
 
-.config-summary h3 {
+.astro-modular-wizard .config-summary h3 {
 	margin: 0 0 15px 0;
 	color: var(--text-normal);
 }
 
-.config-item {
+.astro-modular-wizard .config-item {
 	margin-bottom: 8px;
 	color: var(--text-muted);
 }
 
-.config-item:last-child {
+.astro-modular-wizard .config-item:last-child {
 	margin-bottom: 0;
 }
 
@@ -592,14 +592,14 @@
 	overflow: hidden;
 }
 
-/* Vertical Tab Content (Shell Commands style) */
-.vertical-tab-content {
+/* Vertical Tab Content (Shell Commands style) - SCOPED to this plugin only */
+.astro-modular-settings .vertical-tab-content {
 	display: flex;
 	flex-direction: column;
 	height: 100%;
 }
 
-.tab-container {
+.astro-modular-settings .tab-container {
 	display: flex;
 	flex-direction: column;
 	overflow: hidden;
@@ -607,7 +607,7 @@
 	height: 100%;
 }
 
-.tab-nav {
+.astro-modular-settings .tab-nav {
 	display: flex;
 	border-bottom: 1px solid var(--background-modifier-border);
 	margin: 0;
@@ -621,27 +621,28 @@
 	-webkit-overflow-scrolling: touch;
 }
 
-.tab-nav::-webkit-scrollbar {
+.astro-modular-settings .tab-nav::-webkit-scrollbar {
 	height: 6px;
 }
 
-.tab-nav::-webkit-scrollbar-track {
+.astro-modular-settings .tab-nav::-webkit-scrollbar-track {
 	background: transparent;
 }
 
-.tab-nav::-webkit-scrollbar-thumb {
+.astro-modular-settings .tab-nav::-webkit-scrollbar-thumb {
 	background: var(--background-modifier-border);
 	border-radius: 3px;
 }
 
-.tab-nav::-webkit-scrollbar-thumb:hover {
+.astro-modular-settings .tab-nav::-webkit-scrollbar-thumb:hover {
 	background: var(--background-modifier-border-hover);
 }
 
-.tab-button {
+.astro-modular-settings .tab-button {
 	padding: 8px 12px;
 	background: transparent;
 	border: none;
+	border-bottom: 2px solid transparent;
 	color: var(--text-muted);
 	cursor: default;
 	font-size: 14px;
@@ -652,15 +653,20 @@
 	text-align: left;
 	box-shadow: none;
 	position: relative;
+	transition: color 0.2s ease, border-color 0.2s ease;
 }
 
-.tab-button.active {
+.astro-modular-settings .tab-button:hover {
 	color: var(--text-normal);
-	font-weight: normal;
-	background: var(--background-primary);
 }
 
-.tab-content {
+.astro-modular-settings .tab-button.active {
+	color: var(--text-normal);
+	background: var(--background-primary);
+	border-bottom: 2px solid var(--interactive-accent);
+}
+
+.astro-modular-settings .tab-content {
 	flex: 1;
 	padding: 20px;
 	margin: 0;
@@ -668,38 +674,38 @@
 	min-height: 0;
 }
 
-.tab-content-container {
+.astro-modular-settings .tab-content-container {
 	flex: 1;
 	padding: 20px;
 	margin: 0;
 }
 
-.SC-tab-content {
+.astro-modular-settings .SC-tab-content {
 	display: none;
 	padding: 0;
 	margin: 0;
 }
 
-.SC-tab-content.SC-tab-active {
+.astro-modular-settings .SC-tab-content.SC-tab-active {
 	display: block;
 }
 
-.settings-section {
+.astro-modular-settings .settings-section {
 	margin-bottom: 30px;
 }
 
-.settings-section h2 {
+.astro-modular-settings .settings-section h2 {
 	margin-bottom: 10px;
 	color: var(--text-normal);
 }
 
-.settings-section p {
+.astro-modular-settings .settings-section p {
 	color: var(--text-muted);
 	margin-bottom: 20px;
 	line-height: 1.6;
 }
 
-.config-display {
+.astro-modular-settings .config-display {
 	background: var(--background-secondary);
 	padding: 20px;
 	border-radius: 8px;
@@ -707,17 +713,17 @@
 	margin: 20px 0;
 }
 
-.config-info h3 {
+.astro-modular-settings .config-info h3 {
 	margin: 0 0 15px 0;
 	color: var(--text-normal);
 }
 
-.config-item {
+.astro-modular-settings .config-item {
 	margin-bottom: 8px;
 	color: var(--text-muted);
 }
 
-.config-item:last-child {
+.astro-modular-settings .config-item:last-child {
 	margin-bottom: 0;
 }
 
@@ -1504,4 +1510,21 @@
 	.simple-color-input label {
 		min-width: auto;
 	}
+}
+
+/* Fix checkbox checkmark centering - use proper vertical centering */
+input[type=checkbox]:checked:after {
+	content: "";
+	inset-inline-start: -1px;
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	width: var(--checkbox-size);
+	height: var(--checkbox-size);
+	display: block;
+	background-color: var(--checkbox-marker-color);
+	-webkit-mask-position: 52% 52%;
+	-webkit-mask-size: 65%;
+	-webkit-mask-repeat: no-repeat;
+	-webkit-mask-image: url(data:image/svg+xml; utf8, <svg width="12px"height="10px"viewBox="0 0 12 8"version="1.1"xmlns="http://www.w3.org/2000/svg"xmlns:xlink="http://www.w3.org/1999/xlink"><g stroke="none"stroke-width="1"fill="none"fill-rule="evenodd"><g transform="translate%28-4.000000, -6.000000%29"fill="%23000000"><path d="M8.1043257,14.0367999 L4.52468714,10.5420499 C4.32525014,10.3497722 4.32525014,10.0368095 4.52468714,9.8424863 L5.24777413,9.1439454 C5.44721114,8.95166768 5.77142411,8.95166768 5.97086112,9.1439454 L8.46638057,11.5903727 L14.0291389,6.1442083 C14.2285759,5.95193057 14.5527889,5.95193057 14.7522259,6.1442083 L15.4753129,6.84377194 C15.6747499,7.03604967 15.6747499,7.35003511 15.4753129,7.54129009 L8.82741268,14.0367999 C8.62797568,14.2290777 8.3037627,14.2290777 8.1043257,14.0367999"></path></g></g></svg>);
 }
