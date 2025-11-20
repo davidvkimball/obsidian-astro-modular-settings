@@ -24,6 +24,7 @@
     "node_modules",
     "main.js",
     "esbuild.config.mjs",
-    "version-bump.mjs"
+    "version-bump.mjs",
+    "reference"
   ]
 }

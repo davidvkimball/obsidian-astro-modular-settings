@@ -65,6 +65,9 @@ export interface AstroModularSettings {
 	
 	// Custom theme generation
 	customThemeGenerationEnabled?: boolean;
+
+	// Help button replacement
+	helpButtonReplacement: HelpButtonReplacementSettings;
 }
 
 export interface SiteInformation {
@@ -392,6 +395,12 @@ export interface ColorScale {
 	950?: string; // Only for primary colors
 }
 
+export interface HelpButtonReplacementSettings {
+	enabled: boolean;
+	commandId: string;
+	iconId: string;
+}
+
 export const FONT_OPTIONS = [
 	'Inter', 'Roboto', 'Open Sans', 'Lato', 'Poppins', 'Source Sans Pro', 'Nunito', 'Montserrat',
 	'Playfair Display', 'Merriweather', 'Lora', 'Crimson Text', 'PT Serif', 'Libre Baskerville',
@@ -621,6 +630,11 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 	availableThemes: 'default',
 	customThemes: '',
 	customThemeGenerationEnabled: false,
+	helpButtonReplacement: {
+		enabled: true,
+		commandId: 'astro-modular-settings:open-settings',
+		iconId: 'wrench',
+	},
 };
 
 export const THEME_OPTIONS: ThemeOption[] = [
