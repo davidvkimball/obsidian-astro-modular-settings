@@ -68,6 +68,9 @@ export interface AstroModularSettings {
 
 	// Help button replacement
 	helpButtonReplacement: HelpButtonReplacementSettings;
+
+	// Ribbon icon
+	removeRibbonIcon: boolean;
 }
 
 export interface SiteInformation {
@@ -635,6 +638,7 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 		commandId: 'astro-modular-settings:open-settings',
 		iconId: 'wrench',
 	},
+	removeRibbonIcon: false,
 };
 
 export const THEME_OPTIONS: ThemeOption[] = [

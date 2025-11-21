@@ -72,6 +72,21 @@ export class GeneralTab extends TabRenderer {
 					await this.plugin.saveData(settings);
 				}));
 
+		// Remove ribbon icon toggle
+		new Setting(container)
+			.setName('Remove ribbon icon')
+			.setDesc('Remove the wizard icon from the left ribbon')
+			.addToggle(toggle => toggle
+				.setValue(settings.removeRibbonIcon ?? false)
+				.onChange(async (value) => {
+					settings.removeRibbonIcon = value;
+					await this.plugin.saveData(settings);
+					// Update ribbon icon immediately
+					if ((this.plugin as any).updateRibbonIcon) {
+						await (this.plugin as any).updateRibbonIcon();
+					}
+				}));
+
 		// Help button replacement toggle
 		const helpButtonSetting = new Setting(container)
 			.setName('Swap out help button for custom action')
