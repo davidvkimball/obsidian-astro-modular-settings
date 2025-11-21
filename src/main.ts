@@ -147,6 +147,7 @@ export default class AstroModularSettingsPlugin extends Plugin {
 		// Only add CSS if replacement is enabled
 		if (this.settings.helpButtonReplacement?.enabled) {
 			// Create style element to hide help button globally
+			// Use unique ID to avoid conflicts with other plugins
 			this.helpButtonStyleEl = document.createElement('style');
 			this.helpButtonStyleEl.id = 'astro-modular-settings-hide-help-button';
 			this.helpButtonStyleEl.textContent = `
@@ -203,15 +204,23 @@ export default class AstroModularSettingsPlugin extends Plugin {
 			this.helpButtonElement = helpButton;
 
 			// Remove existing custom button if it exists (always recreate to update icon/command)
-			if (this.customHelpButton && this.customHelpButton.parentElement) {
+			// Check if it's actually in the DOM and has our identifier before trying to remove it
+			if (this.customHelpButton && 
+				this.customHelpButton.parentElement && 
+				document.body.contains(this.customHelpButton) &&
+				this.customHelpButton.hasAttribute('data-astro-modular-settings-help-replacement')) {
 				this.customHelpButton.remove();
-				this.customHelpButton = undefined;
 			}
+			this.customHelpButton = undefined;
 
 			// Create a new custom button
 			const customButton = helpButton.cloneNode(true) as HTMLElement;
 			customButton.style.display = '';
 			customButton.removeAttribute('aria-label'); // Remove any existing aria-label
+			
+			// Add unique identifier to avoid conflicts with other plugins
+			customButton.setAttribute('data-astro-modular-settings-help-replacement', 'true');
+			customButton.classList.add('astro-modular-settings-help-replacement');
 			
 			// Clear any existing click handlers
 			customButton.onclick = null;
@@ -278,10 +287,22 @@ export default class AstroModularSettingsPlugin extends Plugin {
 				const vaultActions = document.querySelector('.workspace-drawer-vault-actions');
 				if (!vaultActions) return;
 				
-				// Check if we have a custom button, if not, inject it
-				if (!this.customHelpButton) {
-					this.updateHelpButton();
+			// Check if we have a custom button AND it's still in the DOM
+			// The reference might exist but the button could have been removed
+			// Also verify it has our unique identifier to avoid conflicts with other plugins
+			const customButtonExists = this.customHelpButton && 
+				this.customHelpButton.parentElement && 
+				document.body.contains(this.customHelpButton) &&
+				this.customHelpButton.hasAttribute('data-astro-modular-settings-help-replacement');
+			
+			if (!customButtonExists) {
+				// Clear stale reference if button was removed or doesn't have our identifier
+				if (this.customHelpButton && (!document.body.contains(this.customHelpButton) || 
+					!this.customHelpButton.hasAttribute('data-astro-modular-settings-help-replacement'))) {
+					this.customHelpButton = undefined;
 				}
+				this.updateHelpButton();
+			}
 			}, 100); // Shorter debounce for better responsiveness
 		});
 
