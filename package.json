@@ -1,6 +1,6 @@
 {
 	"name": "astro-modular-settings",
-	"version": "0.3.3",
+	"version": "0.3.4",
 	"description": "Onboarding and configuration management for Astro Modular theme.",
 	"main": "main.js",
 	"scripts": {
