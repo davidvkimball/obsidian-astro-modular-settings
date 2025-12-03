@@ -48,7 +48,7 @@ export class SetupWizardModal extends Modal {
 		];
 	}
 
-	onOpen() {
+	async onOpen() {
 		const { contentEl } = this;
 		contentEl.empty();
 		contentEl.addClass('astro-modular-wizard');
@@ -59,7 +59,7 @@ export class SetupWizardModal extends Modal {
 		// Store a snapshot of initial settings to detect changes later
 		this.initialSettingsSnapshot = this.createSettingsSnapshot();
 		
-		this.renderCurrentStep();
+		await this.renderCurrentStep();
 	}
 
 	async onClose() {
@@ -75,29 +75,64 @@ export class SetupWizardModal extends Modal {
 		this.isCompleting = false;
 	}
 
-	private renderCurrentStep() {
+	private scrollToTop() {
+		const { contentEl } = this;
+		
+		// Method 1: Find and scroll the actual scrollable parent
+		let scrollableParent: HTMLElement | null = contentEl;
+		while (scrollableParent && scrollableParent !== document.body) {
+			const style = window.getComputedStyle(scrollableParent);
+			if (scrollableParent.scrollHeight > scrollableParent.clientHeight && 
+				(style.overflowY === 'auto' || style.overflowY === 'scroll' || style.overflow === 'auto' || style.overflow === 'scroll')) {
+				scrollableParent.scrollTop = 0;
+				break;
+			}
+			scrollableParent = scrollableParent.parentElement;
+		}
+		
+		// Method 2: Try common Obsidian modal containers
+		const modalContent = contentEl.closest('.modal-content');
+		if (modalContent) {
+			(modalContent as HTMLElement).scrollTop = 0;
+		}
+		
+		const modalContainer = contentEl.closest('.modal-container');
+		if (modalContainer) {
+			(modalContainer as HTMLElement).scrollTop = 0;
+		}
+		
+		// Also try contentEl itself
+		contentEl.scrollTop = 0;
+	}
+
+	private async renderCurrentStep() {
 		const { contentEl } = this;
 		const state = this.stateManager.getState();
+		
+		// Scroll to top IMMEDIATELY before clearing content to prevent visual jump
+		this.scrollToTop();
 		
 		// Clear content
 		contentEl.empty();
 		contentEl.addClass('astro-modular-wizard');
 
-		// Render header
-		this.renderHeader(contentEl);
+		// Scroll to top again after clearing (in case clearing changed scroll position)
+		this.scrollToTop();
 
 		// Render progress
 		this.renderProgress(contentEl);
 
-		// Render step content
+		// Render step content (await to ensure it's complete)
 		const stepContent = contentEl.createDiv('wizard-content');
-		this.renderStepContent(stepContent);
+		await this.renderStepContent(stepContent);
 
 		// Render footer
 		this.renderFooter(contentEl);
 		
-		// Scroll to top of the modal content after rendering
-		contentEl.scrollTop = 0;
+		// Final scroll to top after all rendering is complete
+		requestAnimationFrame(() => {
+			this.scrollToTop();
+		});
 	}
 
 	private renderHeader(container: HTMLElement) {
@@ -115,8 +150,11 @@ export class SetupWizardModal extends Modal {
 			<div class="progress-bar">
 				<div class="progress-fill" style="width: ${this.stateManager.getProgress()}%"></div>
 			</div>
-			<div class="progress-text">Step ${state.currentStep} of ${state.totalSteps}</div>
 		`;
+		
+		// Add step text below the progress bar
+		const progressText = progress.createDiv('progress-text');
+		progressText.textContent = `Step ${state.currentStep} of ${state.totalSteps}`;
 	}
 
 	private async renderStepContent(container: HTMLElement) {
@@ -140,11 +178,11 @@ export class SetupWizardModal extends Modal {
 				text: 'Previous',
 				cls: 'mod-button'
 			});
-			prevBtn.addEventListener('click', () => {
+			prevBtn.addEventListener('click', async () => {
 				// Discard any changes made on current step and go back
 				this.discardCurrentStepChanges();
 				this.stateManager.previousStep();
-				this.renderCurrentStep();
+				await this.renderCurrentStep();
 			});
 		}
 
@@ -158,7 +196,7 @@ export class SetupWizardModal extends Modal {
 				// Save current step changes to wizard state, data.json, and config.ts
 				await this.saveCurrentStepToWizardState();
 				this.stateManager.nextStep();
-				this.renderCurrentStep();
+				await this.renderCurrentStep();
 			});
 		} else {
 			const completeBtn = buttons.createEl('button', {
@@ -193,10 +231,10 @@ export class SetupWizardModal extends Modal {
 				cls: 'mod-button'
 			});
 			skipBtn.style.opacity = '0.6';
-			skipBtn.addEventListener('click', () => {
+			skipBtn.addEventListener('click', async () => {
 				// Skip without saving current step changes to wizard state
 				this.stateManager.nextStep();
-				this.renderCurrentStep();
+				await this.renderCurrentStep();
 			});
 		}
 	}

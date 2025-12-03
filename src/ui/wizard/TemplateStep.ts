@@ -1,6 +1,6 @@
 import { BaseWizardStep } from './BaseWizardStep';
 import { TEMPLATE_OPTIONS, TemplateType } from '../../types';
-import { Notice } from 'obsidian';
+import { Notice, Setting } from 'obsidian';
 
 export class TemplateStep extends BaseWizardStep {
 	render(container: HTMLElement): void {
@@ -24,12 +24,6 @@ export class TemplateStep extends BaseWizardStep {
 							</div>
 						</div>
 					`).join('')}
-				</div>
-				<div class="template-actions" style="margin-top: 2rem; padding-top: 1.5rem;">
-					<button class="mod-cta" id="edit-config-directly">
-						Edit config.ts directly
-					</button>
-					<p class="template-action-desc" style="margin-top: 0.5rem; margin-bottom: 0;">Skip the wizard and edit your Astro configuration file directly (advanced).</p>
 				</div>
 			</div>
 		`;
@@ -59,12 +53,23 @@ export class TemplateStep extends BaseWizardStep {
 			});
 		});
 
-		// Add click handler for "Edit config.ts directly" button
-		const editConfigButton = container.querySelector('#edit-config-directly');
-		if (editConfigButton) {
-			editConfigButton.addEventListener('click', () => {
-				this.openConfigFile();
-			});
+		// Edit config.ts directly setting (standard Obsidian Setting format)
+		const templateSelection = container.querySelector('.template-selection');
+		if (templateSelection) {
+			const setting = new Setting(templateSelection as HTMLElement)
+				.setName('Edit config.ts directly (advanced)')
+				.setDesc('Skip the wizard and edit your Astro configuration file directly.')
+				.addButton(button => button
+					.setButtonText('Edit config.ts')
+					.onClick(() => {
+						this.openConfigFile();
+					}));
+			
+			// Add spacing above the setting
+			const settingEl = setting.settingEl;
+			if (settingEl) {
+				settingEl.style.marginTop = '2rem';
+			}
 		}
 	}
 
