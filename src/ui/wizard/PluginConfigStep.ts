@@ -16,22 +16,79 @@ export class PluginConfigStep extends BaseWizardStep {
 				
 				<div class="plugin-status">
       ${pluginStatus.map((plugin: any) => {
-						const isSettingsCheck = plugin.name === 'Plugin-compatible Obsidian settings';
+						const isSettingsCheck = plugin.name === 'Attachment settings';
 						const isConfigured = plugin.installed; // For settings, installed means configured
+						const hasSyncIssues = plugin.outOfSyncContentTypes && plugin.outOfSyncContentTypes.length > 0;
+						// If ALL content types are out of sync (4 out of 4), it's "Doesn't match", not "Partially configured"
+						const allOutOfSync = hasSyncIssues && plugin.outOfSyncContentTypes && plugin.outOfSyncContentTypes.length === 4;
+						const isPartiallyConfigured = hasSyncIssues && !allOutOfSync && plugin.installed && plugin.enabled;
+						const allMismatched = allOutOfSync && plugin.installed && plugin.enabled;
+						// Check if this is Image Inserter and settings don't match
+						const isImageInserter = plugin.name === 'Image Inserter';
+						const imageInserterMismatch = isImageInserter && plugin.installed && plugin.enabled && plugin.settingsMatch === false;
+						
+						// Determine if plugin is properly configured (not just enabled)
+						const isProperlyConfigured = plugin.installed && plugin.enabled && 
+							!imageInserterMismatch && !allMismatched && !isPartiallyConfigured;
+						
+						// Determine status text
+						let statusText: string;
+						if (isSettingsCheck) {
+							statusText = isConfigured ? 'Configured' : 'Doesn\'t match';
+						} else if (!plugin.installed) {
+							statusText = 'Not installed';
+						} else if (!plugin.enabled) {
+							statusText = 'Disabled';
+						} else if (imageInserterMismatch || allMismatched) {
+							statusText = 'Doesn\'t match';
+						} else if (isPartiallyConfigured) {
+							statusText = 'Partially configured';
+						} else if (isProperlyConfigured) {
+							statusText = 'Configured';
+						} else {
+							// Fallback - should not happen, but just in case
+							statusText = 'Configured';
+						}
+						
+						// Determine item class
+						let itemClass = 'plugin-item';
+						if (isSettingsCheck) {
+							itemClass += isConfigured ? ' installed' : ' missing';
+						} else if (imageInserterMismatch || allMismatched) {
+							// Image Inserter settings don't match or all content types are out of sync - show as "missing" (red X)
+							itemClass += ' missing';
+						} else if (isPartiallyConfigured) {
+							itemClass += ' partially-configured';
+						} else {
+							itemClass += (plugin.installed && plugin.enabled) ? ' installed' : ' missing';
+						}
+						
+						// Determine icon
+						let iconSvg: string;
+						if (isSettingsCheck) {
+							iconSvg = isConfigured 
+								? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'
+								: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+						} else if (imageInserterMismatch || allMismatched) {
+							// Image Inserter settings don't match or all content types are out of sync - show red X
+							iconSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+						} else if (isPartiallyConfigured) {
+							iconSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>';
+						} else {
+							iconSvg = (plugin.installed && plugin.enabled)
+								? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'
+								: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+						}
+						
 						return `
-						<div class="plugin-item ${isConfigured ? 'installed' : 'missing'}">
+						<div class="${itemClass}">
 							<div class="plugin-icon">
-								${isConfigured 
-									? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'
-									: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>'
-								}
+								${iconSvg}
 							</div>
 							<div class="plugin-info">
 								<h3>${plugin.name}</h3>
-								<p>${isSettingsCheck 
-									? (isConfigured ? 'Configured' : 'Doesn\'t match')
-									: (plugin.installed ? (plugin.enabled ? 'Enabled' : 'Not enabled') : 'Not enabled')
-								}</p>
+								<p>${statusText}</p>
+								${hasSyncIssues && plugin.outOfSyncContentTypes ? `<p style="font-size: 0.9em; opacity: 0.8; margin-top: 4px;">Out of sync: ${plugin.outOfSyncContentTypes.join(', ')}</p>` : ''}
 							</div>
 						</div>
 					`;
@@ -77,6 +134,85 @@ export class PluginConfigStep extends BaseWizardStep {
 
 				const success = await (this.plugin as any).pluginManager.configurePlugins(config);
 				if (success) {
+					// Reload plugin status to reflect changes
+					const updatedStatus = await (this.plugin as any).pluginManager.getPluginStatus(state.selectedContentOrg);
+					
+					// Re-render the status display
+					const statusContainer = container.querySelector('.plugin-status');
+					if (statusContainer) {
+						statusContainer.innerHTML = updatedStatus.map((plugin: any) => {
+							const isSettingsCheck = plugin.name === 'Attachment settings';
+							const isConfigured = plugin.installed;
+							const hasSyncIssues = plugin.outOfSyncContentTypes && plugin.outOfSyncContentTypes.length > 0;
+							const allOutOfSync = hasSyncIssues && plugin.outOfSyncContentTypes && plugin.outOfSyncContentTypes.length === 4;
+							const isPartiallyConfigured = hasSyncIssues && !allOutOfSync && plugin.installed && plugin.enabled;
+							const allMismatched = allOutOfSync && plugin.installed && plugin.enabled;
+							const isImageInserter = plugin.name === 'Image Inserter';
+							const imageInserterMismatch = isImageInserter && plugin.installed && plugin.enabled && plugin.settingsMatch === false;
+							
+							// Determine if plugin is properly configured (not just enabled)
+							const isProperlyConfigured = plugin.installed && plugin.enabled && 
+								!imageInserterMismatch && !allMismatched && !isPartiallyConfigured;
+							
+							let statusText: string;
+							if (isSettingsCheck) {
+								statusText = isConfigured ? 'Configured' : 'Doesn\'t match';
+							} else if (!plugin.installed) {
+								statusText = 'Not installed';
+							} else if (!plugin.enabled) {
+								statusText = 'Disabled';
+							} else if (imageInserterMismatch || allMismatched) {
+								statusText = 'Doesn\'t match';
+							} else if (isPartiallyConfigured) {
+								statusText = 'Partially configured';
+							} else if (isProperlyConfigured) {
+								statusText = 'Configured';
+							} else {
+								// Fallback - should not happen, but just in case
+								statusText = 'Configured';
+							}
+							
+							let itemClass = 'plugin-item';
+							if (isSettingsCheck) {
+								itemClass += isConfigured ? ' installed' : ' missing';
+							} else if (imageInserterMismatch || allMismatched) {
+								itemClass += ' missing';
+							} else if (isPartiallyConfigured) {
+								itemClass += ' partially-configured';
+							} else {
+								itemClass += (plugin.installed && plugin.enabled) ? ' installed' : ' missing';
+							}
+							
+							let iconSvg: string;
+							if (isSettingsCheck) {
+								iconSvg = isConfigured 
+									? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'
+									: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+							} else if (imageInserterMismatch || allMismatched) {
+								iconSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+							} else if (isPartiallyConfigured) {
+								iconSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>';
+							} else {
+								iconSvg = (plugin.installed && plugin.enabled)
+									? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'
+									: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+							}
+							
+							return `
+								<div class="${itemClass}">
+									<div class="plugin-icon">
+										${iconSvg}
+									</div>
+									<div class="plugin-info">
+										<h3>${plugin.name}</h3>
+										<p>${statusText}</p>
+										${hasSyncIssues && plugin.outOfSyncContentTypes ? `<p style="font-size: 0.9em; opacity: 0.8; margin-top: 4px;">Out of sync: ${plugin.outOfSyncContentTypes.join(', ')}</p>` : ''}
+									</div>
+								</div>
+							`;
+						}).join('');
+					}
+					
 					// Show detailed success message
 					const contentOrg = state.selectedContentOrg;
 					const attachmentLocation = contentOrg === 'file-based' ? 'subfolder (attachments/)' : 'same folder';

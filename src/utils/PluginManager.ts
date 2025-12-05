@@ -32,13 +32,29 @@ export class PluginManager {
 			// This works even when the plugin is disabled
 			const isInstalled = this.isPluginInstalled(pluginId);
 			
+			// For Astro Composer, check content type settings and include in main status
+			let outOfSyncContentTypes: string[] | undefined;
+			if (pluginId === 'astro-composer' && plugin) {
+				const syncCheck = await this.checkAstroComposerSettings(plugin, contentOrg);
+				if (syncCheck) {
+					outOfSyncContentTypes = syncCheck.outOfSyncContentTypes;
+				}
+			}
+			
+			// For Image Inserter, check if settings match content organization
+			let imageInserterSettingsMatch = true;
+			if (pluginId === 'insert-unsplash-image' && plugin && isInstalled && isInEnabledSet) {
+				imageInserterSettingsMatch = this.checkImageInserterSettings(plugin, contentOrg);
+			}
 			
 			status.push({
 				name: this.getPluginDisplayName(pluginId),
 				installed: isInstalled,
 				enabled: isInEnabledSet || false,
 				configurable: this.isPluginConfigurable(pluginId),
-				currentSettings: plugin ? await this.getPluginSettings(plugin) : undefined
+				currentSettings: plugin ? await this.getPluginSettings(plugin) : undefined,
+				outOfSyncContentTypes: outOfSyncContentTypes,
+				settingsMatch: pluginId === 'insert-unsplash-image' ? imageInserterSettingsMatch : undefined
 			});
 		}
 
@@ -87,23 +103,112 @@ export class PluginManager {
 			isConfigured = normalizedPath === `./${expectedSubfolder}` || 
 			               normalizedPath === `${expectedSubfolder}` ||
 			               normalizedPath.endsWith(`/${expectedSubfolder}`) ||
-			               normalizedPath === `.${expectedSubfolder}`;
+			               normalizedPath === `.${expectedSubfolder}` ||
+			               normalizedPath === `${expectedSubfolder}/` ||
+			               normalizedPath === `./${expectedSubfolder}/`;
 		} else {
 			// For folder-based: should be "./" or empty (same folder)
 			// Obsidian stores empty string or "./" for "same folder as current file"
 			isConfigured = normalizedPath === './' || 
 			               normalizedPath === '' || 
 			               normalizedPath === '.' ||
-			               normalizedPath === undefined;
+			               normalizedPath === undefined ||
+			               normalizedPath === null;
 		}
 		
 		return {
-			name: 'Plugin-compatible Obsidian settings',
+			name: 'Attachment settings',
 			installed: isConfigured, // Use installed field to indicate configured status
 			enabled: false, // Not applicable for settings
 			configurable: true,
 			currentSettings: undefined
 		};
+	}
+
+	private async checkAstroComposerSettings(plugin: Plugin, contentOrg?: ContentOrganizationType): Promise<{ outOfSyncContentTypes: string[] } | null> {
+		const contentOrgValue = contentOrg || this.getContentOrganization?.() || 'file-based';
+		const expectedMode = contentOrgValue === 'file-based' ? 'file' : 'folder';
+		
+		try {
+			const pluginSettings = (plugin as any).settings;
+			if (!pluginSettings) {
+				return null;
+			}
+			
+			const mismatchedTypes: string[] = [];
+			
+			// Check posts: use global creationMode
+			if (pluginSettings.creationMode && typeof pluginSettings.creationMode === 'string') {
+				if (pluginSettings.creationMode !== expectedMode) {
+					mismatchedTypes.push('posts');
+				}
+			} else {
+				// No creationMode set, needs configuration
+				mismatchedTypes.push('posts');
+			}
+			
+			// Check pages: use pagesCreationMode
+			if (pluginSettings.pagesCreationMode) {
+				if (pluginSettings.pagesCreationMode !== expectedMode) {
+					mismatchedTypes.push('pages');
+				}
+			} else {
+				// No pagesCreationMode set, needs configuration
+				mismatchedTypes.push('pages');
+			}
+			
+			// Check projects and docs: use customContentTypes
+			if (Array.isArray(pluginSettings.customContentTypes)) {
+				for (const contentType of ['projects', 'docs']) {
+					const customType = pluginSettings.customContentTypes.find((ct: any) => 
+						ct && ct.folder && ct.folder.toLowerCase() === contentType
+					);
+					if (customType && customType.creationMode) {
+						if (customType.creationMode !== expectedMode) {
+							mismatchedTypes.push(contentType);
+						}
+					} else {
+						// Custom type exists but no creationMode set, needs configuration
+						mismatchedTypes.push(contentType);
+					}
+				}
+			} else {
+				// No customContentTypes array, projects and docs need configuration
+				mismatchedTypes.push('projects', 'docs');
+			}
+			
+			// If all content types match, return null (no issues)
+			if (mismatchedTypes.length === 0) {
+				return null;
+			}
+			
+			// Return the list of out-of-sync content types
+			return { outOfSyncContentTypes: mismatchedTypes };
+		} catch (error) {
+			console.error('Failed to check Astro Composer settings:', error);
+			return null;
+		}
+	}
+	
+	private checkImageInserterSettings(plugin: Plugin, contentOrg?: ContentOrganizationType): boolean {
+		const contentOrgValue = contentOrg || this.getContentOrganization?.() || 'file-based';
+		const expectedFormat = contentOrgValue === 'file-based' 
+			? '[[attachments/{image-url}]]' 
+			: '[[{image-url}]]';
+		
+		try {
+			const pluginSettings = (plugin as any).settings;
+			if (!pluginSettings) {
+				return false;
+			}
+			
+			// Check the frontmatter valueFormat
+			const actualFormat = pluginSettings.frontmatter?.valueFormat;
+			return actualFormat === expectedFormat;
+		} catch (error) {
+			console.error('Failed to check Image Inserter settings:', error);
+			return false;
+		}
 	}
 
 	private isPluginConfigurable(pluginId: string): boolean {
@@ -149,16 +254,15 @@ export class PluginManager {
 
 	private async configureObsidianSettings(settings: any): Promise<void> {
 		try {
-			// Method 1: Try to use the app's settings manager if available
 			const app = this.app as any;
+			const targetPath = settings.attachmentLocation === 'subfolder' 
+				? `./${settings.subfolderName}` 
+				: './';
+			
+			// Method 1: Try to use the app's settings manager if available
 			if (app.setting && typeof app.setting.set === 'function') {
-				if (settings.attachmentLocation === 'subfolder') {
-					await app.setting.set('attachmentFolderPath', `./${settings.subfolderName}`);
-					await app.setting.set('newLinkFormat', 'relative');
-				} else {
-					await app.setting.set('attachmentFolderPath', './');
-					await app.setting.set('newLinkFormat', 'relative');
-				}
+				await app.setting.set('attachmentFolderPath', targetPath);
+				await app.setting.set('newLinkFormat', 'relative');
 				
 				// Save the settings
 				if (typeof app.setting.save === 'function') {
@@ -168,24 +272,10 @@ export class PluginManager {
 				// Method 2: Fallback to vault config (current approach)
 				const obsidianSettings = (this.app.vault as any).config as ObsidianVaultConfig;
 				
-				if (settings.attachmentLocation === 'subfolder') {
-					obsidianSettings.newLinkFormat = 'relative';
-					obsidianSettings.attachmentFolderPath = `./${settings.subfolderName}`;
-				} else {
-					obsidianSettings.newLinkFormat = 'relative';
-					obsidianSettings.attachmentFolderPath = './';
-				}
+				obsidianSettings.newLinkFormat = 'relative';
+				obsidianSettings.attachmentFolderPath = targetPath;
 				
 				await (this.app.vault as any).saveConfig();
-			}
-			
-			// Method 3: Try to trigger a settings refresh
-			try {
-				if (app.setting && typeof app.setting.open === 'function') {
-					// This might trigger a refresh of the settings UI
-				}
-			} catch (refreshError) {
-				// Ignore refresh errors
 			}
 			
 		} catch (error) {
@@ -199,16 +289,48 @@ export class PluginManager {
 			const plugins = (this.app as any).plugins as ObsidianPlugins;
 			const astroComposerPlugin = plugins?.plugins?.['astro-composer'];
 			
-			if (astroComposerPlugin && astroComposerPlugin.settings) {
-				// Update Astro Composer settings
-				astroComposerPlugin.settings.creationMode = settings.creationMode;
-				astroComposerPlugin.settings.indexFileName = settings.indexFileName;
-				
-				// Save the settings
+			if (!astroComposerPlugin) {
+				console.warn('Astro Composer plugin not found');
+				return;
+			}
+			
+			if (!astroComposerPlugin.settings) {
+				console.warn('Astro Composer plugin settings not available');
+				return;
+			}
+			
+			const pluginSettings = astroComposerPlugin.settings;
+			const creationMode = settings.creationMode;
+			
+			// Update posts: use global creationMode (for posts)
+			pluginSettings.creationMode = creationMode;
+			
+			// Update pages: use pagesCreationMode
+			pluginSettings.pagesCreationMode = creationMode;
+			
+			// Update projects and docs: use customContentTypes array
+			if (Array.isArray(pluginSettings.customContentTypes)) {
+				for (const customType of pluginSettings.customContentTypes) {
+					if (customType && typeof customType === 'object') {
+						// Check if this is projects or docs by folder name
+						const folderName = (customType.folder || '').toLowerCase();
+						if (folderName === 'projects' || folderName === 'docs') {
+							customType.creationMode = creationMode;
+						}
+					}
+				}
+			}
+			
+			// Update index file name
+			pluginSettings.indexFileName = settings.indexFileName;
+			
+			// Save the settings
+			if (typeof astroComposerPlugin.saveSettings === 'function') {
 				await astroComposerPlugin.saveSettings();
 			}
 		} catch (error) {
 			console.error('Failed to configure Astro Composer:', error);
+			throw error; // Re-throw to let caller know it failed
 		}
 	}
 
@@ -246,8 +368,13 @@ export class PluginManager {
 		instructions += '## Astro Composer Plugin\n';
 		instructions += `1. Go to **Settings → Community plugins → Astro Composer**\n`;
 		instructions += `2. Set **Creation mode** to: "${config.astroComposerSettings.creationMode === 'file' ? 'File-based' : 'Folder-based'}"\n`;
+		instructions += `3. Ensure **Creation mode** is set to "${config.astroComposerSettings.creationMode === 'file' ? 'File-based' : 'Folder-based'}" for all content types:\n`;
+		instructions += `   - Posts\n`;
+		instructions += `   - Pages\n`;
+		instructions += `   - Projects\n`;
+		instructions += `   - Docs\n`;
 		if (config.astroComposerSettings.creationMode === 'folder') {
-			instructions += `3. Set **Index file name** to: "${config.astroComposerSettings.indexFileName}"\n`;
+			instructions += `4. Set **Index file name** to: "${config.astroComposerSettings.indexFileName}"\n`;
 		}
 		
 		instructions += '## Image Inserter Plugin\n';

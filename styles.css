@@ -490,6 +490,10 @@
 	border-color: var(--color-red);
 }
 
+.plugin-item.partially-configured {
+	border-color: #f59e0b; /* Orange/amber color */
+}
+
 .plugin-icon {
 	display: flex;
 	align-items: center;
@@ -503,6 +507,10 @@
 
 .plugin-item.missing .plugin-icon {
 	color: var(--text-error);
+}
+
+.plugin-item.partially-configured .plugin-icon {
+	color: #f59e0b; /* Orange/amber color to match border */
 }
 
 .plugin-info h3 {

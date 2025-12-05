@@ -157,23 +157,84 @@ export class ConfigTab extends TabRenderer {
 		const pluginStatusDiv = statusContainer.createDiv('plugin-status');
 		
 		for (const plugin of pluginStatus) {
-			const isSettingsCheck = plugin.name === 'Plugin-compatible Obsidian settings';
+			const isSettingsCheck = plugin.name === 'Attachment settings';
 			const isConfigured = plugin.installed; // For settings, installed means configured
-			const pluginItem = pluginStatusDiv.createDiv(`plugin-item ${isConfigured ? 'installed' : 'missing'}`);
+			const hasSyncIssues = plugin.outOfSyncContentTypes && plugin.outOfSyncContentTypes.length > 0;
+			// If ALL content types are out of sync (4 out of 4), it's "Doesn't match", not "Partially configured"
+			const allOutOfSync = hasSyncIssues && plugin.outOfSyncContentTypes && plugin.outOfSyncContentTypes.length === 4;
+			const isPartiallyConfigured = hasSyncIssues && !allOutOfSync && plugin.installed && plugin.enabled;
+			const allMismatched = allOutOfSync && plugin.installed && plugin.enabled;
+			// Check if this is Image Inserter and settings don't match
+			const isImageInserter = plugin.name === 'Image Inserter';
+			const imageInserterMismatch = isImageInserter && plugin.installed && plugin.enabled && plugin.settingsMatch === false;
+			
+			// Determine item class and styling
+			let itemClass = 'plugin-item';
+			if (isSettingsCheck) {
+				itemClass += isConfigured ? ' installed' : ' missing';
+			} else if (imageInserterMismatch || allMismatched) {
+				// Image Inserter settings don't match or all content types are out of sync - show as "missing" (red X)
+				itemClass += ' missing';
+			} else if (isPartiallyConfigured) {
+				itemClass += ' partially-configured';
+			} else {
+				itemClass += plugin.installed && plugin.enabled ? ' installed' : ' missing';
+			}
+			
+			const pluginItem = pluginStatusDiv.createDiv(itemClass);
 			const icon = pluginItem.createDiv('plugin-icon');
-			icon.innerHTML = isConfigured 
-				? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'
-				: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+			
+			// Set icon based on status
+			if (isSettingsCheck) {
+				icon.innerHTML = isConfigured 
+					? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'
+					: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+			} else if (imageInserterMismatch || allMismatched) {
+				// Image Inserter settings don't match or all content types are out of sync - show red X
+				icon.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+			} else if (isPartiallyConfigured) {
+				// Alert triangle icon (neutral warning icon from Lucide)
+				icon.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>';
+			} else {
+				icon.innerHTML = plugin.installed && plugin.enabled
+					? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'
+					: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+			}
 			
 			const info = pluginItem.createDiv('plugin-info');
 			info.createEl('h3', { text: plugin.name });
+			
 			let statusText: string;
 			if (isSettingsCheck) {
+				// For settings check, installed means configured
 				statusText = isConfigured ? 'Configured' : 'Doesn\'t match';
+			} else if (!plugin.installed) {
+				statusText = 'Not installed';
+			} else if (!plugin.enabled) {
+				statusText = 'Disabled';
+			} else if (imageInserterMismatch || allMismatched) {
+				// Settings don't match
+				statusText = 'Doesn\'t match';
+			} else if (isPartiallyConfigured) {
+				// Some settings don't match
+				statusText = 'Partially configured';
 			} else {
-				statusText = plugin.installed ? (plugin.enabled ? 'Enabled' : 'Not enabled') : 'Not enabled';
+				// Plugin is installed, enabled, and settings match (or no settings to check)
+				statusText = 'Configured';
 			}
+			
 			info.createEl('p', { text: statusText });
+			
+			// Add details about out-of-sync content types
+			if (hasSyncIssues && plugin.outOfSyncContentTypes) {
+				const detailsP = info.createEl('p', { 
+					text: `Out of sync: ${plugin.outOfSyncContentTypes.join(', ')}`,
+					cls: 'sync-details'
+				});
+				detailsP.style.fontSize = '0.9em';
+				detailsP.style.opacity = '0.8';
+				detailsP.style.marginTop = '4px';
+			}
 		}
 
 		// Re-apply configuration button

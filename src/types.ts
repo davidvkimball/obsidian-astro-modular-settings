@@ -321,6 +321,8 @@ export interface PluginStatus {
 	enabled: boolean;
 	configurable: boolean;
 	currentSettings?: any;
+	outOfSyncContentTypes?: string[]; // For Astro Composer: list of content types that are out of sync
+	settingsMatch?: boolean; // For Image Inserter: whether settings match content organization
 }
 
 export interface ConfigFileInfo {
