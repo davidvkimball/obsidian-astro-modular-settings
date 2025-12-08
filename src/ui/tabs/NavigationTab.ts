@@ -1,4 +1,4 @@
-import { Setting, Notice } from 'obsidian';
+import { Setting, Notice, setIcon } from 'obsidian';
 import { TabRenderer } from '../common/TabRenderer';
 
 export class NavigationTab extends TabRenderer {
@@ -23,18 +23,47 @@ export class NavigationTab extends TabRenderer {
 		const pagesList = pagesSection.createDiv('nav-items');
 		pagesList.id = 'pages-list';
 		pagesList.innerHTML = `
-			${settings.navigation.pages.map((page: any, index: number) => `
+			${settings.navigation.pages.map((page: any, index: number) => {
+				const hasChildren = page.children && page.children.length > 0;
+				return `
 				<div class="nav-item" data-index="${index}" draggable="true">
 					<div class="nav-item-content">
 						<div class="nav-item-fields">
-							<input type="text" class="nav-title" placeholder="Page Title" value="${page.title}" draggable="false">
-							<input type="text" class="nav-url" placeholder="/page-url" value="${page.url}" draggable="false">
+							<input type="text" class="nav-title" placeholder="Page Title" value="${page.title || ''}" draggable="false">
+							<input type="text" class="nav-url" placeholder="/page-url (leave empty for dropdown-only)" value="${page.url || ''}" draggable="false">
 						</div>
-						<button class="nav-remove mod-warning" data-index="${index}">Remove</button>
+						<div class="nav-item-actions">
+							<button class="nav-add-child" data-index="${index}" title="Add child page">+ Child</button>
+							<button class="nav-remove mod-warning" data-index="${index}" data-icon="trash" title="Remove" aria-label="Remove"></button>
+						</div>
+					</div>
+					<div class="nav-children-container" data-parent-index="${index}" ${!hasChildren ? 'style="display: none;"' : ''}>
+						<div class="nav-children-label">Child Pages:</div>
+						<div class="nav-children" data-parent-index="${index}">
+							${hasChildren ? page.children.map((child: any, childIndex: number) => `
+								<div class="nav-child-item" data-index="${index}" data-child-index="${childIndex}">
+									<div class="nav-item-fields">
+										<input type="text" class="nav-child-title" placeholder="Child Title" value="${child.title || ''}" draggable="false">
+										<input type="text" class="nav-child-url" placeholder="/child-url" value="${child.url || ''}" draggable="false">
+									</div>
+									<button class="nav-child-remove mod-warning" data-index="${index}" data-child-index="${childIndex}" data-icon="trash" title="Remove" aria-label="Remove"></button>
+								</div>
+							`).join('') : ''}
+						</div>
 					</div>
 				</div>
-			`).join('')}
+			`;
+			}).join('')}
 		`;
+
+		// Set icons on remove buttons - use setTimeout to ensure DOM is ready
+		setTimeout(() => {
+			pagesList.querySelectorAll('button[data-icon="trash"]').forEach((button) => {
+				// Clear any text content first
+				button.textContent = '';
+				setIcon(button as HTMLElement, 'trash');
+			});
+		}, 0);
 
 		// Add page button
 		new Setting(pagesSection)
@@ -67,7 +96,7 @@ export class NavigationTab extends TabRenderer {
 							<input type="text" class="nav-title" placeholder="Social Title" value="${social.title}" draggable="false">
 							<input type="text" class="nav-url" placeholder="https://example.com" value="${social.url}" draggable="false">
 						</div>
-						<button class="nav-remove mod-warning" data-index="${index}">Remove</button>
+						<button class="nav-remove mod-warning" data-index="${index}" data-icon="trash" title="Remove" aria-label="Remove"></button>
 					</div>
 					<div class="nav-icon-row">
 						<input type="text" class="nav-icon" placeholder="icon-name" value="${social.icon || ''}" draggable="false">
@@ -78,6 +107,15 @@ export class NavigationTab extends TabRenderer {
 				</div>
 			`).join('')}
 		`;
+
+		// Set icons on remove buttons - use setTimeout to ensure DOM is ready
+		setTimeout(() => {
+			socialList.querySelectorAll('button[data-icon="trash"]').forEach((button) => {
+				// Clear any text content first
+				button.textContent = '';
+				setIcon(button as HTMLElement, 'trash');
+			});
+		}, 0);
 
 		// Add social link button
 		new Setting(socialSection)
@@ -277,12 +315,44 @@ export class NavigationTab extends TabRenderer {
 		if (pagesList) {
 			pagesList.addEventListener('input', (e) => {
 				const target = e.target as HTMLInputElement;
-				if (target.classList.contains('nav-title') || target.classList.contains('nav-url')) {
+				if (target.classList.contains('nav-title')) {
 					const item = target.closest('.nav-item');
 					const index = parseInt(item?.getAttribute('data-index') || '0');
-					const field = target.classList.contains('nav-title') ? 'title' : 'url';
-					
-					settings.navigation.pages[index][field] = target.value;
+					settings.navigation.pages[index].title = target.value;
+					this.debouncedSave();
+				} else if (target.classList.contains('nav-url')) {
+					const item = target.closest('.nav-item');
+					const index = parseInt(item?.getAttribute('data-index') || '0');
+					// If URL is empty, remove it (makes it dropdown-only). Otherwise, set it.
+					if (target.value.trim() === '') {
+						delete settings.navigation.pages[index].url;
+					} else {
+						settings.navigation.pages[index].url = target.value;
+					}
+					this.debouncedSave();
+				} else if (target.classList.contains('nav-child-title')) {
+					const childItem = target.closest('.nav-child-item');
+					const parentIndex = parseInt(childItem?.getAttribute('data-index') || '0');
+					const childIndex = parseInt(childItem?.getAttribute('data-child-index') || '0');
+					if (!settings.navigation.pages[parentIndex].children) {
+						settings.navigation.pages[parentIndex].children = [];
+					}
+					if (!settings.navigation.pages[parentIndex].children![childIndex]) {
+						settings.navigation.pages[parentIndex].children![childIndex] = { title: '', url: '' };
+					}
+					settings.navigation.pages[parentIndex].children![childIndex].title = target.value;
+					this.debouncedSave();
+				} else if (target.classList.contains('nav-child-url')) {
+					const childItem = target.closest('.nav-child-item');
+					const parentIndex = parseInt(childItem?.getAttribute('data-index') || '0');
+					const childIndex = parseInt(childItem?.getAttribute('data-child-index') || '0');
+					if (!settings.navigation.pages[parentIndex].children) {
+						settings.navigation.pages[parentIndex].children = [];
+					}
+					if (!settings.navigation.pages[parentIndex].children![childIndex]) {
+						settings.navigation.pages[parentIndex].children![childIndex] = { title: '', url: '' };
+					}
+					settings.navigation.pages[parentIndex].children![childIndex].url = target.value;
 					this.debouncedSave();
 				}
 			});
@@ -304,7 +374,7 @@ export class NavigationTab extends TabRenderer {
 			});
 		}
 
-		// Handle remove button clicks - use event delegation on container
+		// Handle remove button clicks and add child button - use event delegation on container
 		// This is more reliable than attaching to each button
 		const removeHandler = async (e: MouseEvent) => {
 			const target = e.target as HTMLElement;
@@ -334,6 +404,61 @@ export class NavigationTab extends TabRenderer {
 					new Notice('Social link removed and applied to config.ts');
 					this.render(container); // Re-render to update indices
 				}
+			} else if (target.classList.contains('nav-child-remove')) {
+				e.preventDefault();
+				e.stopPropagation();
+				
+				const parentIndex = parseInt(target.getAttribute('data-index') || '0');
+				const childIndex = parseInt(target.getAttribute('data-child-index') || '0');
+				const currentSettings = this.getSettings();
+				
+				if (currentSettings.navigation.pages[parentIndex].children) {
+					currentSettings.navigation.pages[parentIndex].children!.splice(childIndex, 1);
+					// Remove children array if empty
+					if (currentSettings.navigation.pages[parentIndex].children!.length === 0) {
+						delete currentSettings.navigation.pages[parentIndex].children;
+					}
+					await this.plugin.saveData(currentSettings);
+					await (this.plugin as any).loadSettings();
+					await this.applyCurrentConfiguration(false);
+					new Notice('Child page removed and applied to config.ts');
+					// Hide children container if no children left
+					const navItem = target.closest('.nav-item');
+					const childrenContainer = navItem?.querySelector('.nav-children-container') as HTMLElement;
+					if (childrenContainer && (!currentSettings.navigation.pages[parentIndex].children || currentSettings.navigation.pages[parentIndex].children!.length === 0)) {
+						childrenContainer.style.display = 'none';
+					}
+					this.render(container);
+				}
+			} else if (target.classList.contains('nav-add-child')) {
+				e.preventDefault();
+				e.stopPropagation();
+				
+				const index = parseInt(target.getAttribute('data-index') || '0');
+				const currentSettings = this.getSettings();
+				
+				if (!currentSettings.navigation.pages[index].children) {
+					currentSettings.navigation.pages[index].children = [];
+				}
+				currentSettings.navigation.pages[index].children!.push({ title: 'New Child', url: '/new-child' });
+				await this.plugin.saveData(currentSettings);
+				await (this.plugin as any).loadSettings();
+				await this.applyCurrentConfiguration(false);
+				new Notice('Child page added and applied to config.ts');
+				// Show the children container if it was hidden
+				const navItem = target.closest('.nav-item');
+				const childrenContainer = navItem?.querySelector('.nav-children-container') as HTMLElement;
+				if (childrenContainer) {
+					childrenContainer.style.display = 'block';
+				}
+				this.render(container);
+				// Re-set icons after render (including new child buttons)
+				setTimeout(() => {
+					container.querySelectorAll('button[data-icon="trash"]').forEach((button) => {
+						button.textContent = '';
+						setIcon(button as HTMLElement, 'trash');
+					});
+				}, 0);
 			}
 		};
 		

@@ -213,17 +213,120 @@ export class ConfigFileManager {
 		// Extract navigation settings
 		config.navigation = { pages: [], social: [] };
 		
-		// Extract navigation pages
+		// Extract navigation pages (supports nested structure)
 		const pagesMatch = configContent.match(/\/\/ \[CONFIG:NAVIGATION_PAGES\]\s*\n\s*pages:\s*\[([\s\S]*?)\]/);
 		if (pagesMatch) {
 			const pagesContent = pagesMatch[1];
-			// Match the single-line format: { title: "...", url: "..." }
-			const pageMatches = pagesContent.matchAll(/\{\s*title:\s*"([^"]*)",\s*url:\s*"([^"]*)"\s*\}/g);
-			for (const pageMatch of pageMatches) {
-				config.navigation.pages.push({
-					title: pageMatch[1],
-					url: pageMatch[2]
-				});
+			
+			// Parse navigation items (supports nested children)
+			const parseNavigationItem = (content: string, startPos: number = 0): { item: any, endPos: number } => {
+				let pos = startPos;
+				const item: any = {};
+				
+				// Skip whitespace
+				while (pos < content.length && /\s/.test(content[pos])) pos++;
+				
+				// Find opening brace
+				if (content[pos] !== '{') {
+					return { item: null, endPos: pos };
+				}
+				pos++;
+				
+				// Parse fields
+				while (pos < content.length) {
+					// Skip whitespace
+					while (pos < content.length && /\s/.test(content[pos])) pos++;
+					
+					// Check for closing brace
+					if (content[pos] === '}') {
+						pos++;
+						break;
+					}
+					
+					// Parse field name
+					const fieldMatch = content.slice(pos).match(/^(\w+):\s*/);
+					if (!fieldMatch) {
+						pos++;
+						continue;
+					}
+					const fieldName = fieldMatch[1];
+					pos += fieldMatch[0].length;
+					
+					// Parse field value
+					if (fieldName === 'title' || fieldName === 'url') {
+						const valueMatch = content.slice(pos).match(/^"([^"]*)"/);
+						if (valueMatch) {
+							item[fieldName] = valueMatch[1];
+							pos += valueMatch[0].length;
+						}
+					} else if (fieldName === 'children') {
+						// Parse children array
+						pos++; // skip '['
+						item.children = [];
+						while (pos < content.length) {
+							// Skip whitespace
+							while (pos < content.length && /\s/.test(content[pos])) pos++;
+							
+							// Check for closing bracket
+							if (content[pos] === ']') {
+								pos++;
+								break;
+							}
+							
+							// Parse child item
+							const childResult = parseNavigationItem(content, pos);
+							if (childResult.item) {
+								item.children.push(childResult.item);
+								pos = childResult.endPos;
+							} else {
+								break;
+							}
+							
+							// Skip comma
+							while (pos < content.length && /\s/.test(content[pos])) pos++;
+							if (content[pos] === ',') pos++;
+						}
+					}
+					
+					// Skip comma
+					while (pos < content.length && /\s/.test(content[pos])) pos++;
+					if (content[pos] === ',') pos++;
+				}
+				
+				return { item, endPos: pos };
+			};
+			
+			// Parse all pages
+			let pos = 0;
+			while (pos < pagesContent.length) {
+				// Skip whitespace
+				while (pos < pagesContent.length && /\s/.test(pagesContent[pos])) pos++;
+				
+				// Check for end of array
+				if (pos >= pagesContent.length || pagesContent[pos] === ']') break;
+				
+				// Parse item
+				const result = parseNavigationItem(pagesContent, pos);
+				if (result.item) {
+					config.navigation.pages.push(result.item);
+					pos = result.endPos;
+				} else {
+					// Fallback to simple regex for backward compatibility
+					const simpleMatch = pagesContent.slice(pos).match(/\{\s*title:\s*"([^"]*)",\s*url:\s*"([^"]*)"\s*\}/);
+					if (simpleMatch) {
+						config.navigation.pages.push({
+							title: simpleMatch[1],
+							url: simpleMatch[2]
+						});
+						pos += simpleMatch[0].length;
+					} else {
+						break;
+					}
+				}
+				
+				// Skip comma
+				while (pos < pagesContent.length && /\s/.test(pagesContent[pos])) pos++;
+				if (pagesContent[pos] === ',') pos++;
 			}
 		}
 		

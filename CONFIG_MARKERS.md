@@ -92,8 +92,47 @@ These markers allow the plugin to find and update specific configuration values 
 - `CONFIG:NAVIGATION_SHOW_NAVIGATION` - Show/hide navigation
 - `CONFIG:NAVIGATION_STYLE` - Navigation style (minimal/traditional)
 - `CONFIG:NAVIGATION_SHOW_MOBILE_MENU` - Show/hide mobile menu
-- `CONFIG:NAVIGATION_PAGES` - Navigation pages array
+- `CONFIG:NAVIGATION_PAGES` - Navigation pages array (supports nested structure with optional `url` and `children` fields)
 - `CONFIG:NAVIGATION_SOCIAL` - Social links array
+
+**Navigation Pages Structure:**
+Navigation pages support both flat and nested structures for backward compatibility:
+
+**Flat structure (backward compatible):**
+```typescript
+pages: [
+  { title: "Posts", url: "/posts/" },
+  { title: "About", url: "/about/" }
+]
+```
+
+**Nested structure (dropdown menus):**
+```typescript
+pages: [
+  { title: "Posts", url: "/posts/" },
+  { 
+    title: "Services",  // No URL = dropdown-only parent
+    children: [
+      { title: "Web Development", url: "/services/web-dev/" },
+      { title: "Consulting", url: "/services/consulting/" }
+    ]
+  },
+  { 
+    title: "About", 
+    url: "/about/",  // Has URL = clickable parent with dropdown
+    children: [
+      { title: "Team", url: "/about/team/" },
+      { title: "History", url: "/about/history/" }
+    ]
+  }
+]
+```
+
+**Key points:**
+- `url` is optional - if missing, the item becomes a dropdown-only parent (non-clickable trigger)
+- `children` is optional - if missing, the item is a regular navigation link
+- Single level nesting only - children cannot have their own children
+- Backward compatible - existing flat arrays continue to work without changes
 
 ### Optional Content Types
 - `CONFIG:OPTIONAL_CONTENT_TYPES_PROJECTS` - Enable/disable projects

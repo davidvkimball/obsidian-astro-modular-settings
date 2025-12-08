@@ -657,14 +657,42 @@ export class ConfigPresetModifier {
 			);
 		}
 		
-		// Update navigation pages
-		const pagesArray = settings.navigation.pages.map(page => 
-			`      { title: "${page.title}", url: "${page.url}" }`
-		).join(',\n');
-		modifiedConfig = modifiedConfig.replace(
-			/\/\/ \[CONFIG:NAVIGATION_PAGES\]\s*\n\s*pages:\s*\[[\s\S]*?\]/,
-			`// [CONFIG:NAVIGATION_PAGES]\n    pages: [\n${pagesArray},\n    ]`
-		);
+		// Update navigation pages (with nested support)
+		const serializeNavigationItem = (item: any, indent: string = '      '): string => {
+			let result = `${indent}{ title: "${item.title}"`;
+			if (item.url) {
+				result += `, url: "${item.url}"`;
+			}
+			if (item.children && item.children.length > 0) {
+				result += `,\n${indent}  children: [\n`;
+				// Children are flat - they don't have their own children
+				result += item.children.map((child: any) => {
+					let childResult = `${indent}    { title: "${child.title}", url: "${child.url}" }`;
+					return childResult;
+				}).join(',\n');
+				result += `\n${indent}  ]`;
+			}
+			result += ' }';
+			return result;
+		};
+		const pagesArray = settings.navigation.pages.map(page => serializeNavigationItem(page)).join(',\n');
+		// Match from CONFIG:NAVIGATION_PAGES to CONFIG:NAVIGATION_SOCIAL, replacing everything in between
+		// This ensures we capture the entire pages array including nested children
+		const pagesMarker = '// [CONFIG:NAVIGATION_PAGES]';
+		const socialMarker = '// [CONFIG:NAVIGATION_SOCIAL]';
+		const pagesMarkerIndex = modifiedConfig.indexOf(pagesMarker);
+		const socialMarkerIndex = modifiedConfig.indexOf(socialMarker);
+		
+		if (pagesMarkerIndex !== -1 && socialMarkerIndex !== -1) {
+			// Find the start of pages: [ (after the marker)
+			const pagesArrayStart = modifiedConfig.indexOf('pages: [', pagesMarkerIndex);
+			if (pagesArrayStart !== -1) {
+				// Replace from after the marker to before the social marker
+				const before = modifiedConfig.substring(0, pagesMarkerIndex + pagesMarker.length);
+				const after = modifiedConfig.substring(socialMarkerIndex);
+				modifiedConfig = `${before}\n    pages: [\n${pagesArray}\n    ],\n    ${after}`;
+			}
+		}
 		
 		// Update navigation social
 		const socialArray = settings.navigation.social.map(social => 
@@ -876,16 +904,44 @@ export class ConfigPresetModifier {
 					`// [CONFIG:NAVIGATION_SHOW_MOBILE_MENU]\n    showMobileMenu: ${settings.navigation.showMobileMenu}`
 				);
 			}
-			// Update navigation pages
+			// Update navigation pages (with nested support)
 			if (settings.navigation.pages) {
-				const pagesArray = settings.navigation.pages.map(page => 
-					`      { title: "${page.title}", url: "${page.url}" }`
-				).join(',\n');
-				const pagesValue = pagesArray ? `[\n${pagesArray},\n    ]` : '[]';
-				modifiedConfig = modifiedConfig.replace(
-					/\/\/ \[CONFIG:NAVIGATION_PAGES\]\s*\n\s*pages:\s*\[[\s\S]*?\]/,
-					`// [CONFIG:NAVIGATION_PAGES]\n    pages: ${pagesValue}`
-				);
+				const serializeNavigationItem = (item: any, indent: string = '      '): string => {
+					let result = `${indent}{ title: "${item.title}"`;
+					if (item.url) {
+						result += `, url: "${item.url}"`;
+					}
+					if (item.children && item.children.length > 0) {
+						result += `,\n${indent}  children: [\n`;
+						// Children are flat - they don't have their own children
+						result += item.children.map((child: any) => {
+							let childResult = `${indent}    { title: "${child.title}", url: "${child.url}" }`;
+							return childResult;
+						}).join(',\n');
+						result += `\n${indent}  ]`;
+					}
+					result += ' }';
+					return result;
+				};
+				const pagesArray = settings.navigation.pages.map(page => serializeNavigationItem(page)).join(',\n');
+				const pagesValue = pagesArray ? `[\n${pagesArray}\n    ]` : '[]';
+				// Match from CONFIG:NAVIGATION_PAGES to CONFIG:NAVIGATION_SOCIAL, replacing everything in between
+				// This ensures we capture the entire pages array including nested children
+				const pagesMarker = '// [CONFIG:NAVIGATION_PAGES]';
+				const socialMarker = '// [CONFIG:NAVIGATION_SOCIAL]';
+				const pagesMarkerIndex = modifiedConfig.indexOf(pagesMarker);
+				const socialMarkerIndex = modifiedConfig.indexOf(socialMarker);
+				
+				if (pagesMarkerIndex !== -1 && socialMarkerIndex !== -1) {
+					// Find the start of pages: [ (after the marker)
+					const pagesArrayStart = modifiedConfig.indexOf('pages: [', pagesMarkerIndex);
+					if (pagesArrayStart !== -1) {
+						// Replace from after the marker to before the social marker
+						const before = modifiedConfig.substring(0, pagesMarkerIndex + pagesMarker.length);
+						const after = modifiedConfig.substring(socialMarkerIndex);
+						modifiedConfig = `${before}\n    pages: ${pagesValue},\n    ${after}`;
+					}
+				}
 			}
 			// Update navigation social
 			if (settings.navigation.social) {

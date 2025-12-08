@@ -99,11 +99,17 @@ export interface SeoSettings {
 	defaultOgImageAlt: string;
 }
 
+export interface NavigationItem {
+	title: string;
+	url?: string;  // Optional - if missing, item is dropdown-only
+	children?: NavigationItem[];  // Single level only
+}
+
 export interface NavigationSettings {
 	showNavigation: boolean;
 	style: 'minimal' | 'traditional';
 	showMobileMenu: boolean;
-	pages: Array<{ title: string; url: string }>;
+	pages: NavigationItem[];
 	social: Array<{ title: string; url: string; icon: string }>;
 }
 

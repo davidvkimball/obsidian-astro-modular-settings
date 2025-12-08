@@ -1,4 +1,5 @@
 import { BaseWizardStep } from './BaseWizardStep';
+import { setIcon } from 'obsidian';
 
 export class NavigationStep extends BaseWizardStep {
 	render(container: HTMLElement): void {
@@ -12,19 +13,39 @@ export class NavigationStep extends BaseWizardStep {
 				<div class="navigation-sections">
 					<div class="nav-section">
 						<h3>Navigation Pages</h3>
-						<p>Add pages to your main navigation menu.</p>
+						<p>Add pages to your main navigation menu. Leave URL empty to create dropdown-only parents.</p>
 						<div class="nav-items" id="pages-list">
-							${state.selectedNavigation.pages.map((page: any, index: number) => `
+							${state.selectedNavigation.pages.map((page: any, index: number) => {
+								const hasChildren = page.children && page.children.length > 0;
+								return `
 								<div class="nav-item" data-index="${index}" draggable="true">
 									<div class="nav-item-content">
 										<div class="nav-item-fields">
-											<input type="text" class="nav-title" placeholder="Page Title" value="${page.title}" draggable="false">
-											<input type="text" class="nav-url" placeholder="/page-url" value="${page.url}" draggable="false">
+											<input type="text" class="nav-title" placeholder="Page Title" value="${page.title || ''}" draggable="false">
+											<input type="text" class="nav-url" placeholder="/page-url (leave empty for dropdown-only)" value="${page.url || ''}" draggable="false">
 										</div>
-										<button class="nav-remove mod-warning" data-index="${index}">Remove</button>
+										<div class="nav-item-actions">
+											<button class="nav-add-child" data-index="${index}" title="Add child page">+ Child</button>
+											<button class="nav-remove mod-warning" data-index="${index}" data-icon="trash" title="Remove" aria-label="Remove"></button>
+										</div>
+									</div>
+									<div class="nav-children-container" data-parent-index="${index}" ${!hasChildren ? 'style="display: none;"' : ''}>
+										<div class="nav-children-label">Child Pages:</div>
+										<div class="nav-children" data-parent-index="${index}">
+											${hasChildren ? page.children.map((child: any, childIndex: number) => `
+												<div class="nav-child-item" data-index="${index}" data-child-index="${childIndex}">
+													<div class="nav-item-fields">
+														<input type="text" class="nav-child-title" placeholder="Child Title" value="${child.title || ''}" draggable="false">
+														<input type="text" class="nav-child-url" placeholder="/child-url" value="${child.url || ''}" draggable="false">
+													</div>
+													<button class="nav-child-remove mod-warning" data-index="${index}" data-child-index="${childIndex}" data-icon="trash" title="Remove" aria-label="Remove"></button>
+												</div>
+											`).join('') : ''}
+										</div>
 									</div>
 								</div>
-							`).join('')}
+							`;
+							}).join('')}
 						</div>
 						<button class="nav-add" id="add-page">+ Add Page</button>
 					</div>
@@ -40,7 +61,7 @@ export class NavigationStep extends BaseWizardStep {
 											<input type="text" class="nav-title" placeholder="Social Title" value="${social.title}" draggable="false">
 											<input type="text" class="nav-url" placeholder="https://example.com" value="${social.url}" draggable="false">
 										</div>
-										<button class="nav-remove mod-warning" data-index="${index}">Remove</button>
+										<button class="nav-remove mod-warning" data-index="${index}" data-icon="trash" title="Remove" aria-label="Remove"></button>
 									</div>
 									<div class="nav-icon-row">
 										<input type="text" class="nav-icon" placeholder="icon-name" value="${social.icon || ''}" draggable="false">
@@ -57,6 +78,15 @@ export class NavigationStep extends BaseWizardStep {
 			</div>
 		`;
 
+		// Set icons on remove buttons - use setTimeout to ensure DOM is ready
+		setTimeout(() => {
+			container.querySelectorAll('button[data-icon="trash"]').forEach((button) => {
+				// Clear any text content first
+				button.textContent = '';
+				setIcon(button as HTMLElement, 'trash');
+			});
+		}, 0);
+
 		this.setupEventHandlers(container);
 	}
 
@@ -68,12 +98,41 @@ export class NavigationStep extends BaseWizardStep {
 		if (pagesList) {
 			const pagesInputHandler = (e: Event) => {
 				const target = e.target as HTMLInputElement;
-				if (target.classList.contains('nav-title') || target.classList.contains('nav-url')) {
+				if (target.classList.contains('nav-title')) {
 					const item = target.closest('.nav-item');
 					const index = parseInt(item?.getAttribute('data-index') || '0');
-					const field = target.classList.contains('nav-title') ? 'title' : 'url';
-					
-					state.selectedNavigation.pages[index][field] = target.value;
+					state.selectedNavigation.pages[index].title = target.value;
+				} else if (target.classList.contains('nav-url')) {
+					const item = target.closest('.nav-item');
+					const index = parseInt(item?.getAttribute('data-index') || '0');
+					// If URL is empty, remove it (makes it dropdown-only). Otherwise, set it.
+					if (target.value.trim() === '') {
+						delete state.selectedNavigation.pages[index].url;
+					} else {
+						state.selectedNavigation.pages[index].url = target.value;
+					}
+				} else if (target.classList.contains('nav-child-title')) {
+					const childItem = target.closest('.nav-child-item');
+					const parentIndex = parseInt(childItem?.getAttribute('data-index') || '0');
+					const childIndex = parseInt(childItem?.getAttribute('data-child-index') || '0');
+					if (!state.selectedNavigation.pages[parentIndex].children) {
+						state.selectedNavigation.pages[parentIndex].children = [];
+					}
+					if (!state.selectedNavigation.pages[parentIndex].children![childIndex]) {
+						state.selectedNavigation.pages[parentIndex].children![childIndex] = { title: '', url: '' };
+					}
+					state.selectedNavigation.pages[parentIndex].children![childIndex].title = target.value;
+				} else if (target.classList.contains('nav-child-url')) {
+					const childItem = target.closest('.nav-child-item');
+					const parentIndex = parseInt(childItem?.getAttribute('data-index') || '0');
+					const childIndex = parseInt(childItem?.getAttribute('data-child-index') || '0');
+					if (!state.selectedNavigation.pages[parentIndex].children) {
+						state.selectedNavigation.pages[parentIndex].children = [];
+					}
+					if (!state.selectedNavigation.pages[parentIndex].children![childIndex]) {
+						state.selectedNavigation.pages[parentIndex].children![childIndex] = { title: '', url: '' };
+					}
+					state.selectedNavigation.pages[parentIndex].children![childIndex].url = target.value;
 				}
 			};
 			// Remove old handler if exists
@@ -136,7 +195,7 @@ export class NavigationStep extends BaseWizardStep {
 			addSocialBtn.addEventListener('click', addSocialHandler);
 		}
 
-		// Remove buttons - work with selected navigation
+		// Remove buttons and add child - work with selected navigation
 		// Use event delegation to prevent duplicate handlers
 		const removeHandler = (e: Event) => {
 			const target = e.target as HTMLElement;
@@ -151,6 +210,43 @@ export class NavigationStep extends BaseWizardStep {
 					state.selectedNavigation.pages.splice(index, 1);
 				} else {
 					state.selectedNavigation.social.splice(index, 1);
+				}
+				this.render(container);
+			} else if (target.classList.contains('nav-child-remove')) {
+				e.preventDefault();
+				e.stopPropagation();
+				
+				const parentIndex = parseInt(target.getAttribute('data-index') || '0');
+				const childIndex = parseInt(target.getAttribute('data-child-index') || '0');
+				
+				if (state.selectedNavigation.pages[parentIndex].children) {
+					state.selectedNavigation.pages[parentIndex].children!.splice(childIndex, 1);
+					if (state.selectedNavigation.pages[parentIndex].children!.length === 0) {
+						delete state.selectedNavigation.pages[parentIndex].children;
+					}
+					// Hide children container if no children left
+					const navItem = target.closest('.nav-item');
+					const childrenContainer = navItem?.querySelector('.nav-children-container') as HTMLElement;
+					if (childrenContainer && (!state.selectedNavigation.pages[parentIndex].children || state.selectedNavigation.pages[parentIndex].children!.length === 0)) {
+						childrenContainer.style.display = 'none';
+					}
+				}
+				this.render(container);
+			} else if (target.classList.contains('nav-add-child')) {
+				e.preventDefault();
+				e.stopPropagation();
+				
+				const index = parseInt(target.getAttribute('data-index') || '0');
+				
+				if (!state.selectedNavigation.pages[index].children) {
+					state.selectedNavigation.pages[index].children = [];
+				}
+				state.selectedNavigation.pages[index].children!.push({ title: 'New Child', url: '/new-child' });
+				// Show the children container if it was hidden
+				const navItem = target.closest('.nav-item');
+				const childrenContainer = navItem?.querySelector('.nav-children-container') as HTMLElement;
+				if (childrenContainer) {
+					childrenContainer.style.display = 'block';
 				}
 				this.render(container);
 			}
