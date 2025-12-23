@@ -142,19 +142,63 @@ export class FeaturesTab extends TabRenderer {
 			});
 			setting
 				.setName('Footer content')
-				.setDesc('Text to display in footer. Use {author} for site author and {title} for site title')
-				.addText(text => text
-					.setPlaceholder('© 2025 {author}. Built with the Astro Modular theme.')
-					.setValue(settings.footer?.content || '© 2025 {author}. Built with the <a href="https://github.com/davidvkimball/astro-modular" target="_blank">Astro Modular</a> theme.')
-					.onChange(async (value) => {
-						if (!settings.footer) {
-							settings.footer = { enabled: true, content: '', showSocialIconsInFooter: true };
-						}
-						settings.footer.content = value;
-						void this.plugin.saveData(settings);
+				.setDesc('Text to display in footer. Use {author} for site author and {title} for site title');
+			
+			// Create textarea manually for full-width, multi-line input
+			const textarea = setting.controlEl.createEl('textarea', {
+				attr: {
+					placeholder: '© 2025 {author}. Built with the Astro Modular theme.',
+					rows: '3'
+				}
+			});
+			textarea.value = settings.footer?.content || '© 2025 {author}. Built with the <a href="https://github.com/davidvkimball/astro-modular" target="_blank">Astro Modular</a> theme.';
+			
+			textarea.setCssProps({
+				width: '100%',
+				minHeight: '80px',
+				resize: 'vertical',
+				fontFamily: 'var(--font-text)',
+				fontSize: 'var(--font-ui-small)',
+				padding: 'var(--size-4-2) var(--size-4-3)',
+				border: '1px solid var(--background-modifier-border)',
+				borderRadius: 'var(--radius-s)',
+				background: 'var(--background-primary)',
+				color: 'var(--text-normal)'
+			});
+			
+			// Position textarea below description (not to the right)
+			setting.controlEl.setCssProps({
+				width: '100%',
+				marginTop: 'var(--size-4-2)'
+			});
+			
+			let timeoutId: number | null = null;
+			textarea.addEventListener('input', () => {
+				if (timeoutId) {
+					clearTimeout(timeoutId);
+				}
+				if (!settings.footer) {
+					settings.footer = { enabled: true, content: '', showSocialIconsInFooter: true };
+				}
+				settings.footer.content = textarea.value;
+				void this.plugin.saveData(settings);
+				timeoutId = window.setTimeout(() => {
+					void (async () => {
 						await (this.plugin as AstroModularPlugin).loadSettings();
 						void this.applyCurrentConfiguration();
-					}));
+					})();
+				}, 1000);
+			});
+			
+			textarea.addEventListener('blur', () => {
+				if (timeoutId) {
+					clearTimeout(timeoutId);
+					void (async () => {
+						await (this.plugin as AstroModularPlugin).loadSettings();
+						void this.applyCurrentConfiguration();
+					})();
+				}
+			});
 		});
 
 		// Show social icons in footer - add as setting with conditional visibility

@@ -1,6 +1,6 @@
 import { BaseWizardStep } from './BaseWizardStep';
 import { Notice, setIcon, Modal } from 'obsidian';
-import { AstroModularPlugin, PluginStatus } from '../../types';
+import { AstroModularPlugin, PluginStatus, PluginConfiguration } from '../../types';
 
 export class PluginConfigStep extends BaseWizardStep {
 	render(container: HTMLElement): void {
@@ -123,12 +123,14 @@ export class PluginConfigStep extends BaseWizardStep {
 				try {
 				// Create configuration based on current content organization choice
 				const contentOrg = state.selectedContentOrg;
-				const config = {
+				const config: PluginConfiguration = {
 					obsidianSettings: {
+						// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 						attachmentLocation: (contentOrg === 'file-based' ? 'subfolder' : 'same-folder') as 'subfolder' | 'same-folder',
 						subfolderName: 'attachments'
 					},
 					astroComposerSettings: {
+						// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 						creationMode: (contentOrg === 'file-based' ? 'file' : 'folder') as 'file' | 'folder',
 						indexFileName: 'index'
 					},
@@ -148,6 +150,7 @@ export class PluginConfigStep extends BaseWizardStep {
 					const updatedStatus = await (this.plugin as AstroModularPlugin).pluginManager.getPluginStatus(state.selectedContentOrg);
 					
 					// Re-render the status display
+					// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 					const statusContainerEl = container.querySelector('.plugin-status') as HTMLElement | null;
 					if (statusContainerEl) {
 						statusContainerEl.empty(); // Clear existing items
@@ -179,12 +182,14 @@ export class PluginConfigStep extends BaseWizardStep {
 			try {
 				// Create configuration based on current content organization choice
 				const contentOrg = state.selectedContentOrg;
-				const config = {
+				const config: PluginConfiguration = {
 					obsidianSettings: {
+						// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 						attachmentLocation: (contentOrg === 'file-based' ? 'subfolder' : 'same-folder') as 'subfolder' | 'same-folder',
 						subfolderName: 'attachments'
 					},
 					astroComposerSettings: {
+						// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 						creationMode: (contentOrg === 'file-based' ? 'file' : 'folder') as 'file' | 'folder',
 						indexFileName: 'index'
 					},

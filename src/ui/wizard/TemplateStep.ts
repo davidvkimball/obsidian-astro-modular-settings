@@ -287,8 +287,8 @@ export class TemplateStep extends BaseWizardStep {
 			const fs = require('fs') as typeof import('fs');
 			// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
 			const path = require('path') as typeof import('path');
-			// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
 			// @ts-expect-error - electron is only available in Electron environment
+			// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
 			const electronModule = require('electron') as unknown as { shell?: typeof import('electron').shell };
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			const shellRaw = electronModule.shell;
@@ -301,8 +301,7 @@ export class TemplateStep extends BaseWizardStep {
 				throw new Error('Electron shell API not available');
 			}
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Runtime type guard ensures safety
-			// @ts-expect-error - electron is only available in Electron environment
-			const shell = shellRaw as typeof import('electron').shell;
+			const shell = shellRaw;
 			const configPath = path.join(vaultPathString, '..', 'config.ts');
 			
 			if (fs.existsSync(configPath)) {

@@ -476,9 +476,14 @@ export class AdvancedTab extends TabRenderer {
 			const fs = require('fs') as typeof import('fs');
 			// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
 			const path = require('path') as typeof import('path');
-			// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef, @typescript-eslint/no-unsafe-assignment
 			// @ts-expect-error - electron is only available in Electron environment
-			const { shell } = require('electron') as { shell: typeof import('electron').shell };
+			// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
+			const electronModule = require('electron') as unknown as { shell?: typeof import('electron').shell };
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+			const shell = electronModule.shell;
+			if (!shell) {
+				throw new Error('Electron shell API not available');
+			}
 			
 			// Get the actual vault path string from the adapter
 			const adapter = this.app.vault.adapter as { basePath?: string; path?: string };

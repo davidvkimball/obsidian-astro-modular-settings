@@ -335,7 +335,7 @@ export class PluginManager {
 				return;
 			}
 			
-			const pluginSettings = astroComposerPluginWithSettings.settings as Record<string, unknown>;
+			const pluginSettings = astroComposerPluginWithSettings.settings;
 			const creationMode = settings.creationMode;
 			
 			// Check if using new contentTypes array structure
@@ -399,6 +399,7 @@ export class PluginManager {
 			if (imageInserterPluginWithSettings && imageInserterPluginWithSettings.settings) {
 				// Update Image Inserter settings
 				// Only update the frontmatter.valueFormat (this is the main setting)
+				// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 				const pluginSettings = imageInserterPluginWithSettings.settings as Record<string, unknown>;
 				if (pluginSettings.frontmatter && typeof pluginSettings.frontmatter === 'object' && pluginSettings.frontmatter !== null) {
 					const frontmatter = pluginSettings.frontmatter as Record<string, unknown>;

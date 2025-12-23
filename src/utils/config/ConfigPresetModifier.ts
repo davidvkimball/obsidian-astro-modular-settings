@@ -261,7 +261,7 @@ export class ConfigPresetModifier {
 			
 			// Update search settings - use individual markers
 			if (commandPalette.search && typeof commandPalette.search === 'object' && commandPalette.search !== null) {
-				const search = commandPalette.search as Record<string, unknown>;
+				const search = commandPalette.search;
 				
 				// Update each search setting individually
 				if (search.posts !== undefined) {
@@ -296,7 +296,7 @@ export class ConfigPresetModifier {
 			
 			// Update sections settings - use individual markers
 			if (commandPalette.sections && typeof commandPalette.sections === 'object' && commandPalette.sections !== null) {
-				const sections = commandPalette.sections as Record<string, unknown>;
+				const sections = commandPalette.sections;
 				
 				// Update each section setting individually
 				if (sections.quickActions !== undefined) {
@@ -324,7 +324,7 @@ export class ConfigPresetModifier {
 			
 			// Update quick actions settings - use individual markers
 			if (commandPalette.quickActions && typeof commandPalette.quickActions === 'object' && commandPalette.quickActions !== null) {
-				const quickActions = commandPalette.quickActions as Record<string, unknown>;
+				const quickActions = commandPalette.quickActions;
 				
 				// Update each quick action setting individually
 				if (quickActions.enabled !== undefined) {

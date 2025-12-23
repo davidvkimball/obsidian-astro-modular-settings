@@ -1,6 +1,6 @@
 import { Setting, Notice, Modal, setIcon } from 'obsidian';
 import { TabRenderer } from '../common/TabRenderer';
-import { TEMPLATE_OPTIONS, AstroModularPlugin, TemplateType, AstroModularSettings, CommandPaletteSettings, HomeOptions, PostOptions, NavigationSettings } from '../../types';
+import { TEMPLATE_OPTIONS, AstroModularPlugin, TemplateType, AstroModularSettings, CommandPaletteSettings, HomeOptions, PostOptions, NavigationSettings, PluginConfiguration } from '../../types';
 import { PresetWarningModal } from '../PresetWarningModal';
 import { createSettingsGroup } from '../../utils/settings-compat';
 
@@ -118,12 +118,14 @@ export class ConfigTab extends TabRenderer {
 						
 						// Build plugin config dynamically based on new content organization (like wizard does)
 						const contentOrg = value as 'file-based' | 'folder-based';
-						const config = {
+						const config: PluginConfiguration = {
 							obsidianSettings: {
+								// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 								attachmentLocation: (contentOrg === 'file-based' ? 'subfolder' : 'same-folder') as 'subfolder' | 'same-folder',
 								subfolderName: 'attachments'
 							},
 							astroComposerSettings: {
+								// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 								creationMode: (contentOrg === 'file-based' ? 'file' : 'folder') as 'file' | 'folder',
 								indexFileName: 'index'
 							},
@@ -151,10 +153,14 @@ export class ConfigTab extends TabRenderer {
 		});
 
 		// Plugin configuration section
-		// Plugin configuration heading
-		new Setting(container)
+		// Plugin configuration heading with proper spacing
+		const pluginConfigHeading = new Setting(container)
 			.setHeading()
 			.setName('Plugin configuration');
+		pluginConfigHeading.settingEl.setCssProps({
+			marginTop: 'var(--size-4-6)',
+			marginBottom: 'var(--size-4-2)'
+		});
 		
 		// Get plugin status (async, so we need to handle this)
 		void this.renderPluginStatus(container, settings);
@@ -263,12 +269,14 @@ export class ConfigTab extends TabRenderer {
 					.onClick(async () => {
 						// Create configuration based on current content organization choice
 						const contentOrg = settings.contentOrganization;
-						const config = {
+						const config: PluginConfiguration = {
 							obsidianSettings: {
+								// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 								attachmentLocation: (contentOrg === 'file-based' ? 'subfolder' : 'same-folder') as 'subfolder' | 'same-folder',
 								subfolderName: 'attachments'
 							},
 							astroComposerSettings: {
+								// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 								creationMode: (contentOrg === 'file-based' ? 'file' : 'folder') as 'file' | 'folder',
 								indexFileName: 'index'
 							},
@@ -314,12 +322,14 @@ export class ConfigTab extends TabRenderer {
 					.onClick(async () => {
 					// Create configuration based on current content organization choice
 					const contentOrg = settings.contentOrganization;
-					const config = {
+					const config: PluginConfiguration = {
 						obsidianSettings: {
+							// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 							attachmentLocation: (contentOrg === 'file-based' ? 'subfolder' : 'same-folder') as 'subfolder' | 'same-folder',
 							subfolderName: 'attachments'
 						},
 						astroComposerSettings: {
+							// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 							creationMode: (contentOrg === 'file-based' ? 'file' : 'folder') as 'file' | 'folder',
 							indexFileName: 'index'
 						},

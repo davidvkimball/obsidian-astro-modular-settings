@@ -1,5 +1,5 @@
 import { Setting, Notice, Modal, setIcon } from 'obsidian';
-import { AstroModularPlugin } from '../../types';
+import { AstroModularPlugin, PluginConfiguration } from '../../types';
 import { TabRenderer } from '../common/TabRenderer';
 
 export class PluginsTab extends TabRenderer {
@@ -104,12 +104,14 @@ export class PluginsTab extends TabRenderer {
 				.onClick(async () => {
 					// Create configuration based on current content organization choice
 					const contentOrg = settings.contentOrganization;
-					const config = {
+					const config: PluginConfiguration = {
 						obsidianSettings: {
+							// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 							attachmentLocation: (contentOrg === 'file-based' ? 'subfolder' : 'same-folder') as 'subfolder' | 'same-folder',
 							subfolderName: 'attachments'
 						},
 						astroComposerSettings: {
+							// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 							creationMode: (contentOrg === 'file-based' ? 'file' : 'folder') as 'file' | 'folder',
 							indexFileName: 'index'
 						},
@@ -223,12 +225,14 @@ export class PluginsTab extends TabRenderer {
 				.onClick(async () => {
 					// Create configuration based on current content organization choice
 					const contentOrg = settings.contentOrganization;
-					const config = {
+					const config: PluginConfiguration = {
 						obsidianSettings: {
+							// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 							attachmentLocation: (contentOrg === 'file-based' ? 'subfolder' : 'same-folder') as 'subfolder' | 'same-folder',
 							subfolderName: 'attachments'
 						},
 						astroComposerSettings: {
+							// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 							creationMode: (contentOrg === 'file-based' ? 'file' : 'folder') as 'file' | 'folder',
 							indexFileName: 'index'
 						},

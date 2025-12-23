@@ -151,8 +151,49 @@ export class SiteInfoTab extends TabRenderer {
 				});
 		});
 
-		// Assets & Metadata group with heading
-		const assetsGroup = createSettingsGroup(container, 'Assets & metadata');
+		// Assets & Metadata section - create header with floating button
+		const assetsSection = container.createDiv('assets-section');
+		const assetsHeader = assetsSection.createDiv('assets-header');
+		assetsHeader.setCssProps({
+			display: 'flex',
+			alignItems: 'center',
+			justifyContent: 'space-between',
+			marginBottom: '20px'
+		});
+		
+		const assetsTitle = assetsHeader.createEl('h3', { text: 'Assets & metadata' });
+		assetsTitle.setCssProps({
+			margin: '0',
+			fontSize: 'var(--font-ui-medium)',
+			fontWeight: 'var(--font-bold)'
+		});
+		
+		const sharedFolderButton = assetsHeader.createEl('button', {
+			cls: 'clickable-icon',
+			attr: { 'aria-label': 'Open public folder' }
+		});
+		sharedFolderButton.setCssProps({
+			padding: '4px',
+			border: 'none',
+			backgroundColor: 'transparent',
+			color: 'var(--text-normal)',
+			display: 'flex',
+			alignItems: 'center',
+			justifyContent: 'center'
+		});
+		
+		setIcon(sharedFolderButton, 'folder');
+		
+		sharedFolderButton.addEventListener('click', () => {
+			const publicPath = '../../public';
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+			void ((this.app as any).openWithDefaultApp?.(publicPath) ?? Promise.resolve()).catch((error: unknown) => {
+				new Notice(`Failed to open public folder: ${error instanceof Error ? error.message : String(error)}`);
+			});
+		});
+
+		// Assets & Metadata group without heading (heading is now separate)
+		const assetsGroup = createSettingsGroup(assetsSection);
 
 		// Helper function to copy file to public folder
 		const copyImageToPublic = async (sourcePath: string, targetFileName: string): Promise<void> => {
@@ -287,56 +328,6 @@ export class SiteInfoTab extends TabRenderer {
 			
 			fileInput.click();
 		};
-
-		// Shared folder button - add as a setting within the group
-		assetsGroup.addSetting((setting) => {
-			// Hide default UI elements and add custom button
-			const nameEl = setting.settingEl.querySelector('.setting-item-name');
-			const descEl = setting.settingEl.querySelector('.setting-item-description');
-			const controlEl = setting.settingEl.querySelector('.setting-item-control');
-			if (nameEl) (nameEl as HTMLElement).setCssProps({ display: 'none' });
-			if (descEl) (descEl as HTMLElement).setCssProps({ display: 'none' });
-			if (controlEl) (controlEl as HTMLElement).setCssProps({ display: 'none' });
-			setting.settingEl.setCssProps({
-				borderTop: 'none',
-				paddingTop: '0',
-				paddingBottom: '0'
-			});
-			
-			const assetsHeader = setting.settingEl.createDiv();
-			assetsHeader.setCssProps({
-				display: 'flex',
-				alignItems: 'center',
-				justifyContent: 'space-between',
-				gap: '10px',
-				marginBottom: '20px'
-			});
-			
-			const sharedFolderButton = assetsHeader.createEl('button', {
-				cls: 'clickable-icon',
-				attr: { 'aria-label': 'Open public folder' }
-			});
-			sharedFolderButton.setCssProps({
-				marginLeft: 'auto',
-				padding: '4px',
-				border: 'none',
-				backgroundColor: 'transparent',
-				color: 'var(--text-normal)',
-				display: 'flex',
-				alignItems: 'center',
-				justifyContent: 'center'
-			});
-			
-			setIcon(sharedFolderButton, 'folder');
-			
-			sharedFolderButton.addEventListener('click', () => {
-				const publicPath = '../../public';
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-				void ((this.app as any).openWithDefaultApp?.(publicPath) ?? Promise.resolve()).catch((error: unknown) => {
-					new Notice(`Failed to open public folder: ${error instanceof Error ? error.message : String(error)}`);
-				});
-			});
-		});
 
 		// Open Graph Image
 		assetsGroup.addSetting((setting) => {
