@@ -1,32 +1,39 @@
-import { Setting, Notice, Modal } from 'obsidian';
+import { Notice, Modal } from 'obsidian';
 import { TabRenderer } from '../common/TabRenderer';
 import { DEFAULT_SETTINGS, TEMPLATE_OPTIONS, AstroModularPlugin } from '../../types';
+import { createSettingsGroup } from '../../utils/settings-compat';
 
 export class AdvancedTab extends TabRenderer {
 	render(container: HTMLElement): void {
 		container.empty();
 		const settings = this.getSettings();
 
+		// Group all settings with no heading
+		const advancedGroup = createSettingsGroup(container);
+
 		// Edit config.ts directly button
-		new Setting(container)
-			.setName('Edit config.ts directly') // "config.ts" is a filename, keep as is
-			// False positive: Text is already in sentence case; "Astro" is a proper noun
-			// eslint-disable-next-line obsidianmd/ui/sentence-case
-			.setDesc('Open your Astro configuration file in the editor')
-			.addButton(button => button
-				.setButtonText('Open config.ts')
-				.onClick(async () => {
-					await this.openConfigFile();
-				}));
+		advancedGroup.addSetting((setting) => {
+			setting
+				.setName('Edit config.ts directly') // "config.ts" is a filename, keep as is
+				// False positive: Text is already in sentence case; "Astro" is a proper noun
+				// eslint-disable-next-line obsidianmd/ui/sentence-case
+				.setDesc('Open your Astro configuration file in the editor')
+				.addButton(button => button
+					.setButtonText('Open config.ts')
+					.onClick(async () => {
+						await this.openConfigFile();
+					}));
+		});
 
 		// Sync from config.ts button
-		new Setting(container)
-			.setName('Sync from config.ts')
-			.setDesc('Read current config.ts file and update plugin settings to match')
-			.addButton(button => button
-				.setButtonText('Sync from config.ts')
-				.setCta()
-				.onClick(async () => {
+		advancedGroup.addSetting((setting) => {
+			setting
+				.setName('Sync from config.ts')
+				.setDesc('Read current config.ts file and update plugin settings to match')
+				.addButton(button => button
+					.setButtonText('Sync from config.ts')
+					.setCta()
+					.onClick(async () => {
 					try {
 						// Read the current config.ts file
 						const plugin = this.plugin as AstroModularPlugin;
@@ -92,7 +99,8 @@ export class AdvancedTab extends TabRenderer {
 						// Update typography settings
 						if (currentConfig.typography && typeof currentConfig.typography === 'object') {
 							const typography = currentConfig.typography as Record<string, unknown>;
-							settings.typography.fontSource = (typography.fontSource as string | undefined) ?? settings.typography.fontSource;
+							const fontSource = (typography.fontSource as string | undefined) ?? settings.typography.fontSource;
+							settings.typography.fontSource = (fontSource === 'local' || fontSource === 'cdn') ? fontSource : settings.typography.fontSource;
 							settings.typography.proseFont = (typography.proseFont as string | undefined) ?? settings.typography.proseFont;
 							settings.typography.headingFont = (typography.headingFont as string | undefined) ?? settings.typography.headingFont;
 							settings.typography.monoFont = (typography.monoFont as string | undefined) ?? settings.typography.monoFont;
@@ -227,15 +235,17 @@ export class AdvancedTab extends TabRenderer {
 						new Notice(`Failed to sync from config.ts: ${error instanceof Error ? error.message : String(error)}`);
 					}
 				}));
+		});
 
 		// Reset to Template button
-		new Setting(container)
-			.setName('Reset to template')
-			.setDesc(`Reset all settings to the current template (${TEMPLATE_OPTIONS.find(t => t.id === settings.currentTemplate)?.name})`)
-			.addButton(button => button
-				.setButtonText('Reset to template')
-				.setWarning()
-				.onClick(async () => {
+		advancedGroup.addSetting((setting) => {
+			setting
+				.setName('Reset to template')
+				.setDesc(`Reset all settings to the current template (${TEMPLATE_OPTIONS.find(t => t.id === settings.currentTemplate)?.name})`)
+				.addButton(button => button
+					.setButtonText('Reset to template')
+					.setWarning()
+					.onClick(async () => {
 					// Reset settings to template defaults
 					try {
 						// Load the template preset
@@ -257,19 +267,19 @@ export class AdvancedTab extends TabRenderer {
 								// CRITICAL: Sync postOptions with features to maintain data integrity
 								// postOptions.graphView.enabled is the source of truth
 								if (settings.postOptions?.graphView) {
-									settings.postOptions.graphView.enabled = (templatePreset.config.features as Record<string, unknown>).graphView as boolean ?? false;
+									settings.postOptions.graphView.enabled = ((templatePreset.config.features as unknown) as Record<string, unknown>).graphView as boolean ?? false;
 									settings.features.graphView = settings.postOptions.graphView.enabled;
 								}
 								
 								// Sync linked mentions
 								if (settings.postOptions?.linkedMentions) {
-									const features = templatePreset.config.features as Record<string, unknown>;
+									const features = (templatePreset.config.features as unknown) as Record<string, unknown>;
 									settings.postOptions.linkedMentions.enabled = features.linkedMentions as boolean ?? false;
 									settings.postOptions.linkedMentions.linkedMentionsCompact = features.linkedMentionsCompact as boolean ?? false;
 								}
 								
 								// Sync command palette quick actions
-								const features = templatePreset.config.features as Record<string, unknown>;
+								const features = (templatePreset.config.features as unknown) as Record<string, unknown>;
 								if (settings.commandPalette?.quickActions && features.quickActions) {
 									settings.commandPalette.quickActions = { ...settings.commandPalette.quickActions, ...features.quickActions as Record<string, unknown> };
 								}
@@ -305,15 +315,17 @@ export class AdvancedTab extends TabRenderer {
 						new Notice(`Failed to reset to template: ${error instanceof Error ? error.message : String(error)}`);
 					}
 				}));
+		});
 
 		// Reset to defaults
-		new Setting(container)
-			.setName('Reset to defaults')
-			.setDesc('Reset all settings to their default values')
-			.addButton(button => button
-				.setButtonText('Reset to defaults')
-				.setWarning()
-				.onClick(() => {
+		advancedGroup.addSetting((setting) => {
+			setting
+				.setName('Reset to defaults')
+				.setDesc('Reset all settings to their default values')
+				.addButton(button => button
+					.setButtonText('Reset to defaults')
+					.setWarning()
+					.onClick(() => {
 					void (async () => {
 						// Create a native Obsidian confirmation modal
 						const confirmModal = new Modal(this.app);
@@ -387,26 +399,31 @@ export class AdvancedTab extends TabRenderer {
 						confirmModal.open();
 					})();
 				}));
+		});
 
 		// Export configuration
-		new Setting(container)
-			.setName('Export configuration')
-			.setDesc('Export your current configuration as JSON')
-			.addButton(button => button
-				.setButtonText('Export JSON')
-				.onClick(() => {
-					this.exportConfiguration();
-				}));
+		advancedGroup.addSetting((setting) => {
+			setting
+				.setName('Export configuration')
+				.setDesc('Export your current configuration as JSON')
+				.addButton(button => button
+					.setButtonText('Export JSON')
+					.onClick(() => {
+						this.exportConfiguration();
+					}));
+		});
 
 		// Import configuration
-		new Setting(container)
-			.setName('Import configuration')
-			.setDesc('Import configuration from JSON file')
-			.addButton(button => button
-				.setButtonText('Import JSON')
-				.onClick(() => {
-					this.importConfiguration();
-				}));
+		advancedGroup.addSetting((setting) => {
+			setting
+				.setName('Import configuration')
+				.setDesc('Import configuration from JSON file')
+				.addButton(button => button
+					.setButtonText('Import JSON')
+					.onClick(() => {
+						this.importConfiguration();
+					}));
+		});
 	}
 
 	private exportConfiguration(): void {
@@ -460,6 +477,7 @@ export class AdvancedTab extends TabRenderer {
 			// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
 			const path = require('path') as typeof import('path');
 			// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef, @typescript-eslint/no-unsafe-assignment
+			// @ts-expect-error - electron is only available in Electron environment
 			const { shell } = require('electron') as { shell: typeof import('electron').shell };
 			
 			// Get the actual vault path string from the adapter

@@ -6,11 +6,11 @@ export class TemplateStep extends BaseWizardStep {
 	render(container: HTMLElement): void {
 		const state = this.getState();
 		
-		const templateSelection = container.createDiv('template-selection');
-		templateSelection.createEl('h2', { text: 'Choose your preset' });
-		templateSelection.createEl('p', { text: 'Select a preset that best fits your content type and goals.' });
+		const templateSelectionDiv = container.createDiv('template-selection');
+		templateSelectionDiv.createEl('h2', { text: 'Choose your preset' });
+		templateSelectionDiv.createEl('p', { text: 'Select a preset that best fits your content type and goals.' });
 		
-		const templateOptions = templateSelection.createDiv('template-options');
+		const templateOptions = templateSelectionDiv.createDiv('template-options');
 		
 		TEMPLATE_OPTIONS.forEach(template => {
 			const templateOption = templateOptions.createDiv('template-option');
@@ -55,9 +55,9 @@ export class TemplateStep extends BaseWizardStep {
 		});
 
 		// Edit config.ts directly setting (standard Obsidian Setting format)
-		const templateSelection = container.querySelector('.template-selection');
-		if (templateSelection) {
-			const setting = new Setting(templateSelection as HTMLElement)
+		const templateSelectionEl = container.querySelector('.template-selection');
+		if (templateSelectionEl) {
+			const setting = new Setting(templateSelectionEl as HTMLElement)
 				.setName('Edit config.ts directly (advanced)')
 				// eslint-disable-next-line obsidianmd/ui/sentence-case -- "Astro" is a proper noun
 				.setDesc('Skip the wizard and edit your Astro configuration file directly.')
@@ -77,8 +77,8 @@ export class TemplateStep extends BaseWizardStep {
 
 	private syncFeaturesWithTemplate(template: string): void {
 		// Load features from preset JSON (single source of truth)
-		const plugin = this.plugin as AstroModularPlugin;
-		const templatePreset = plugin.configManager.getTemplatePreset(template);
+		const pluginInstance = this.plugin as AstroModularPlugin;
+		const templatePreset = pluginInstance.configManager.getTemplatePreset(template);
 		if (!templatePreset || !templatePreset.config || !templatePreset.config.features) {
 			console.error('Template preset not found:', template);
 			return;
@@ -92,18 +92,18 @@ export class TemplateStep extends BaseWizardStep {
 
 	private async updatePluginSettingsWithTemplate(template: string): Promise<void> {
 		// Get the current plugin settings
-		const plugin = this.plugin as AstroModularPlugin;
-		const settings = plugin.settings;
+		const pluginForUpdate = this.plugin as AstroModularPlugin;
+		const settings = pluginForUpdate.settings;
 		
 		// Load the template preset from JSON (single source of truth)
-		const templatePreset = plugin.configManager.getTemplatePreset(template);
+		const templatePreset = pluginForUpdate.configManager.getTemplatePreset(template);
 		if (!templatePreset || !templatePreset.config) {
 			console.error('Template preset not found:', template);
 			return;
 		}
 
 		// CRITICAL: Get full template config including all settings
-		const templateConfig = plugin.configManager.getTemplateConfig(template, settings);
+		const templateConfig = pluginForUpdate.configManager.getTemplateConfig(template, settings);
 
 		// Update settings from the preset's config
 		// NOTE: We do NOT update theme or contentOrganization - those are separate user choices
@@ -155,11 +155,11 @@ export class TemplateStep extends BaseWizardStep {
 				},
 				quickActions: {
 					...settings.commandPalette.quickActions,
-					...(templatePreset.config.features.quickActions || {})
+					...(templatePreset.config.features?.quickActions || {})
 				}
 			};
 			
-			if (templatePreset.config.features.quickActions) {
+			if (templatePreset.config.features && templatePreset.config.features.quickActions) {
 				settings.features.quickActions = {
 					...settings.features.quickActions,
 					...templatePreset.config.features.quickActions
@@ -205,8 +205,8 @@ export class TemplateStep extends BaseWizardStep {
 				wordCount: (postOptions.wordCount as boolean | undefined) ?? settings.postOptions.wordCount,
 				tags: (postOptions.tags as boolean | undefined) ?? settings.postOptions.tags,
 				postNavigation: (postOptions.postNavigation as boolean | undefined) ?? settings.postOptions.postNavigation,
-				showPostCardCoverImages: (postOptions.showPostCardCoverImages as string | undefined) ?? settings.postOptions.showPostCardCoverImages,
-				postCardAspectRatio: (postOptions.postCardAspectRatio as string | undefined) ?? settings.postOptions.postCardAspectRatio,
+				showPostCardCoverImages: ((postOptions.showPostCardCoverImages as string | undefined) ?? settings.postOptions.showPostCardCoverImages) as 'all' | 'featured' | 'home' | 'posts' | 'featured-and-posts' | 'none',
+				postCardAspectRatio: ((postOptions.postCardAspectRatio as string | undefined) ?? settings.postOptions.postCardAspectRatio) as 'og' | '16:9' | '4:3' | '3:2' | 'square' | 'golden' | 'custom',
 				linkedMentions: {
 					...settings.postOptions.linkedMentions,
 					...(postOptions.linkedMentions && typeof postOptions.linkedMentions === 'object' ? postOptions.linkedMentions as Record<string, unknown> : {})
@@ -229,7 +229,7 @@ export class TemplateStep extends BaseWizardStep {
 				...settings.navigation,
 				showNavigation: (navigation.showNavigation as boolean | undefined) ?? settings.navigation.showNavigation,
 				showMobileMenu: (navigation.showMobileMenu as boolean | undefined) ?? settings.navigation.showMobileMenu,
-				style: (navigation.style as string | undefined) ?? settings.navigation.style
+				style: ((navigation.style as string | undefined) ?? settings.navigation.style) as 'minimal' | 'traditional'
 				// Preserve pages and social arrays from user settings
 			};
 		}
@@ -264,8 +264,8 @@ export class TemplateStep extends BaseWizardStep {
 		await this.plugin.saveData(settings);
 		
 		// Reload settings to ensure the plugin has the latest values
-		const plugin = this.plugin as AstroModularPlugin;
-		await plugin.loadSettings();
+		const pluginInstance = this.plugin as AstroModularPlugin;
+		await pluginInstance.loadSettings();
 		
 		// Trigger a refresh of the settings tab if it's open
 		this.refreshSettingsTab();
@@ -288,6 +288,7 @@ export class TemplateStep extends BaseWizardStep {
 			// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
 			const path = require('path') as typeof import('path');
 			// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
+			// @ts-expect-error - electron is only available in Electron environment
 			const electronModule = require('electron') as unknown as { shell?: typeof import('electron').shell };
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			const shellRaw = electronModule.shell;
@@ -300,6 +301,7 @@ export class TemplateStep extends BaseWizardStep {
 				throw new Error('Electron shell API not available');
 			}
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Runtime type guard ensures safety
+			// @ts-expect-error - electron is only available in Electron environment
 			const shell = shellRaw as typeof import('electron').shell;
 			const configPath = path.join(vaultPathString, '..', 'config.ts');
 			

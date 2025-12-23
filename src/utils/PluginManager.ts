@@ -39,7 +39,7 @@ export class PluginManager {
 			// For Astro Composer, check content type settings and include in main status
 			let outOfSyncContentTypes: string[] | undefined;
 			if (pluginId === 'astro-composer' && plugin) {
-				const syncCheck = await this.checkAstroComposerSettings(plugin, contentOrg);
+				const syncCheck = await this.checkAstroComposerSettings(plugin as Plugin, contentOrg);
 				if (syncCheck) {
 					outOfSyncContentTypes = syncCheck.outOfSyncContentTypes;
 				}
@@ -48,7 +48,7 @@ export class PluginManager {
 			// For Image Inserter, check if settings match content organization
 			let imageInserterSettingsMatch = true;
 			if (pluginId === 'insert-unsplash-image' && plugin && isInstalled && isInEnabledSet) {
-				imageInserterSettingsMatch = this.checkImageInserterSettings(plugin, contentOrg);
+				imageInserterSettingsMatch = this.checkImageInserterSettings(plugin as Plugin, contentOrg);
 			}
 			
 			status.push({
@@ -56,7 +56,7 @@ export class PluginManager {
 				installed: isInstalled,
 				enabled: isInEnabledSet || false,
 				configurable: this.isPluginConfigurable(pluginId),
-				currentSettings: plugin ? await this.getPluginSettings(plugin) : undefined,
+				currentSettings: plugin ? await this.getPluginSettings(plugin as Plugin) : undefined,
 				outOfSyncContentTypes: outOfSyncContentTypes,
 				settingsMatch: pluginId === 'insert-unsplash-image' ? imageInserterSettingsMatch : undefined
 			});
@@ -98,7 +98,7 @@ export class PluginManager {
 		let isConfigured = false;
 		
 		// Normalize the attachment path for comparison
-		const attachmentPath = (vaultConfig.attachmentFolderPath || '').trim();
+		const attachmentPath = (vaultConfig?.attachmentFolderPath || '').trim();
 		const normalizedPath = attachmentPath.replace(/\/+$/, ''); // Remove trailing slashes
 		
 		if (expectedLocation === 'subfolder') {
@@ -329,12 +329,13 @@ export class PluginManager {
 				return;
 			}
 			
-			if (!astroComposerPlugin.settings) {
+			const astroComposerPluginWithSettings = astroComposerPlugin as PluginWithSettings;
+			if (!astroComposerPluginWithSettings.settings) {
 				console.warn('Astro Composer plugin settings not available');
 				return;
 			}
 			
-			const pluginSettings = astroComposerPlugin.settings as Record<string, unknown>;
+			const pluginSettings = astroComposerPluginWithSettings.settings as Record<string, unknown>;
 			const creationMode = settings.creationMode;
 			
 			// Check if using new contentTypes array structure
@@ -394,10 +395,11 @@ export class PluginManager {
 			const plugins = (this.app as unknown as { plugins?: ObsidianPlugins }).plugins;
 			const imageInserterPlugin = plugins?.plugins?.['insert-unsplash-image'];
 			
-			if (imageInserterPlugin && imageInserterPlugin.settings) {
+			const imageInserterPluginWithSettings = imageInserterPlugin as PluginWithSettings | undefined;
+			if (imageInserterPluginWithSettings && imageInserterPluginWithSettings.settings) {
 				// Update Image Inserter settings
 				// Only update the frontmatter.valueFormat (this is the main setting)
-				const pluginSettings = imageInserterPlugin.settings as Record<string, unknown>;
+				const pluginSettings = imageInserterPluginWithSettings.settings as Record<string, unknown>;
 				if (pluginSettings.frontmatter && typeof pluginSettings.frontmatter === 'object' && pluginSettings.frontmatter !== null) {
 					const frontmatter = pluginSettings.frontmatter as Record<string, unknown>;
 					frontmatter.valueFormat = settings.valueFormat;

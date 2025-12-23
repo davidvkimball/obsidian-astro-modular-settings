@@ -106,11 +106,11 @@ export class PluginsTab extends TabRenderer {
 					const contentOrg = settings.contentOrganization;
 					const config = {
 						obsidianSettings: {
-							attachmentLocation: contentOrg === 'file-based' ? 'subfolder' : 'same-folder',
+							attachmentLocation: (contentOrg === 'file-based' ? 'subfolder' : 'same-folder') as 'subfolder' | 'same-folder',
 							subfolderName: 'attachments'
 						},
 						astroComposerSettings: {
-							creationMode: contentOrg === 'file-based' ? 'file' : 'folder',
+							creationMode: (contentOrg === 'file-based' ? 'file' : 'folder') as 'file' | 'folder',
 							indexFileName: 'index'
 						},
 						imageInserterSettings: {
@@ -225,11 +225,11 @@ export class PluginsTab extends TabRenderer {
 					const contentOrg = settings.contentOrganization;
 					const config = {
 						obsidianSettings: {
-							attachmentLocation: contentOrg === 'file-based' ? 'subfolder' : 'same-folder',
+							attachmentLocation: (contentOrg === 'file-based' ? 'subfolder' : 'same-folder') as 'subfolder' | 'same-folder',
 							subfolderName: 'attachments'
 						},
 						astroComposerSettings: {
-							creationMode: contentOrg === 'file-based' ? 'file' : 'folder',
+							creationMode: (contentOrg === 'file-based' ? 'file' : 'folder') as 'file' | 'folder',
 							indexFileName: 'index'
 						},
 						imageInserterSettings: {

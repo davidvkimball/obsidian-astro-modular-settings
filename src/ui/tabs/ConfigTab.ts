@@ -2,145 +2,153 @@ import { Setting, Notice, Modal, setIcon } from 'obsidian';
 import { TabRenderer } from '../common/TabRenderer';
 import { TEMPLATE_OPTIONS, AstroModularPlugin, TemplateType, AstroModularSettings, CommandPaletteSettings, HomeOptions, PostOptions, NavigationSettings } from '../../types';
 import { PresetWarningModal } from '../PresetWarningModal';
+import { createSettingsGroup } from '../../utils/settings-compat';
 
 export class ConfigTab extends TabRenderer {
 	async render(container: HTMLElement): Promise<void> {
 		container.empty();
 		const settings = this.getSettings();
 
+		// Group first three settings with no heading
+		const configGroup = createSettingsGroup(container);
+
 		// Template selector
-		new Setting(container)
-			.setName('Template')
-			.setDesc('Choose your content template')
-			.addDropdown(dropdown => {
-				TEMPLATE_OPTIONS.forEach(template => {
-					dropdown.addOption(template.id, template.name);
-				});
-				dropdown.setValue(settings.currentTemplate);
-				dropdown.onChange((value) => {
-					// Show warning modal for template changes
-					const changes = this.getTemplateChanges(value as TemplateType);
-					const modal = new PresetWarningModal(
-						this.app,
-						changes,
-						() => {
-							void (async () => {
-							// User confirmed - apply exactly like TemplateStep does
-							try {
-								// Update template settings exactly like the wizard does
-								await this.updatePluginSettingsWithTemplate(value);
-								
-								// Reload settings to ensure the plugin has the latest values
-								const plugin = this.plugin as AstroModularPlugin;
-								await plugin.loadSettings();
-								
-								// Get fresh settings after reload
-								const freshSettings = plugin.settings;
-								
-								// Apply the configuration
-								const presetSuccess = await plugin.configManager.applyPreset({
-									name: freshSettings.currentTemplate,
-									description: '',
-									features: freshSettings.features,
-									theme: freshSettings.currentTheme,
-									contentOrganization: freshSettings.contentOrganization,
-									config: freshSettings
-								});
-								
-								if (presetSuccess) {
-									new Notice(`Template changed to ${value} and applied to config.ts`);
-								} else {
-									new Notice('Failed to apply template to config.ts');
+		configGroup.addSetting((setting) => {
+			setting
+				.setName('Template')
+				.setDesc('Choose your content template')
+				.addDropdown(dropdown => {
+					TEMPLATE_OPTIONS.forEach(template => {
+						dropdown.addOption(template.id, template.name);
+					});
+					dropdown.setValue(settings.currentTemplate);
+					dropdown.onChange((value) => {
+						// Show warning modal for template changes
+						const changes = this.getTemplateChanges(value as TemplateType);
+						const modal = new PresetWarningModal(
+							this.app,
+							changes,
+							() => {
+								void (async () => {
+								// User confirmed - apply exactly like TemplateStep does
+								try {
+									// Update template settings exactly like the wizard does
+									await this.updatePluginSettingsWithTemplate(value);
+									
+									// Reload settings to ensure the plugin has the latest values
+									const plugin = this.plugin as AstroModularPlugin;
+									await plugin.loadSettings();
+									
+									// Get fresh settings after reload
+									const freshSettings = plugin.settings;
+									
+									// Apply the configuration
+									const presetSuccess = await plugin.configManager.applyPreset({
+										name: freshSettings.currentTemplate,
+										description: '',
+										features: freshSettings.features,
+										theme: freshSettings.currentTheme,
+										contentOrganization: freshSettings.contentOrganization,
+										config: freshSettings
+									});
+									
+									if (presetSuccess) {
+										new Notice(`Template changed to ${value} and applied to config.ts`);
+									} else {
+										new Notice('Failed to apply template to config.ts');
+									}
+								} catch (error) {
+									new Notice(`Failed to apply template change: ${error instanceof Error ? error.message : String(error)}`);
+									dropdown.setValue(settings.currentTemplate);
 								}
-							} catch (error) {
-								new Notice(`Failed to apply template change: ${error instanceof Error ? error.message : String(error)}`);
+								})();
+							},
+							() => {
+								// User cancelled - reset dropdown to current value
 								dropdown.setValue(settings.currentTemplate);
 							}
-							})();
-						},
-						() => {
-							// User cancelled - reset dropdown to current value
-							dropdown.setValue(settings.currentTemplate);
-						}
-					);
-					modal.open();
+						);
+						modal.open();
+					});
 				});
-			});
+		});
 
 		// Deployment platform
-		new Setting(container)
-			.setName('Deployment')
-			.setDesc('Choose your deployment platform')
-			.addDropdown(dropdown => {
-				dropdown.addOption('netlify', 'Netlify');
-				dropdown.addOption('vercel', 'Vercel');
-				dropdown.addOption('github-pages', 'GitHub pages');
-				// False positive: "Cloudflare Workers" is a proper noun (product name) and should be capitalized
-				// eslint-disable-next-line obsidianmd/ui/sentence-case
-				dropdown.addOption('cloudflare-workers', 'Cloudflare Workers');
-				dropdown.setValue(settings.deployment.platform);
-				dropdown.onChange(async (value) => {
-				settings.deployment.platform = value as 'netlify' | 'vercel' | 'github-pages' | 'cloudflare-workers';
-				await this.plugin.saveData(settings);
-				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as AstroModularPlugin).loadSettings();
-				
-				// Apply changes immediately to config.ts
-				try {
-					await this.applyCurrentConfiguration();
-						new Notice(`Deployment platform changed to ${value} and applied to config.ts`);
-					} catch (error) {
-						new Notice(`Failed to apply deployment platform change: ${error instanceof Error ? error.message : String(error)}`);
-					}
+		configGroup.addSetting((setting) => {
+			setting
+				.setName('Deployment')
+				.setDesc('Choose your deployment platform')
+				.addDropdown(dropdown => {
+					dropdown.addOption('netlify', 'Netlify');
+					dropdown.addOption('vercel', 'Vercel');
+					dropdown.addOption('github-pages', 'GitHub pages');
+					// False positive: "Cloudflare Workers" is a proper noun (product name) and should be capitalized
+					// eslint-disable-next-line obsidianmd/ui/sentence-case
+					dropdown.addOption('cloudflare-workers', 'Cloudflare Workers');
+					dropdown.setValue(settings.deployment.platform);
+					dropdown.onChange(async (value) => {
+						settings.deployment.platform = value as 'netlify' | 'vercel' | 'github-pages' | 'cloudflare-workers';
+						await this.plugin.saveData(settings);
+						await (this.plugin as AstroModularPlugin).loadSettings();
+						
+						// Apply changes immediately to config.ts
+						try {
+							await this.applyCurrentConfiguration();
+							new Notice(`Deployment platform changed to ${value} and applied to config.ts`);
+						} catch (error) {
+							new Notice(`Failed to apply deployment platform change: ${error instanceof Error ? error.message : String(error)}`);
+						}
+					});
 				});
-			});
+		});
 
 		// Content organization
-		new Setting(container)
-			.setName('Content organization')
-			.setDesc('Choose how to organize your content and assets')
-			.addDropdown(dropdown => {
-				dropdown.addOption('file-based', 'File-based');
-				dropdown.addOption('folder-based', 'Folder-based');
-				dropdown.setValue(settings.contentOrganization);
-				dropdown.onChange(async (value) => {
-				settings.contentOrganization = value as 'file-based' | 'folder-based';
-				await this.plugin.saveData(settings);
-				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as AstroModularPlugin).loadSettings();
-				
-				// Build plugin config dynamically based on new content organization (like wizard does)
-					const contentOrg = value as 'file-based' | 'folder-based';
-					const config = {
-						obsidianSettings: {
-							attachmentLocation: contentOrg === 'file-based' ? 'subfolder' : 'same-folder',
-							subfolderName: 'attachments'
-						},
-						astroComposerSettings: {
-							creationMode: contentOrg === 'file-based' ? 'file' : 'folder',
-							indexFileName: 'index'
-						},
-						imageInserterSettings: {
-							valueFormat: contentOrg === 'file-based' 
-								? '[[attachments/{image-url}]]' 
-								: '[[{image-url}]]',
-							insertFormat: contentOrg === 'file-based' 
-								? '[[attachments/{image-url}]]' 
-								: '[[{image-url}]]'
+		configGroup.addSetting((setting) => {
+			setting
+				.setName('Content organization')
+				.setDesc('Choose how to organize your content and assets')
+				.addDropdown(dropdown => {
+					dropdown.addOption('file-based', 'File-based');
+					dropdown.addOption('folder-based', 'Folder-based');
+					dropdown.setValue(settings.contentOrganization);
+					dropdown.onChange(async (value) => {
+						settings.contentOrganization = value as 'file-based' | 'folder-based';
+						await this.plugin.saveData(settings);
+						await (this.plugin as AstroModularPlugin).loadSettings();
+						
+						// Build plugin config dynamically based on new content organization (like wizard does)
+						const contentOrg = value as 'file-based' | 'folder-based';
+						const config = {
+							obsidianSettings: {
+								attachmentLocation: (contentOrg === 'file-based' ? 'subfolder' : 'same-folder') as 'subfolder' | 'same-folder',
+								subfolderName: 'attachments'
+							},
+							astroComposerSettings: {
+								creationMode: (contentOrg === 'file-based' ? 'file' : 'folder') as 'file' | 'folder',
+								indexFileName: 'index'
+							},
+							imageInserterSettings: {
+								valueFormat: contentOrg === 'file-based' 
+									? '[[attachments/{image-url}]]' 
+									: '[[{image-url}]]',
+								insertFormat: contentOrg === 'file-based' 
+									? '[[attachments/{image-url}]]' 
+									: '[[{image-url}]]'
+							}
+						};
+						
+						// Configure plugins with the new config
+						try {
+							await (this.plugin as AstroModularPlugin).pluginManager.configurePlugins(config);
+							const attachmentLocation = contentOrg === 'file-based' ? 'subfolder (attachments/)' : 'same folder';
+							const creationMode = contentOrg === 'file-based' ? 'file' : 'folder';
+							new Notice(`Content organization changed to ${value}\n\n• Obsidian: Attachments → ${attachmentLocation}\n• Astro Composer: Creation mode → ${creationMode}\n• Image Inserter: Format updated`, 8000);
+						} catch (error) {
+							new Notice(`Failed to configure plugins for content organization: ${error instanceof Error ? error.message : String(error)}`);
 						}
-					};
-					
-					// Configure plugins with the new config
-					try {
-						await (this.plugin as AstroModularPlugin).pluginManager.configurePlugins(config);
-						const attachmentLocation = contentOrg === 'file-based' ? 'subfolder (attachments/)' : 'same folder';
-						const creationMode = contentOrg === 'file-based' ? 'file' : 'folder';
-						new Notice(`Content organization changed to ${value}\n\n• Obsidian: Attachments → ${attachmentLocation}\n• Astro Composer: Creation mode → ${creationMode}\n• Image Inserter: Format updated`, 8000);
-					} catch (error) {
-						new Notice(`Failed to configure plugins for content organization: ${error instanceof Error ? error.message : String(error)}`);
-					}
+					});
 				});
-			});
+		});
 
 		// Plugin configuration section
 		// Plugin configuration heading
@@ -241,72 +249,78 @@ export class ConfigTab extends TabRenderer {
 			}
 		}
 
-		// Re-apply configuration button
-		new Setting(container)
-			.setName('Re-apply configuration')
-			.setDesc('Re-apply plugin settings based on your content organization choice (useful if settings were changed manually or configuration failed)')
-			.addButton(button => button
-				.setButtonText('Re-apply configuration')
-				.setCta()
-				.onClick(async () => {
-					// Create configuration based on current content organization choice
-					const contentOrg = settings.contentOrganization;
-					const config = {
-						obsidianSettings: {
-							attachmentLocation: contentOrg === 'file-based' ? 'subfolder' : 'same-folder',
-							subfolderName: 'attachments'
-						},
-						astroComposerSettings: {
-							creationMode: contentOrg === 'file-based' ? 'file' : 'folder',
-							indexFileName: 'index'
-						},
-						imageInserterSettings: {
-							valueFormat: contentOrg === 'file-based' 
-								? '[[attachments/{image-url}]]' 
-								: '[[{image-url}]]',
-							insertFormat: contentOrg === 'file-based' 
-								? '[[attachments/{image-url}]]' 
-								: '[[{image-url}]]'
-						}
-					};
+		// Plugin Actions group with heading
+		const pluginActionsGroup = createSettingsGroup(container, 'Plugin actions');
 
-					const success = await (this.plugin as AstroModularPlugin).pluginManager.configurePlugins(config);
-					if (success) {
-						// Show detailed success message
+		// Re-apply configuration button
+		pluginActionsGroup.addSetting((setting) => {
+			setting
+				.setName('Re-apply configuration')
+				.setDesc('Re-apply plugin settings based on your content organization choice (useful if settings were changed manually or configuration failed)')
+				.addButton(button => button
+					.setButtonText('Re-apply configuration')
+					.setCta()
+					.onClick(async () => {
+						// Create configuration based on current content organization choice
 						const contentOrg = settings.contentOrganization;
-						const attachmentLocation = contentOrg === 'file-based' ? 'subfolder (attachments/)' : 'same folder';
-						const creationMode = contentOrg === 'file-based' ? 'file' : 'folder';
-						
-						new Notice(`Configuration re-applied successfully!\n\n• Obsidian: Attachments → ${attachmentLocation}\n• Astro Composer: Creation mode → ${creationMode}\n• Image Inserter: Format updated for ${contentOrg}`, 8000);
-						// Refresh the plugin status display
-						const statusContainerEl = container.querySelector('.plugin-status-container');
-						if (statusContainerEl) {
-							statusContainerEl.remove();
-							await this.renderPluginStatus(container, settings);
+						const config = {
+							obsidianSettings: {
+								attachmentLocation: (contentOrg === 'file-based' ? 'subfolder' : 'same-folder') as 'subfolder' | 'same-folder',
+								subfolderName: 'attachments'
+							},
+							astroComposerSettings: {
+								creationMode: (contentOrg === 'file-based' ? 'file' : 'folder') as 'file' | 'folder',
+								indexFileName: 'index'
+							},
+							imageInserterSettings: {
+								valueFormat: contentOrg === 'file-based' 
+									? '[[attachments/{image-url}]]' 
+									: '[[{image-url}]]',
+								insertFormat: contentOrg === 'file-based' 
+									? '[[attachments/{image-url}]]' 
+									: '[[{image-url}]]'
+							}
+						};
+
+						const success = await (this.plugin as AstroModularPlugin).pluginManager.configurePlugins(config);
+						if (success) {
+							// Show detailed success message
+							const contentOrg = settings.contentOrganization;
+							const attachmentLocation = contentOrg === 'file-based' ? 'subfolder (attachments/)' : 'same folder';
+							const creationMode = contentOrg === 'file-based' ? 'file' : 'folder';
+							
+							new Notice(`Configuration re-applied successfully!\n\n• Obsidian: Attachments → ${attachmentLocation}\n• Astro Composer: Creation mode → ${creationMode}\n• Image Inserter: Format updated for ${contentOrg}`, 8000);
+							// Refresh the plugin status display
+							const statusContainerEl = container.querySelector('.plugin-status-container');
+							if (statusContainerEl) {
+								statusContainerEl.remove();
+								await this.renderPluginStatus(container, settings);
+							}
+						} else {
+							// Text is already in sentence case
+							// eslint-disable-next-line obsidianmd/ui/sentence-case
+							new Notice('⚠️ Some plugins could not be configured automatically. Check console for details.', 5000);
 						}
-					} else {
-						// Text is already in sentence case
-						// eslint-disable-next-line obsidianmd/ui/sentence-case
-						new Notice('⚠️ Some plugins could not be configured automatically. Check console for details.', 5000);
-					}
-				}));
+					}));
+		});
 
 		// Show manual instructions button
-		new Setting(container)
-			.setName('Show manual instructions')
-			.setDesc('Get step-by-step instructions for manual configuration')
-			.addButton(button => button
-				.setButtonText('Show manual instructions')
-				.onClick(async () => {
+		pluginActionsGroup.addSetting((setting) => {
+			setting
+				.setName('Show manual instructions')
+				.setDesc('Get step-by-step instructions for manual configuration')
+				.addButton(button => button
+					.setButtonText('Show manual instructions')
+					.onClick(async () => {
 					// Create configuration based on current content organization choice
 					const contentOrg = settings.contentOrganization;
 					const config = {
 						obsidianSettings: {
-							attachmentLocation: contentOrg === 'file-based' ? 'subfolder' : 'same-folder',
+							attachmentLocation: (contentOrg === 'file-based' ? 'subfolder' : 'same-folder') as 'subfolder' | 'same-folder',
 							subfolderName: 'attachments'
 						},
 						astroComposerSettings: {
-							creationMode: contentOrg === 'file-based' ? 'file' : 'folder',
+							creationMode: (contentOrg === 'file-based' ? 'file' : 'folder') as 'file' | 'folder',
 							indexFileName: 'index'
 						},
 						imageInserterSettings: {
@@ -318,7 +332,7 @@ export class ConfigTab extends TabRenderer {
 								: '[[{image-url}]]'
 						}
 					};
-
+					
 					const instructions = await (this.plugin as AstroModularPlugin).pluginManager.getManualConfigurationInstructions(config);
 					
 					// Create a modal to show instructions
@@ -401,6 +415,7 @@ export class ConfigTab extends TabRenderer {
 					
 					instructionModal.open();
 				}));
+		});
 	}
 
 	private parseBoldText(container: HTMLElement, text: string): void {
@@ -435,7 +450,7 @@ export class ConfigTab extends TabRenderer {
 		const templateConfig = plugin.configManager.getTemplateConfig(template, settings);
 
 		// Update settings from the preset's config
-		settings.currentTemplate = template;
+		settings.currentTemplate = template as TemplateType;
 		
 		// NOTE: We do NOT update theme or contentOrganization - those are separate user choices
 		

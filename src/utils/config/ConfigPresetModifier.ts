@@ -1,4 +1,4 @@
-import { AstroModularSettings, PresetTemplate, NavigationItem } from '../../types';
+import { AstroModularSettings, PresetTemplate, NavigationItem, ThemeType } from '../../types';
 import { ConfigTemplateManager } from './ConfigTemplateManager';
 import { ConfigMarkerValidator } from './ConfigMarkerValidator';
 
@@ -148,25 +148,27 @@ export class ConfigPresetModifier {
 		}
 		
 		// Update layout content width if specified in template
-		if (templateConfig.layout?.contentWidth) {
+		const layout = templateConfig.layout as { contentWidth?: string } | undefined;
+		if (layout?.contentWidth) {
 			modifiedConfig = modifiedConfig.replace(
 				/\/\/ \[CONFIG:LAYOUT_CONTENT_WIDTH\]\s*\n\s*contentWidth:\s*"[^"]*"/,
-				`// [CONFIG:LAYOUT_CONTENT_WIDTH]\n    contentWidth: "${templateConfig.layout.contentWidth}"`
+				`// [CONFIG:LAYOUT_CONTENT_WIDTH]\n    contentWidth: "${layout.contentWidth}"`
 			);
 		}
 		
 		// Update optional content types if specified in template
-		if (templateConfig.optionalContentTypes) {
-			if (templateConfig.optionalContentTypes.projects !== undefined) {
+		const optionalContentTypes = templateConfig.optionalContentTypes as { projects?: boolean; docs?: boolean } | undefined;
+		if (optionalContentTypes) {
+			if (optionalContentTypes.projects !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:OPTIONAL_CONTENT_TYPES_PROJECTS\]\s*\n\s*projects:\s*(true|false)/,
-					`// [CONFIG:OPTIONAL_CONTENT_TYPES_PROJECTS]\n    projects: ${templateConfig.optionalContentTypes.projects}`
+					`// [CONFIG:OPTIONAL_CONTENT_TYPES_PROJECTS]\n    projects: ${optionalContentTypes.projects}`
 				);
 			}
-			if (templateConfig.optionalContentTypes.docs !== undefined) {
+			if (optionalContentTypes.docs !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:OPTIONAL_CONTENT_TYPES_DOCS\]\s*\n\s*docs:\s*(true|false)/,
-					`// [CONFIG:OPTIONAL_CONTENT_TYPES_DOCS]\n    docs: ${templateConfig.optionalContentTypes.docs}`
+					`// [CONFIG:OPTIONAL_CONTENT_TYPES_DOCS]\n    docs: ${optionalContentTypes.docs}`
 				);
 			}
 		}
@@ -184,79 +186,82 @@ export class ConfigPresetModifier {
 		
 		// Update footer settings if specified in template
 		// NOTE: We only update showSocialIconsInFooter and enabled, NEVER the footer.content
-		if (templateConfig.footer) {
+		const footer = templateConfig.footer as { enabled?: boolean; showSocialIconsInFooter?: boolean } | undefined;
+		if (footer) {
 			// Update footer enabled state
-			if (templateConfig.footer.enabled !== undefined) {
+			if (footer.enabled !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:FOOTER_ENABLED\]\s*enabled:\s*(true|false)/,
-					`// [CONFIG:FOOTER_ENABLED]\n    enabled: ${templateConfig.footer.enabled}`
+					`// [CONFIG:FOOTER_ENABLED]\n    enabled: ${footer.enabled}`
 				);
 			}
 			// Update footer social icons
-			if (templateConfig.footer.showSocialIconsInFooter !== undefined) {
+			if (footer.showSocialIconsInFooter !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:FOOTER_SHOW_SOCIAL_ICONS\]\s*showSocialIconsInFooter:\s*[^,\n}]+/,
-					`// [CONFIG:FOOTER_SHOW_SOCIAL_ICONS]\n    showSocialIconsInFooter: ${templateConfig.footer.showSocialIconsInFooter}`
+					`// [CONFIG:FOOTER_SHOW_SOCIAL_ICONS]\n    showSocialIconsInFooter: ${footer.showSocialIconsInFooter}`
 				);
 			}
 		}
 		
 		// Update navigation settings if specified in template
-		if (templateConfig.navigation) {
+		const navigation = templateConfig.navigation as { style?: string; showNavigation?: boolean; showMobileMenu?: boolean } | undefined;
+		if (navigation) {
 			// Update navigation style
-			if (templateConfig.navigation.style) {
+			if (navigation.style) {
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:NAVIGATION_STYLE\]\s*style:\s*"[^"]*"/,
-					`// [CONFIG:NAVIGATION_STYLE]\n    style: "${templateConfig.navigation.style}"`
+					`// [CONFIG:NAVIGATION_STYLE]\n    style: "${navigation.style}"`
 				);
 			}
 			
 			// Update showNavigation
-			if (templateConfig.navigation.showNavigation !== undefined) {
+			if (navigation.showNavigation !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:NAVIGATION_SHOW_NAVIGATION\]\s*showNavigation:\s*(true|false)/,
-					`// [CONFIG:NAVIGATION_SHOW_NAVIGATION]\n    showNavigation: ${templateConfig.navigation.showNavigation}`
+					`// [CONFIG:NAVIGATION_SHOW_NAVIGATION]\n    showNavigation: ${navigation.showNavigation}`
 				);
 			}
 			
 			// Update showMobileMenu
-			if (templateConfig.navigation.showMobileMenu !== undefined) {
+			if (navigation.showMobileMenu !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:NAVIGATION_SHOW_MOBILE_MENU\]\s*showMobileMenu:\s*(true|false)/,
-					`// [CONFIG:NAVIGATION_SHOW_MOBILE_MENU]\n    showMobileMenu: ${templateConfig.navigation.showMobileMenu}`
+					`// [CONFIG:NAVIGATION_SHOW_MOBILE_MENU]\n    showMobileMenu: ${navigation.showMobileMenu}`
 				);
 			}
 		}
 		
 		// Update command palette settings if specified in template
-		if (templateConfig.commandPalette) {
+		const commandPalette = templateConfig.commandPalette as { enabled?: boolean; shortcut?: string; placeholder?: string; search?: Record<string, unknown>; sections?: Record<string, unknown>; quickActions?: Record<string, unknown> } | undefined;
+		if (commandPalette) {
 			// Update enabled state
-			if (templateConfig.commandPalette.enabled !== undefined) {
+			if (commandPalette.enabled !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:COMMAND_PALETTE_ENABLED\]\s*enabled:\s*(true|false)/,
-					`// [CONFIG:COMMAND_PALETTE_ENABLED]\n    enabled: ${templateConfig.commandPalette.enabled}`
+					`// [CONFIG:COMMAND_PALETTE_ENABLED]\n    enabled: ${commandPalette.enabled}`
 				);
 			}
 			
 			// Update shortcut
-			if (templateConfig.commandPalette.shortcut !== undefined) {
+			if (commandPalette.shortcut !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:COMMAND_PALETTE_SHORTCUT\]\s*shortcut:\s*"[^"]*"/,
-					`// [CONFIG:COMMAND_PALETTE_SHORTCUT]\n    shortcut: "${templateConfig.commandPalette.shortcut}"`
+					`// [CONFIG:COMMAND_PALETTE_SHORTCUT]\n    shortcut: "${commandPalette.shortcut}"`
 				);
 			}
 			
 			// Update placeholder
-			if (templateConfig.commandPalette.placeholder !== undefined) {
+			if (commandPalette.placeholder !== undefined) {
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:COMMAND_PALETTE_PLACEHOLDER\]\s*placeholder:\s*"[^"]*"/,
-					`// [CONFIG:COMMAND_PALETTE_PLACEHOLDER]\n    placeholder: "${templateConfig.commandPalette.placeholder}"`
+					`// [CONFIG:COMMAND_PALETTE_PLACEHOLDER]\n    placeholder: "${commandPalette.placeholder}"`
 				);
 			}
 			
 			// Update search settings - use individual markers
-			if (templateConfig.commandPalette.search && typeof templateConfig.commandPalette.search === 'object' && templateConfig.commandPalette.search !== null) {
-				const search = templateConfig.commandPalette.search as Record<string, unknown>;
+			if (commandPalette.search && typeof commandPalette.search === 'object' && commandPalette.search !== null) {
+				const search = commandPalette.search as Record<string, unknown>;
 				
 				// Update each search setting individually
 				if (search.posts !== undefined) {
@@ -290,8 +295,8 @@ export class ConfigPresetModifier {
 			}
 			
 			// Update sections settings - use individual markers
-			if (templateConfig.commandPalette.sections && typeof templateConfig.commandPalette.sections === 'object' && templateConfig.commandPalette.sections !== null) {
-				const sections = templateConfig.commandPalette.sections as Record<string, unknown>;
+			if (commandPalette.sections && typeof commandPalette.sections === 'object' && commandPalette.sections !== null) {
+				const sections = commandPalette.sections as Record<string, unknown>;
 				
 				// Update each section setting individually
 				if (sections.quickActions !== undefined) {
@@ -318,8 +323,8 @@ export class ConfigPresetModifier {
 			}
 			
 			// Update quick actions settings - use individual markers
-			if (templateConfig.commandPalette.quickActions && typeof templateConfig.commandPalette.quickActions === 'object' && templateConfig.commandPalette.quickActions !== null) {
-				const quickActions = templateConfig.commandPalette.quickActions as Record<string, unknown>;
+			if (commandPalette.quickActions && typeof commandPalette.quickActions === 'object' && commandPalette.quickActions !== null) {
+				const quickActions = commandPalette.quickActions as Record<string, unknown>;
 				
 				// Update each quick action setting individually
 				if (quickActions.enabled !== undefined) {
@@ -814,7 +819,7 @@ export class ConfigPresetModifier {
 				// If custom themes are specified, add them to the array
 				if (settings.customThemes && settings.customThemes.trim()) {
 					const customThemesList = settings.customThemes.split(',').map(theme => theme.trim()).filter(theme => theme).filter((theme): theme is Exclude<string, 'custom'> => theme !== 'custom');
-					themesArray = [...themesArray, ...customThemesList];
+					themesArray = [...themesArray, ...customThemesList] as Array<Exclude<ThemeType, 'custom'>>;
 				}
 				
 				const themesString = themesArray.map(theme => `"${theme}"`).join(', ');
@@ -978,7 +983,7 @@ export class ConfigPresetModifier {
 					result += ' }';
 					return result;
 				};
-				const pagesArray = settings.navigation.pages.map(page => serializeNavigationItem(page)).join(',\n');
+				const pagesArray = settings.navigation.pages.map(page => serializeNavigationItem(page as { title: string; url?: string; children?: Array<{ title: string; url: string }> })).join(',\n');
 				const pagesValue = pagesArray ? `[\n${pagesArray}\n    ]` : '[]';
 				// Match from CONFIG:NAVIGATION_PAGES to CONFIG:NAVIGATION_SOCIAL, replacing everything in between
 				// This ensures we capture the entire pages array including nested children

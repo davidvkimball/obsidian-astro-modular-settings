@@ -1,6 +1,7 @@
 import { Setting, Notice, setIcon } from 'obsidian';
 import { AstroModularPlugin, NavigationItem } from '../../types';
 import { TabRenderer } from '../common/TabRenderer';
+import { createSettingsGroup } from '../../utils/settings-compat';
 
 export class NavigationTab extends TabRenderer {
 	private saveTimeoutId: number | null = null;
@@ -81,65 +82,58 @@ export class NavigationTab extends TabRenderer {
 					}));
 
 
-		// Navigation Options section
-		const navOptionsSection = container.createDiv('settings-section');
-		navOptionsSection.setCssProps({
-			marginTop: '30px',
-			paddingTop: '20px',
-			borderTop: '2px solid var(--background-modifier-border)'
-		});
-		
-		// Navigation Options heading
-		new Setting(navOptionsSection)
-			.setHeading()
-			.setName('Navigation options');
+		// Navigation Options group with heading
+		const navOptionsGroup = createSettingsGroup(container, 'Navigation options');
 
 		// Show navigation toggle
-		new Setting(navOptionsSection)
-			.setName('Show navigation')
-			.setDesc('Display navigation menu on your site')
-			.addToggle(toggle => toggle
-				.setValue(settings.navigation.showNavigation ?? true)
-				.onChange(async (value) => {
-				settings.navigation.showNavigation = value;
-				await this.plugin.saveData(settings);
-				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as AstroModularPlugin).loadSettings();
-				await this.applyCurrentConfiguration();
-					new Notice(`Navigation ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
-				}));
+		navOptionsGroup.addSetting((setting) => {
+			setting
+				.setName('Show navigation')
+				.setDesc('Display navigation menu on your site')
+				.addToggle(toggle => toggle
+					.setValue(settings.navigation.showNavigation ?? true)
+					.onChange(async (value) => {
+						settings.navigation.showNavigation = value;
+						await this.plugin.saveData(settings);
+						await (this.plugin as AstroModularPlugin).loadSettings();
+						await this.applyCurrentConfiguration();
+						new Notice(`Navigation ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
+					}));
+		});
 
 		// Navigation style dropdown
-		new Setting(navOptionsSection)
-			.setName('Navigation style')
-			.setDesc('Choose between minimal or traditional navigation style')
-			.addDropdown(dropdown => dropdown
-				.addOption('traditional', 'Traditional')
-				.addOption('minimal', 'Minimal')
-				.setValue(settings.navigation.style || 'traditional')
-				.onChange(async (value) => {
-				settings.navigation.style = value as 'minimal' | 'traditional';
-				await this.plugin.saveData(settings);
-				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as AstroModularPlugin).loadSettings();
-				await this.applyCurrentConfiguration();
-					new Notice(`Navigation style changed to ${value} and applied to config.ts`);
-				}));
+		navOptionsGroup.addSetting((setting) => {
+			setting
+				.setName('Navigation style')
+				.setDesc('Choose between minimal or traditional navigation style')
+				.addDropdown(dropdown => dropdown
+					.addOption('traditional', 'Traditional')
+					.addOption('minimal', 'Minimal')
+					.setValue(settings.navigation.style || 'traditional')
+					.onChange(async (value) => {
+						settings.navigation.style = value as 'minimal' | 'traditional';
+						await this.plugin.saveData(settings);
+						await (this.plugin as AstroModularPlugin).loadSettings();
+						await this.applyCurrentConfiguration();
+						new Notice(`Navigation style changed to ${value} and applied to config.ts`);
+					}));
+		});
 
 		// Show mobile menu toggle
-		new Setting(navOptionsSection)
-			.setName('Show mobile menu')
-			.setDesc('Display mobile navigation menu on smaller screens')
-			.addToggle(toggle => toggle
-				.setValue(settings.navigation.showMobileMenu ?? true)
-				.onChange(async (value) => {
-				settings.navigation.showMobileMenu = value;
-				await this.plugin.saveData(settings);
-				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as AstroModularPlugin).loadSettings();
-				await this.applyCurrentConfiguration();
-					new Notice(`Mobile menu ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
-				}));
+		navOptionsGroup.addSetting((setting) => {
+			setting
+				.setName('Show mobile menu')
+				.setDesc('Display mobile navigation menu on smaller screens')
+				.addToggle(toggle => toggle
+					.setValue(settings.navigation.showMobileMenu ?? true)
+					.onChange(async (value) => {
+						settings.navigation.showMobileMenu = value;
+						await this.plugin.saveData(settings);
+						await (this.plugin as AstroModularPlugin).loadSettings();
+						await this.applyCurrentConfiguration();
+						new Notice(`Mobile menu ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
+					}));
+		});
 
 		// Setup event delegation for input fields and remove buttons
 		// This must be done AFTER all DOM elements are created

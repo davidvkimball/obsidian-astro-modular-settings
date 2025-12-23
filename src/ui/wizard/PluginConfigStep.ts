@@ -25,10 +25,12 @@ export class PluginConfigStep extends BaseWizardStep {
 			const configOptions = pluginConfig.createDiv('config-options');
 			// False positive: "Automatically" and "Manual Instructions" are UI action labels
 			// eslint-disable-next-line obsidianmd/ui/sentence-case
-			configOptions.createEl('button', { text: 'Configure Automatically', cls: 'mod-button mod-cta', id: 'configure-plugins' });
+			const autoBtn = configOptions.createEl('button', { text: 'Configure Automatically', cls: 'mod-button mod-cta' });
+			autoBtn.id = 'configure-plugins';
 			// False positive: "Manual Instructions" is a UI action label
 			// eslint-disable-next-line obsidianmd/ui/sentence-case
-			configOptions.createEl('button', { text: 'Show Manual Instructions', cls: 'mod-button', id: 'show-instructions' });
+			const manualBtn = configOptions.createEl('button', { text: 'Show Manual Instructions', cls: 'mod-button' });
+			manualBtn.id = 'show-instructions';
 
 			this.setupEventHandlers(container);
 		})();
@@ -123,11 +125,11 @@ export class PluginConfigStep extends BaseWizardStep {
 				const contentOrg = state.selectedContentOrg;
 				const config = {
 					obsidianSettings: {
-						attachmentLocation: contentOrg === 'file-based' ? 'subfolder' : 'same-folder',
+						attachmentLocation: (contentOrg === 'file-based' ? 'subfolder' : 'same-folder') as 'subfolder' | 'same-folder',
 						subfolderName: 'attachments'
 					},
 					astroComposerSettings: {
-						creationMode: contentOrg === 'file-based' ? 'file' : 'folder',
+						creationMode: (contentOrg === 'file-based' ? 'file' : 'folder') as 'file' | 'folder',
 						indexFileName: 'index'
 					},
 					imageInserterSettings: {
@@ -146,11 +148,11 @@ export class PluginConfigStep extends BaseWizardStep {
 					const updatedStatus = await (this.plugin as AstroModularPlugin).pluginManager.getPluginStatus(state.selectedContentOrg);
 					
 					// Re-render the status display
-					const statusContainer = container.querySelector('.plugin-status');
-					if (statusContainer) {
-						statusContainer.empty(); // Clear existing items
+					const statusContainerEl = container.querySelector('.plugin-status') as HTMLElement | null;
+					if (statusContainerEl) {
+						statusContainerEl.empty(); // Clear existing items
 						updatedStatus.forEach(plugin => {
-							this.renderPluginStatusItem(statusContainer, plugin);
+							this.renderPluginStatusItem(statusContainerEl, plugin);
 						});
 					}
 					
@@ -179,11 +181,11 @@ export class PluginConfigStep extends BaseWizardStep {
 				const contentOrg = state.selectedContentOrg;
 				const config = {
 					obsidianSettings: {
-						attachmentLocation: contentOrg === 'file-based' ? 'subfolder' : 'same-folder',
+						attachmentLocation: (contentOrg === 'file-based' ? 'subfolder' : 'same-folder') as 'subfolder' | 'same-folder',
 						subfolderName: 'attachments'
 					},
 					astroComposerSettings: {
-						creationMode: contentOrg === 'file-based' ? 'file' : 'folder',
+						creationMode: (contentOrg === 'file-based' ? 'file' : 'folder') as 'file' | 'folder',
 						indexFileName: 'index'
 					},
 					imageInserterSettings: {

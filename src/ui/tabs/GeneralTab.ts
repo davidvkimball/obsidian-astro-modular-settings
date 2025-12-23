@@ -2,6 +2,7 @@ import { Setting } from 'obsidian';
 import { TabRenderer } from '../common/TabRenderer';
 import { SetupWizardModal } from '../SetupWizardModal';
 import { TEMPLATE_OPTIONS, THEME_OPTIONS, AstroModularPlugin, AstroModularSettings } from '../../types';
+import { createSettingsGroup } from '../../utils/settings-compat';
 
 export class GeneralTab extends TabRenderer {
 	render(container: HTMLElement): void {
@@ -43,51 +44,60 @@ export class GeneralTab extends TabRenderer {
 		siteUrlItem.createEl('strong', { text: 'Site URL: ' }); // URL is an acronym, keep uppercase
 		siteUrlItem.createSpan({ text: settings.siteInfo.site });
 
+		// Group three settings with no heading
+		const generalGroup = createSettingsGroup(container);
+		
 		// Run setup wizard button
-		new Setting(container)
-			.setName('Setup wizard')
-			.setDesc('Run the setup wizard to reconfigure your theme')
-			.addButton(button => button
-				.setButtonText('Run setup wizard')
-				.setCta()
-				.onClick(async () => {
-					// Reload settings to ensure we have the latest values
-					const plugin = this.plugin as AstroModularPlugin;
-					await this.plugin.loadData().then((data: Partial<AstroModularSettings> | null) => {
-						if (data) {
-							Object.assign(plugin.settings, data);
-						}
-					});
-					const wizard = new SetupWizardModal(this.app, plugin);
-					wizard.open();
-				}));
+		generalGroup.addSetting((setting) => {
+			setting
+				.setName('Setup wizard')
+				.setDesc('Run the setup wizard to reconfigure your theme')
+				.addButton(button => button
+					.setButtonText('Run setup wizard')
+					.setCta()
+					.onClick(async () => {
+						// Reload settings to ensure we have the latest values
+						const plugin = this.plugin as AstroModularPlugin;
+						await this.plugin.loadData().then((data: Partial<AstroModularSettings> | null) => {
+							if (data) {
+								Object.assign(plugin.settings, data);
+							}
+						});
+						const wizard = new SetupWizardModal(this.app, plugin);
+						wizard.open();
+					}));
+		});
 
 		// Run wizard on startup (moved to bottom)
-		new Setting(container)
-			.setName('Run wizard on startup')
-			.setDesc('Show the setup wizard when Obsidian starts (if not disabled)')
-			.addToggle(toggle => toggle
-				.setValue(settings.runWizardOnStartup)
-				.onChange(async (value) => {
-					settings.runWizardOnStartup = value;
-					await this.plugin.saveData(settings);
-				}));
+		generalGroup.addSetting((setting) => {
+			setting
+				.setName('Run wizard on startup')
+				.setDesc('Show the setup wizard when Obsidian starts (if not disabled)')
+				.addToggle(toggle => toggle
+					.setValue(settings.runWizardOnStartup)
+					.onChange(async (value) => {
+						settings.runWizardOnStartup = value;
+						await this.plugin.saveData(settings);
+					}));
+		});
 
 		// Remove ribbon icon toggle
-		new Setting(container)
-			.setName('Remove ribbon icon')
-			.setDesc('Remove the wizard icon from the left ribbon')
-			.addToggle(toggle => toggle
-				.setValue(settings.removeRibbonIcon ?? false)
-				.onChange(async (value) => {
-					settings.removeRibbonIcon = value;
-					await this.plugin.saveData(settings);
-					// Update ribbon icon immediately
-					const plugin = this.plugin as AstroModularPlugin;
-					if (plugin.updateRibbonIcon) {
-						await plugin.updateRibbonIcon();
-					}
-				}));
+		generalGroup.addSetting((setting) => {
+			setting
+				.setName('Remove ribbon icon')
+				.setDesc('Remove the wizard icon from the left ribbon')
+				.addToggle(toggle => toggle
+					.setValue(settings.removeRibbonIcon ?? false)
+					.onChange(async (value) => {
+						settings.removeRibbonIcon = value;
+						await this.plugin.saveData(settings);
+						// Update ribbon icon immediately
+						const plugin = this.plugin as AstroModularPlugin;
+						if (plugin.updateRibbonIcon) {
+							await plugin.updateRibbonIcon();
+						}
+					}));
+		});
 	}
 
 	private formatDeploymentName(deployment: string): string {

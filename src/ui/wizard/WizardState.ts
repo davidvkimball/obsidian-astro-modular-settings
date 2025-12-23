@@ -43,7 +43,6 @@ export class WizardStateManager {
 				const templateFeatures: Record<string, FeatureSettings> = {
 				'standard': {
 					commandPalette: true,
-					tableOfContents: true,
 					readingTime: true,
 					linkedMentions: true,
 					linkedMentionsCompact: false,
@@ -67,7 +66,6 @@ export class WizardStateManager {
 				},
 					'compact': {
 						commandPalette: true,
-						tableOfContents: true,
 						readingTime: true,
 						linkedMentions: true,
 						linkedMentionsCompact: true,
@@ -91,7 +89,6 @@ export class WizardStateManager {
 					},
 					'minimal': {
 						commandPalette: true,
-						tableOfContents: false,
 						readingTime: false,
 						linkedMentions: false,
 						linkedMentionsCompact: false,
@@ -252,21 +249,21 @@ export class WizardStateManager {
 		// Update features with current settings, preserving template defaults for missing values
 		const templateFeatures: Record<string, FeatureSettings> = {
 			'standard': {
-				commandPalette: true, tableOfContents: true, readingTime: true, linkedMentions: true,
+				commandPalette: true, readingTime: true, linkedMentions: true,
 				linkedMentionsCompact: false, graphView: true, postNavigation: true, hideScrollBar: false,
 				scrollToTop: true, showSocialIconsInFooter: true, profilePicture: false, comments: false,
 				featureButton: 'mode', showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og',
 				customPostCardAspectRatio: '2.5/1', quickActions: { enabled: true, toggleMode: true, graphView: true, changeTheme: true }
 			},
 			'compact': {
-				commandPalette: true, tableOfContents: true, readingTime: true, linkedMentions: true,
+				commandPalette: true, readingTime: true, linkedMentions: true,
 				linkedMentionsCompact: true, graphView: false, postNavigation: true, hideScrollBar: false,
 				scrollToTop: true, showSocialIconsInFooter: false, profilePicture: false, comments: false,
 				featureButton: 'none', showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og',
 				customPostCardAspectRatio: '2.5/1', quickActions: { enabled: true, toggleMode: true, graphView: true, changeTheme: true }
 			},
 			'minimal': {
-				commandPalette: true, tableOfContents: false, readingTime: false, linkedMentions: false,
+				commandPalette: true, readingTime: false, linkedMentions: false,
 				linkedMentionsCompact: false, graphView: false, postNavigation: false, hideScrollBar: true,
 				scrollToTop: true, showSocialIconsInFooter: false, profilePicture: false, comments: false,
 				featureButton: 'none', showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og',
@@ -415,7 +412,7 @@ export class WizardStateManager {
 			
 			// Also sync postOptions.comments.enabled to ensure consistency
 			if (!settings.postOptions) {
-				settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tableOfContents: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: { ...settings.optionalFeatures.comments } };
+				settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: { ...settings.optionalFeatures.comments } };
 			} else if (!settings.postOptions.comments) {
 				settings.postOptions.comments = { ...settings.optionalFeatures.comments };
 			} else {

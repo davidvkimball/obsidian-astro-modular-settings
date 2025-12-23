@@ -1,6 +1,7 @@
-import { Setting, Notice, Modal, setIcon } from 'obsidian';
+import { Notice, Modal, setIcon } from 'obsidian';
 import { TabRenderer } from '../common/TabRenderer';
 import { AstroModularPlugin, ObsidianVaultAdapter } from '../../types';
+import { createSettingsGroup } from '../../utils/settings-compat';
 // Buffer is available in Node.js environment
 // Buffer is available in Node.js environment
 // eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
@@ -11,113 +12,147 @@ export class SiteInfoTab extends TabRenderer {
 		container.empty();
 		const settings = this.getSettings();
 
+		// First group: Group initial settings with no heading
+		const siteInfoGroup = createSettingsGroup(container);
+
 		// Site URL
-		this.createTextSetting(
-			container,
-			'Site URL',
-			'Your site\'s base URL (e.g., https://yoursite.com)',
-			settings.siteInfo.site,
-			(value) => {
-				settings.siteInfo.site = value;
-			}
-		);
+		siteInfoGroup.addSetting((setting) => {
+			setting
+				.setName('Site URL')
+				.setDesc('Your site\'s base URL (e.g., https://yoursite.com)')
+				.addText(text => {
+					text.setValue(settings.siteInfo.site);
+					let timeoutId: number | null = null;
+					text.onChange((value) => {
+						if (timeoutId) {
+							clearTimeout(timeoutId);
+						}
+						settings.siteInfo.site = value;
+						void this.plugin.saveData(settings);
+						timeoutId = window.setTimeout(() => {
+							void this.applyCurrentConfiguration();
+						}, 1000);
+					});
+					text.inputEl.addEventListener('blur', () => {
+						if (timeoutId) {
+							clearTimeout(timeoutId);
+							void this.applyCurrentConfiguration();
+						}
+					});
+				});
+		});
 
 		// Site Title
-		this.createTextSetting(
-			container,
-			'Site Title',
-			'Your site\'s title',
-			settings.siteInfo.title,
-			(value) => {
-				settings.siteInfo.title = value;
-			}
-		);
+		siteInfoGroup.addSetting((setting) => {
+			setting
+				.setName('Site title')
+				.setDesc('Your site\'s title')
+				.addText(text => {
+					text.setValue(settings.siteInfo.title);
+					let timeoutId: number | null = null;
+					text.onChange((value) => {
+						if (timeoutId) {
+							clearTimeout(timeoutId);
+						}
+						settings.siteInfo.title = value;
+						void this.plugin.saveData(settings);
+						timeoutId = window.setTimeout(() => {
+							void this.applyCurrentConfiguration();
+						}, 1000);
+					});
+					text.inputEl.addEventListener('blur', () => {
+						if (timeoutId) {
+							clearTimeout(timeoutId);
+							void this.applyCurrentConfiguration();
+						}
+					});
+				});
+		});
 
 		// Site Description
-		this.createTextSetting(
-			container,
-			'Site Description',
-			'A brief description of your site',
-			settings.siteInfo.description,
-			(value) => {
-				settings.siteInfo.description = value;
-			}
-		);
+		siteInfoGroup.addSetting((setting) => {
+			setting
+				.setName('Site description')
+				.setDesc('A brief description of your site')
+				.addText(text => {
+					text.setValue(settings.siteInfo.description);
+					let timeoutId: number | null = null;
+					text.onChange((value) => {
+						if (timeoutId) {
+							clearTimeout(timeoutId);
+						}
+						settings.siteInfo.description = value;
+						void this.plugin.saveData(settings);
+						timeoutId = window.setTimeout(() => {
+							void this.applyCurrentConfiguration();
+						}, 1000);
+					});
+					text.inputEl.addEventListener('blur', () => {
+						if (timeoutId) {
+							clearTimeout(timeoutId);
+							void this.applyCurrentConfiguration();
+						}
+					});
+				});
+		});
 
 		// Author Name
-		this.createTextSetting(
-			container,
-			'Author Name',
-			'Your name or the site author\'s name',
-			settings.siteInfo.author,
-			(value) => {
-				settings.siteInfo.author = value;
-			}
-		);
+		siteInfoGroup.addSetting((setting) => {
+			setting
+				.setName('Author name')
+				.setDesc('Your name or the site author\'s name')
+				.addText(text => {
+					text.setValue(settings.siteInfo.author);
+					let timeoutId: number | null = null;
+					text.onChange((value) => {
+						if (timeoutId) {
+							clearTimeout(timeoutId);
+						}
+						settings.siteInfo.author = value;
+						void this.plugin.saveData(settings);
+						timeoutId = window.setTimeout(() => {
+							void this.applyCurrentConfiguration();
+						}, 1000);
+					});
+					text.inputEl.addEventListener('blur', () => {
+						if (timeoutId) {
+							clearTimeout(timeoutId);
+							void this.applyCurrentConfiguration();
+						}
+					});
+				});
+		});
 
 		// Language
-		this.createTextSetting(
-			container,
-			'Language',
-			'Your site\'s primary language (ISO 639-1 code)',
-			settings.siteInfo.language,
-			(value) => {
-				settings.siteInfo.language = value;
-			}
-		);
+		siteInfoGroup.addSetting((setting) => {
+			setting
+				.setName('Language code')
+				// eslint-disable-next-line obsidianmd/ui/sentence-case
+				.setDesc('Your site\'s primary language (ISO 639-1 code)')
+				.addText(text => {
+					text.setValue(settings.siteInfo.language);
+					let timeoutId: number | null = null;
+					text.onChange((value) => {
+						if (timeoutId) {
+							clearTimeout(timeoutId);
+						}
+						settings.siteInfo.language = value;
+						void this.plugin.saveData(settings);
+						timeoutId = window.setTimeout(() => {
+							void this.applyCurrentConfiguration();
+						}, 1000);
+					});
+					text.inputEl.addEventListener('blur', () => {
+						if (timeoutId) {
+							clearTimeout(timeoutId);
+							void this.applyCurrentConfiguration();
+						}
+					});
+				});
+		});
 
-		// ═══════════════════════════════════════════════════════════════════
-		// ASSETS & METADATA
-		// ═══════════════════════════════════════════════════════════════════
-		const assetsSection = container.createDiv('settings-section');
-		assetsSection.setCssProps({
-			marginTop: '30px',
-			paddingTop: '20px',
-			borderTop: '2px solid var(--background-modifier-border)'
-		});
-		// Assets & Metadata heading
-		new Setting(assetsSection)
-			.setHeading()
-			.setName('Assets & metadata');
-		
-		// Shared folder button container
-		const assetsHeader = assetsSection.createDiv();
-		assetsHeader.setCssProps({
-			display: 'flex',
-			alignItems: 'center',
-			justifyContent: 'space-between',
-			gap: '10px',
-			marginBottom: '20px'
-		});
-		
-		// Shared folder button for opening public folder
-		const sharedFolderButton = assetsHeader.createEl('button', {
-			cls: 'clickable-icon',
-			attr: { 'aria-label': 'Open public folder' }
-		});
-		sharedFolderButton.setCssProps({
-			marginLeft: 'auto',
-			padding: '4px',
-			border: 'none',
-			backgroundColor: 'transparent',
-			color: 'var(--text-normal)',
-			display: 'flex',
-			alignItems: 'center',
-			justifyContent: 'center'
-		});
-		
-		// Use setIcon for folder icon (Obsidian API)
-		setIcon(sharedFolderButton, 'folder');
-		
-		sharedFolderButton.addEventListener('click', () => {
-			// Use relative path like StyleTab does for themes folder
-			const publicPath = '../../public';
-			// openWithDefaultApp is not available in Obsidian's App interface, but may exist in Electron
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-			void ((this.app as any).openWithDefaultApp?.(publicPath) ?? Promise.resolve()).catch((error: unknown) => {
-				new Notice(`Failed to open public folder: ${error instanceof Error ? error.message : String(error)}`);
-			});
-		});
+		// Assets & Metadata group with heading
+		const assetsGroup = createSettingsGroup(container, 'Assets & metadata');
 
 		// Helper function to copy file to public folder
 		const copyImageToPublic = async (sourcePath: string, targetFileName: string): Promise<void> => {
@@ -253,110 +288,188 @@ export class SiteInfoTab extends TabRenderer {
 			fileInput.click();
 		};
 
-		// Open Graph Image
-		const ogImageSetting = new Setting(assetsSection)
-			.setName('Open graph image')
-			// False positive: "PNG" is an acronym and should be uppercase
-			// eslint-disable-next-line obsidianmd/ui/sentence-case
-			.setDesc('Select a PNG image to replace open-graph.png in the public folder (recommended: 1200 x 630 pixels)');
-		
-		const ogImageButton = ogImageSetting.controlEl.createEl('button', {
-			text: 'Select PNG file',
-			cls: 'mod-cta'
+		// Shared folder button - add as a setting within the group
+		assetsGroup.addSetting((setting) => {
+			// Hide default UI elements and add custom button
+			const nameEl = setting.settingEl.querySelector('.setting-item-name');
+			const descEl = setting.settingEl.querySelector('.setting-item-description');
+			const controlEl = setting.settingEl.querySelector('.setting-item-control');
+			if (nameEl) (nameEl as HTMLElement).setCssProps({ display: 'none' });
+			if (descEl) (descEl as HTMLElement).setCssProps({ display: 'none' });
+			if (controlEl) (controlEl as HTMLElement).setCssProps({ display: 'none' });
+			setting.settingEl.setCssProps({
+				borderTop: 'none',
+				paddingTop: '0',
+				paddingBottom: '0'
+			});
+			
+			const assetsHeader = setting.settingEl.createDiv();
+			assetsHeader.setCssProps({
+				display: 'flex',
+				alignItems: 'center',
+				justifyContent: 'space-between',
+				gap: '10px',
+				marginBottom: '20px'
+			});
+			
+			const sharedFolderButton = assetsHeader.createEl('button', {
+				cls: 'clickable-icon',
+				attr: { 'aria-label': 'Open public folder' }
+			});
+			sharedFolderButton.setCssProps({
+				marginLeft: 'auto',
+				padding: '4px',
+				border: 'none',
+				backgroundColor: 'transparent',
+				color: 'var(--text-normal)',
+				display: 'flex',
+				alignItems: 'center',
+				justifyContent: 'center'
+			});
+			
+			setIcon(sharedFolderButton, 'folder');
+			
+			sharedFolderButton.addEventListener('click', () => {
+				const publicPath = '../../public';
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+				void ((this.app as any).openWithDefaultApp?.(publicPath) ?? Promise.resolve()).catch((error: unknown) => {
+					new Notice(`Failed to open public folder: ${error instanceof Error ? error.message : String(error)}`);
+				});
+			});
 		});
-		
-		ogImageButton.addEventListener('click', () => {
-			void showFilePicker('open-graph.png');
+
+		// Open Graph Image
+		assetsGroup.addSetting((setting) => {
+			setting
+				.setName('Open graph image')
+				// False positive: "PNG" is an acronym and should be uppercase
+				// eslint-disable-next-line obsidianmd/ui/sentence-case
+				.setDesc('Select a PNG image to replace open-graph.png in the public folder (recommended: 1200 x 630 pixels)');
+			
+			const ogImageButton = setting.controlEl.createEl('button', {
+				text: 'Select PNG file',
+				cls: 'mod-cta'
+			});
+			
+			ogImageButton.addEventListener('click', () => {
+				void showFilePicker('open-graph.png');
+			});
 		});
 
 		// Open Graph Image Alt Text
-		this.createTextSetting(
-			assetsSection,
-			'Open Graph image alt text',
-			'Alternative text for the Open Graph image',
-			settings.siteInfo.defaultOgImageAlt || settings.seo?.defaultOgImageAlt || 'Astro Modular logo.',
-			(value) => {
-				settings.siteInfo.defaultOgImageAlt = value;
-				// Also update seo for backwards compatibility
-				if (!settings.seo) {
-					settings.seo = { defaultOgImageAlt: '' };
-				}
-				settings.seo.defaultOgImageAlt = value;
-			},
-			1000,
-			async () => {
-				await this.applyCurrentConfiguration();
+		assetsGroup.addSetting((setting) => {
+			setting
+				// False positive: "Open Graph" is a proper noun (OG format standard)
+				// eslint-disable-next-line obsidianmd/ui/sentence-case
+				.setName('Open Graph image alt text')
 				// False positive: "Open Graph" is a technical term (OG image standard) and should be capitalized
 				// eslint-disable-next-line obsidianmd/ui/sentence-case
-				new Notice('Open Graph image alt text updated and applied to config.ts');
-			}
-		);
+				.setDesc('Alternative text for the Open Graph image')
+				.addText(text => {
+					text.setValue(settings.siteInfo.defaultOgImageAlt || settings.seo?.defaultOgImageAlt || 'Astro Modular logo.');
+					let timeoutId: number | null = null;
+					text.onChange((value) => {
+						if (timeoutId) {
+							clearTimeout(timeoutId);
+						}
+						settings.siteInfo.defaultOgImageAlt = value;
+						if (!settings.seo) {
+							settings.seo = { defaultOgImageAlt: '' };
+						}
+						settings.seo.defaultOgImageAlt = value;
+						void this.plugin.saveData(settings);
+						timeoutId = window.setTimeout(() => {
+							void this.applyCurrentConfiguration().then(() => {
+								// False positive: "Open Graph" is a technical term (OG image standard) and should be capitalized
+								// eslint-disable-next-line obsidianmd/ui/sentence-case
+								new Notice('Open Graph image alt text updated and applied to config.ts');
+							});
+						}, 1000);
+					});
+					text.inputEl.addEventListener('blur', () => {
+						if (timeoutId) {
+							clearTimeout(timeoutId);
+							void this.applyCurrentConfiguration().then(() => {
+								// False positive: "Open Graph" is a technical term (OG image standard) and should be capitalized
+								// eslint-disable-next-line obsidianmd/ui/sentence-case
+								new Notice('Open Graph image alt text updated and applied to config.ts');
+							});
+						}
+					});
+				});
+		});
 
 		// Favicon (always visible - used as fallback when theme-adaptive is enabled)
-		const faviconSetting = new Setting(assetsSection)
-			.setName('Favicon') // Already sentence case
-			// False positive: "PNG" is an acronym and should be uppercase
-			// eslint-disable-next-line obsidianmd/ui/sentence-case
-			.setDesc('Select a PNG image to replace favicon.png in the public folder (recommended: 256 x 256 pixels). Standard favicon is used when browser preference cannot be determined.');
-		
-		const faviconButton = faviconSetting.controlEl.createEl('button', {
-			text: 'Select PNG file',
-			cls: 'mod-cta'
-		});
-		
-		faviconButton.addEventListener('click', () => {
-			void showFilePicker('favicon.png');
+		assetsGroup.addSetting((setting) => {
+			setting
+				.setName('Favicon')
+				// False positive: "PNG" is an acronym and should be uppercase
+				// eslint-disable-next-line obsidianmd/ui/sentence-case
+				.setDesc('Select a PNG image to replace favicon.png in the public folder (recommended: 256 x 256 pixels). Standard favicon is used when browser preference cannot be determined.');
+			
+			const faviconButton = setting.controlEl.createEl('button', {
+				text: 'Select PNG file',
+				cls: 'mod-cta'
+			});
+			
+			faviconButton.addEventListener('click', () => {
+				void showFilePicker('favicon.png');
+			});
 		});
 
 		// Theme-adaptive favicon toggle
-		new Setting(assetsSection)
-			.setName('Theme-adaptive favicon')
-			.setDesc('If enabled, favicon switches between light and dark variants based on browser theme preference. Standard favicon is used when browser\'s preference cannot be determined.')
-			.addToggle(toggle => toggle
-				.setValue(settings.siteInfo.faviconThemeAdaptive ?? true)
-				.onChange(async (value) => {
-					settings.siteInfo.faviconThemeAdaptive = value;
-					await this.plugin.saveData(settings);
-					// Reload settings to ensure we have the latest values before rendering
-					await (this.plugin as AstroModularPlugin).loadSettings();
-					await this.applyCurrentConfiguration();
-					// Re-render to show/hide light/dark favicon fields
-					this.render(container);
-					new Notice(`Theme-adaptive favicon ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
-				}));
+		assetsGroup.addSetting((setting) => {
+			setting
+				.setName('Theme-adaptive favicon')
+				.setDesc('If enabled, favicon switches between light and dark variants based on browser theme preference. Standard favicon is used when browser\'s preference cannot be determined.')
+				.addToggle(toggle => toggle
+					.setValue(settings.siteInfo.faviconThemeAdaptive ?? true)
+					.onChange(async (value) => {
+						settings.siteInfo.faviconThemeAdaptive = value;
+						await this.plugin.saveData(settings);
+						await (this.plugin as AstroModularPlugin).loadSettings();
+						await this.applyCurrentConfiguration();
+						this.render(container);
+						new Notice(`Theme-adaptive favicon ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
+					}));
+		});
 
 		// Light/Dark favicon fields (only shown when theme-adaptive is enabled)
 		if (settings.siteInfo.faviconThemeAdaptive ?? true) {
 			// Light theme favicon
-			const faviconLightSetting = new Setting(assetsSection)
-				.setName('Light theme favicon') // Already sentence case
-				// False positive: "PNG" is an acronym and should be uppercase
-				// eslint-disable-next-line obsidianmd/ui/sentence-case
-				.setDesc('Select a PNG image to replace favicon-light.png in the public folder (recommended: 256 x 256 pixels)');
-			
-			const faviconLightButton = faviconLightSetting.controlEl.createEl('button', {
-				text: 'Select PNG file',
-				cls: 'mod-cta'
-			});
-			
-			faviconLightButton.addEventListener('click', () => {
-				void showFilePicker('favicon-light.png');
+			assetsGroup.addSetting((setting) => {
+				setting
+					.setName('Light theme favicon')
+					// False positive: "PNG" is an acronym and should be uppercase
+					// eslint-disable-next-line obsidianmd/ui/sentence-case
+					.setDesc('Select a PNG image to replace favicon-light.png in the public folder (recommended: 256 x 256 pixels)');
+				
+				const faviconLightButton = setting.controlEl.createEl('button', {
+					text: 'Select PNG file',
+					cls: 'mod-cta'
+				});
+				
+				faviconLightButton.addEventListener('click', () => {
+					void showFilePicker('favicon-light.png');
+				});
 			});
 
 			// Dark theme favicon
-			const faviconDarkSetting = new Setting(assetsSection)
-				.setName('Dark theme favicon') // Already sentence case
-				// False positive: "PNG" is an acronym and should be uppercase
-				// eslint-disable-next-line obsidianmd/ui/sentence-case
-				.setDesc('Select a PNG image to replace favicon-dark.png in the public folder (recommended: 256 x 256 pixels)');
-			
-			const faviconDarkButton = faviconDarkSetting.controlEl.createEl('button', {
-				text: 'Select PNG file',
-				cls: 'mod-cta'
-			});
-			
-			faviconDarkButton.addEventListener('click', () => {
-				void showFilePicker('favicon-dark.png');
+			assetsGroup.addSetting((setting) => {
+				setting
+					.setName('Dark theme favicon')
+					// False positive: "PNG" is an acronym and should be uppercase
+					// eslint-disable-next-line obsidianmd/ui/sentence-case
+					.setDesc('Select a PNG image to replace favicon-dark.png in the public folder (recommended: 256 x 256 pixels)');
+				
+				const faviconDarkButton = setting.controlEl.createEl('button', {
+					text: 'Select PNG file',
+					cls: 'mod-cta'
+				});
+				
+				faviconDarkButton.addEventListener('click', () => {
+					void showFilePicker('favicon-dark.png');
+				});
 			});
 		}
 	}
