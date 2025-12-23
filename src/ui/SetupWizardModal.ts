@@ -1,4 +1,4 @@
-import { App, Modal, Notice, Plugin } from 'obsidian';
+import { App, Modal, Notice } from 'obsidian';
 import { WizardStateManager } from './wizard/WizardState';
 import { BaseWizardStep } from './wizard/BaseWizardStep';
 import { WelcomeStep } from './wizard/WelcomeStep';
@@ -11,15 +11,7 @@ import { OptionalFeaturesStep } from './wizard/OptionalFeaturesStep';
 import { DeploymentStep } from './wizard/DeploymentStep';
 import { PluginConfigStep } from './wizard/PluginConfigStep';
 import { FinalizeStep } from './wizard/FinalizeStep';
-import { AstroModularSettings } from '../types';
-import { ConfigManager } from '../utils/ConfigManager';
-
-export interface AstroModularPlugin extends Plugin {
-	settings: AstroModularSettings;
-	configManager: ConfigManager;
-	loadSettings(): Promise<void>;
-	triggerSettingsRefresh(): Promise<void>;
-}
+import { AstroModularPlugin, AstroModularSettings } from '../types';
 
 export class SetupWizardModal extends Modal {
 	private stateManager: WizardStateManager;
@@ -48,7 +40,7 @@ export class SetupWizardModal extends Modal {
 		];
 	}
 
-	async onOpen() {
+	onOpen() {
 		const { contentEl } = this;
 		contentEl.empty();
 		contentEl.addClass('astro-modular-wizard');
@@ -59,17 +51,18 @@ export class SetupWizardModal extends Modal {
 		// Store a snapshot of initial settings to detect changes later
 		this.initialSettingsSnapshot = this.createSettingsSnapshot();
 		
-		await this.renderCurrentStep();
+		// Render current step (may be async, but we don't await it)
+		void this.renderCurrentStep();
 	}
 
-	async onClose() {
+	onClose() {
 		const { contentEl } = this;
 		contentEl.empty();
 		
 		// Save any wizard state changes to data.json and config.ts if modal is closed
 		// This ensures changes are preserved even if user closes modal without completing wizard
 		// Only show notification if not completing (Complete Setup already shows its own notification)
-		await this.saveWizardStateToDataJson(!this.isCompleting);
+		void this.saveWizardStateToDataJson(!this.isCompleting);
 		
 		// Reset the flag
 		this.isCompleting = false;
@@ -105,9 +98,8 @@ export class SetupWizardModal extends Modal {
 		contentEl.scrollTop = 0;
 	}
 
-	private async renderCurrentStep() {
+	private renderCurrentStep() {
 		const { contentEl } = this;
-		const state = this.stateManager.getState();
 		
 		// Scroll to top IMMEDIATELY before clearing content to prevent visual jump
 		this.scrollToTop();
@@ -122,9 +114,9 @@ export class SetupWizardModal extends Modal {
 		// Render progress
 		this.renderProgress(contentEl);
 
-		// Render step content (await to ensure it's complete)
+		// Render step content (may be async, but we don't await it)
 		const stepContent = contentEl.createDiv('wizard-content');
-		await this.renderStepContent(stepContent);
+		this.renderStepContent(stepContent);
 
 		// Render footer
 		this.renderFooter(contentEl);
@@ -137,37 +129,38 @@ export class SetupWizardModal extends Modal {
 
 	private renderHeader(container: HTMLElement) {
 		const header = container.createDiv('wizard-header');
-		header.innerHTML = `
-			<h1>Astro Modular Setup</h1>
-		`;
+		header.createEl('h1', { text: 'Astro modular setup' });
 	}
 
 	private renderProgress(container: HTMLElement) {
 		const state = this.stateManager.getState();
 		const progress = container.createDiv('wizard-progress');
 		
-		progress.innerHTML = `
-			<div class="progress-bar">
-				<div class="progress-fill" style="width: ${this.stateManager.getProgress()}%"></div>
-			</div>
-		`;
+		const progressBar = progress.createDiv('progress-bar');
+		const progressFill = progressBar.createDiv('progress-fill');
+		// Set dynamic width using setCssProps
+		progressFill.setCssProps({ width: `${this.stateManager.getProgress()}%` });
 		
 		// Add step text below the progress bar
 		const progressText = progress.createDiv('progress-text');
 		progressText.textContent = `Step ${state.currentStep} of ${state.totalSteps}`;
 	}
 
-	private async renderStepContent(container: HTMLElement) {
+	private renderStepContent(container: HTMLElement) {
 		const state = this.stateManager.getState();
 		const stepIndex = state.currentStep - 1;
 		
 		if (stepIndex >= 0 && stepIndex < this.steps.length) {
-			await this.steps[stepIndex].render(container);
+			// Render step (may be async, but we don't await it)
+			const result = this.steps[stepIndex].render(container);
+			// If render returns a promise, handle it
+			if (result !== undefined && result !== null && typeof result === 'object' && 'then' in result) {
+				void (result as Promise<void>);
+			}
 		}
 	}
 
 	private renderFooter(container: HTMLElement) {
-		const state = this.stateManager.getState();
 		const footer = container.createDiv('wizard-footer');
 		
 		const buttons = footer.createDiv('wizard-buttons');
@@ -178,11 +171,11 @@ export class SetupWizardModal extends Modal {
 				text: 'Previous',
 				cls: 'mod-button'
 			});
-			prevBtn.addEventListener('click', async () => {
+			prevBtn.addEventListener('click', () => {
 				// Discard any changes made on current step and go back
 				this.discardCurrentStepChanges();
 				this.stateManager.previousStep();
-				await this.renderCurrentStep();
+				void this.renderCurrentStep();
 			});
 		}
 
@@ -192,35 +185,40 @@ export class SetupWizardModal extends Modal {
 				text: 'Next',
 				cls: 'mod-button mod-cta'
 			});
-			nextBtn.addEventListener('click', async () => {
+			nextBtn.addEventListener('click', () => {
 				// Save current step changes to wizard state, data.json, and config.ts
-				await this.saveCurrentStepToWizardState();
-				this.stateManager.nextStep();
-				await this.renderCurrentStep();
+				void (async () => {
+					await this.saveCurrentStepToWizardState();
+					this.stateManager.nextStep();
+					this.renderCurrentStep();
+				})();
 			});
 		} else {
 			const completeBtn = buttons.createEl('button', {
-				text: 'Complete Setup',
+				text: 'Complete setup',
 				cls: 'mod-button mod-cta'
 			});
-			completeBtn.addEventListener('click', async () => {
+			completeBtn.addEventListener('click', () => {
 				// Mark that we're completing the wizard to avoid duplicate notifications
 				this.isCompleting = true;
 				
-				// Complete the wizard
-				const finalStep = this.steps[this.steps.length - 1] as FinalizeStep;
-				await finalStep.completeWizard();
-				
-				// Save the final settings
-				await this.plugin.saveData(this.plugin.settings);
-				
-				// CRITICAL: Reload settings from disk to ensure everything is synchronized
-				await this.plugin.loadSettings();
-				
-				// Trigger settings tab refresh to show updated values
-				await this.plugin.triggerSettingsRefresh();
-				
-				this.close();
+				// Complete the wizard (fire and forget)
+				void (async () => {
+					// Complete the wizard
+					const finalStep = this.steps[this.steps.length - 1] as FinalizeStep;
+					await finalStep.completeWizard();
+					
+					// Save the final settings
+					await this.plugin.saveData(this.plugin.settings);
+					
+					// CRITICAL: Reload settings from disk to ensure everything is synchronized
+					await this.plugin.loadSettings();
+					
+					// Trigger settings tab refresh to show updated values
+					await this.plugin.triggerSettingsRefresh();
+					
+					this.close();
+				})();
 			});
 		}
 
@@ -230,11 +228,11 @@ export class SetupWizardModal extends Modal {
 				text: 'Skip',
 				cls: 'mod-button'
 			});
-			skipBtn.style.opacity = '0.6';
-			skipBtn.addEventListener('click', async () => {
+			skipBtn.addClass('wizard-skip-button');
+			skipBtn.addEventListener('click', () => {
 				// Skip without saving current step changes to wizard state
 				this.stateManager.nextStep();
-				await this.renderCurrentStep();
+				this.renderCurrentStep();
 			});
 		}
 	}
@@ -325,6 +323,7 @@ export class SetupWizardModal extends Modal {
 	private createSettingsSnapshot(): Partial<AstroModularSettings> {
 		// Create a deep copy of current settings for comparison
 		const settings = this.plugin.settings;
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-return
 		return JSON.parse(JSON.stringify({
 			currentTemplate: settings.currentTemplate,
 			currentTheme: settings.currentTheme,

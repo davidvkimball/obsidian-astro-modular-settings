@@ -1,5 +1,47 @@
 /* Astro Modular Settings Plugin Styles */
 
+/* Preset Warning Modal Styles */
+.preset-warning-modal-header {
+	margin-top: 0;
+}
+
+.preset-warning-message {
+	margin-bottom: 16px;
+}
+
+.preset-warning-changes-list {
+	margin-bottom: 24px;
+	padding-left: 20px;
+}
+
+.preset-warning-list-item {
+	margin-bottom: 4px;
+}
+
+.preset-warning-question {
+	font-weight: bold;
+	margin-bottom: 24px;
+}
+
+.modal-button-container {
+	display: flex;
+	gap: 12px;
+	justify-content: flex-end;
+}
+
+/* Hide ribbon icon from context menu when removed */
+body[data-astro-modular-ribbon-removed="true"] .menu-item:has(svg[data-lucide="wand-sparkles"]),
+body[data-astro-modular-ribbon-removed="true"] .menu-item:has(.lucide-wand-sparkles),
+body[data-astro-modular-ribbon-removed="true"] .menu-item .menu-item-icon:has(svg[data-lucide="wand-sparkles"]),
+body[data-astro-modular-ribbon-removed="true"] .menu-item .menu-item-icon:has(.lucide-wand-sparkles) {
+	display: none !important;
+}
+
+/* Wizard skip button opacity */
+.wizard-skip-button {
+	opacity: 0.6;
+}
+
 /* Wizard Modal Styles */
 .astro-modular-wizard {
 	font-family: var(--font-family);
@@ -514,7 +556,8 @@
 }
 
 .plugin-info h3 {
-	margin: 0 0 5px 0;
+	margin: 0 0 5px 0 !important;
+	padding: 0 !important;
 	color: var(--text-normal);
 	font-size: 14px;
 }
@@ -523,6 +566,18 @@
 	margin: 0;
 	color: var(--text-muted);
 	font-size: 12px;
+}
+
+/* Fix indentation for all h3 elements in settings */
+.astro-modular-settings h3 {
+	margin-left: 0 !important;
+	padding-left: 0 !important;
+}
+
+/* Fix indentation for h3 in plugin items specifically */
+.astro-modular-settings .plugin-item .plugin-info h3 {
+	margin-left: 0 !important;
+	padding-left: 0 !important;
 }
 
 .config-options {
@@ -708,9 +763,25 @@
 	margin-bottom: 30px;
 }
 
-.astro-modular-settings .settings-section h2 {
-	margin-bottom: 10px;
-	color: var(--text-normal);
+/* Fix indentation for heading settings - remove padding/margin */
+/* Obsidian uses .setting-item-heading class for headings created with setHeading() */
+.astro-modular-settings .setting-item-heading {
+	margin-left: 0 !important;
+	margin-right: 0 !important;
+	padding-left: 0 !important;
+	padding-right: 0 !important;
+	border: none !important;
+}
+
+.astro-modular-settings .setting-item-heading .setting-item-name {
+	margin: 0 !important;
+	padding: 0 !important;
+	font-weight: var(--font-medium);
+}
+
+.astro-modular-settings .setting-item-heading .setting-item-info {
+	margin: 0 !important;
+	padding: 0 !important;
 }
 
 .astro-modular-settings .settings-section p {
@@ -727,9 +798,20 @@
 	margin: 20px 0;
 }
 
-.astro-modular-settings .config-info h3 {
-	margin: 0 0 15px 0;
-	color: var(--text-normal);
+/* Fix heading indentation in config-info */
+.astro-modular-settings .config-info .setting-item-heading,
+.astro-modular-settings .config-info .setting-item.setting-item-heading {
+	margin-left: 0 !important;
+	margin-right: 0 !important;
+	padding-left: 0 !important;
+	padding-right: 0 !important;
+	border: none !important;
+}
+
+.astro-modular-settings .config-info .setting-item-heading .setting-item-name,
+.astro-modular-settings .config-info .setting-item.setting-item-heading .setting-item-name {
+	margin: 0 0 15px 0 !important;
+	padding: 0 !important;
 }
 
 .astro-modular-settings .config-item {
@@ -936,20 +1018,25 @@
 	gap: 1rem;
 }
 
-.setting-group {
+/* SCOPED to plugin UI only */
+.astro-modular-settings .setting-group,
+.astro-modular-wizard .setting-group {
 	display: flex;
 	flex-direction: column;
 	gap: 0.5rem;
 }
 
-.setting-group label {
+.astro-modular-settings .setting-group label,
+.astro-modular-wizard .setting-group label {
 	font-weight: 500;
 	color: var(--text-normal);
 	font-size: 0.875rem;
 }
 
-.setting-group input,
-.setting-group select {
+.astro-modular-settings .setting-group input,
+.astro-modular-settings .setting-group select,
+.astro-modular-wizard .setting-group input,
+.astro-modular-wizard .setting-group select {
 	/* Use Obsidian's native form control styling */
 	width: 100%;
 }
@@ -1021,8 +1108,6 @@
 
 .deployment-header h3 {
 	margin: 0;
-	font-size: 1.125rem;
-	font-weight: 600;
 	color: var(--text-normal);
 }
 
@@ -1044,7 +1129,6 @@
 .site-info-form h3 {
 	margin: 0 0 15px 0;
 	color: var(--text-normal);
-	font-size: 1.125rem;
 }
 
 .form-group {
@@ -1096,7 +1180,6 @@
 .nav-section h3 {
 	margin: 0 0 5px 0;
 	color: var(--text-normal);
-	font-size: 1.125rem;
 }
 
 .nav-section p {
@@ -1384,21 +1467,26 @@
 	margin-top: 15px;
 }
 
-.setting-group {
+/* SCOPED to plugin UI only - Profile picture and comments options */
+.astro-modular-settings .setting-group,
+.astro-modular-wizard .setting-group {
 	display: flex;
 	flex-direction: column;
 	gap: 5px;
 }
 
-.setting-group label {
+.astro-modular-settings .setting-group label,
+.astro-modular-wizard .setting-group label {
 	font-weight: 500;
 	color: var(--text-normal);
 	font-size: 13px;
 	margin-bottom: 3px;
 }
 
-.setting-group input,
-.setting-group select {
+.astro-modular-settings .setting-group input,
+.astro-modular-settings .setting-group select,
+.astro-modular-wizard .setting-group input,
+.astro-modular-wizard .setting-group select {
 	width: 100%;
 	padding: 6px 10px;
 	border: 1px solid var(--background-modifier-border);
@@ -1409,8 +1497,10 @@
 	transition: border-color 0.2s ease;
 }
 
-.setting-group input:focus,
-.setting-group select:focus {
+.astro-modular-settings .setting-group input:focus,
+.astro-modular-settings .setting-group select:focus,
+.astro-modular-wizard .setting-group input:focus,
+.astro-modular-wizard .setting-group select:focus {
 	outline: none;
 	border-color: var(--interactive-accent);
 	box-shadow: 0 0 0 2px var(--interactive-accent-2);
@@ -1641,8 +1731,9 @@
 	}
 }
 
-/* Fix checkbox checkmark centering - use proper vertical centering */
-input[type=checkbox]:checked:after {
+/* Fix checkbox checkmark centering - SCOPED to plugin UI only */
+.astro-modular-settings input[type=checkbox]:checked:after,
+.astro-modular-wizard input[type=checkbox]:checked:after {
 	content: "";
 	inset-inline-start: -1px;
 	position: absolute;

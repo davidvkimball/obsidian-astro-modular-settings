@@ -1,5 +1,5 @@
 import { Plugin } from 'obsidian';
-import { AstroModularSettings, TemplateType, ThemeType, ContentOrganizationType } from '../../types';
+import { TemplateType, ThemeType, ContentOrganizationType, SiteInformation, NavigationSettings, FeatureSettings, TypographySettings, OptionalFeatures, AstroModularPlugin } from '../../types';
 
 export interface WizardState {
 	// Current step
@@ -10,11 +10,11 @@ export interface WizardState {
 	selectedTemplate: TemplateType;
 	selectedTheme: ThemeType;
 	selectedContentOrg: ContentOrganizationType;
-	selectedSiteInfo: any;
-	selectedNavigation: any;
-	selectedFeatures: any;
-	selectedTypography: any;
-	selectedOptionalFeatures: any;
+	selectedSiteInfo: SiteInformation;
+	selectedNavigation: NavigationSettings;
+	selectedFeatures: FeatureSettings;
+	selectedTypography: TypographySettings;
+	selectedOptionalFeatures: OptionalFeatures;
 	selectedOptionalContentTypes: {
 		projects: boolean;
 		docs: boolean;
@@ -29,7 +29,7 @@ export class WizardStateManager {
 
 	constructor(plugin: Plugin) {
 		this.plugin = plugin;
-		const settings = (plugin as any).settings;
+		const settings = (plugin as AstroModularPlugin).settings;
 		this.state = {
 			currentStep: 1,
 			totalSteps: 10,
@@ -40,7 +40,7 @@ export class WizardStateManager {
 			selectedNavigation: settings.navigation,
 			selectedFeatures: (() => {
 				// Initialize features based on current template
-				const templateFeatures: Record<string, any> = {
+				const templateFeatures: Record<string, FeatureSettings> = {
 				'standard': {
 					commandPalette: true,
 					tableOfContents: true,
@@ -237,7 +237,7 @@ export class WizardStateManager {
 
 	refreshState(): void {
 		// Refresh the wizard state with current plugin settings
-		const settings = (this.plugin as any).settings;
+		const settings = (this.plugin as AstroModularPlugin).settings;
 		
 		// Update the state with current settings
 		this.state.selectedTemplate = settings.currentTemplate;
@@ -250,7 +250,7 @@ export class WizardStateManager {
 		this.state.runWizardOnStartup = settings.runWizardOnStartup;
 		
 		// Update features with current settings, preserving template defaults for missing values
-		const templateFeatures: Record<string, any> = {
+		const templateFeatures: Record<string, FeatureSettings> = {
 			'standard': {
 				commandPalette: true, tableOfContents: true, readingTime: true, linkedMentions: true,
 				linkedMentionsCompact: false, graphView: true, postNavigation: true, hideScrollBar: false,
@@ -353,7 +353,7 @@ export class WizardStateManager {
 
 	buildFinalSettings(): void {
 		// Update plugin.settings directly instead of returning a new object
-		const settings = (this.plugin as any).settings;
+		const settings = (this.plugin as AstroModularPlugin).settings;
 		
 		// Store the original template to detect if it changed
 		const originalTemplate = settings.currentTemplate;
@@ -395,7 +395,7 @@ export class WizardStateManager {
 		// ONLY apply template preset changes if the template was actually changed
 		// This prevents reverting user customizations when navigating the wizard
 		if (this.state.selectedTemplate !== originalTemplate) {
-			const templatePreset = (this.plugin as any).configManager.getTemplatePreset(this.state.selectedTemplate);
+			const templatePreset = (this.plugin as AstroModularPlugin).configManager.getTemplatePreset(this.state.selectedTemplate);
 			if (templatePreset && templatePreset.config) {
 				// Update table of contents settings from preset
 				if (templatePreset.config.tableOfContents) {

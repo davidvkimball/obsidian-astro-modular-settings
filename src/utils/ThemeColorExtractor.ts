@@ -1,4 +1,4 @@
-import { ThemeColors, SimpleThemeColors, ColorScale } from '../types';
+import { ThemeColors, ColorScale } from '../types';
 
 export class ThemeColorExtractor {
 	/**
@@ -27,7 +27,6 @@ export class ThemeColorExtractor {
 		// Get multiple background colors to create a better scale
 		const backgroundPrimary = this.getColorValue(styles, '--background-primary');
 		const backgroundSecondary = this.getColorValue(styles, '--background-secondary');
-		const backgroundModifierBorder = this.getColorValue(styles, '--background-modifier-border');
 		
 		// Determine if we're in a dark or light theme
 		const backgroundRgb = this.hexToRgb(backgroundPrimary);
@@ -144,7 +143,7 @@ export class ThemeColorExtractor {
 
 		// Create a temporary element to compute the color
 		const tempElement = document.createElement('div');
-		tempElement.style.color = colorValue;
+		tempElement.setCssProps({ color: colorValue });
 		document.body.appendChild(tempElement);
 		
 		const computedColor = getComputedStyle(tempElement).color;
@@ -410,9 +409,9 @@ export class ThemeColorExtractor {
 		
 		// Handle 6-digit hex
 		if (hex.length === 6) {
-			const r = parseInt(hex.substr(0, 2), 16);
-			const g = parseInt(hex.substr(2, 2), 16);
-			const b = parseInt(hex.substr(4, 2), 16);
+			const r = parseInt(hex.substring(0, 2), 16);
+			const g = parseInt(hex.substring(2, 4), 16);
+			const b = parseInt(hex.substring(4, 6), 16);
 			return { r, g, b };
 		}
 		

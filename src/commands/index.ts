@@ -1,12 +1,12 @@
-import { Plugin, Notice } from 'obsidian';
-import { ObsidianApp } from '../types';
+import { Plugin } from 'obsidian';
+import { ObsidianApp, AstroModularPlugin, AstroModularSettings } from '../types';
 import { SetupWizardModal } from '../ui/SetupWizardModal';
 
 export function registerCommands(plugin: Plugin) {
 	// Open settings command
 	plugin.addCommand({
 		id: 'open-settings',
-		name: 'Open Astro Modular Settings',
+		name: 'Open settings',
 		icon: 'settings-2',
 		callback: () => {
 			// This will be handled by the settings tab
@@ -22,10 +22,12 @@ export function registerCommands(plugin: Plugin) {
 		icon: 'wand',
 		callback: async () => {
 			// Reload settings to ensure we have the latest values
-			await plugin.loadData().then((data: any) => {
-				Object.assign((plugin as any).settings, data);
+			await plugin.loadData().then((data: Partial<AstroModularSettings> | null) => {
+				if (data && 'settings' in plugin) {
+					Object.assign((plugin as AstroModularPlugin).settings, data);
+				}
 			});
-			const wizard = new SetupWizardModal(plugin.app, plugin as any);
+			const wizard = new SetupWizardModal(plugin.app, plugin as AstroModularPlugin);
 			wizard.open();
 		}
 	});

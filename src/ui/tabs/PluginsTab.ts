@@ -1,4 +1,5 @@
-import { Setting, Notice, Modal } from 'obsidian';
+import { Setting, Notice, Modal, setIcon } from 'obsidian';
+import { AstroModularPlugin } from '../../types';
 import { TabRenderer } from '../common/TabRenderer';
 
 export class PluginsTab extends TabRenderer {
@@ -6,12 +7,9 @@ export class PluginsTab extends TabRenderer {
 		container.empty();
 		const settings = this.getSettings();
 
-		// Settings section header
-		const settingsSection = container.createDiv('settings-section');
-
 		// Get plugin status
 		const contentOrg = settings.contentOrganization;
-		const pluginStatus = await (this.plugin as any).pluginManager.getPluginStatus(contentOrg);
+		const pluginStatus = await (this.plugin as AstroModularPlugin).pluginManager.getPluginStatus(contentOrg);
 
 		// Display plugin status
 		const statusContainer = container.createDiv('plugin-status-container');
@@ -45,21 +43,17 @@ export class PluginsTab extends TabRenderer {
 			const pluginItem = pluginStatusDiv.createDiv(itemClass);
 			const icon = pluginItem.createDiv('plugin-icon');
 			
-			// Set icon based on status
+			// Set icon based on status using setIcon
 			if (isSettingsCheck) {
-				icon.innerHTML = isConfigured 
-					? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'
-					: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+				setIcon(icon, isConfigured ? 'check' : 'x');
 			} else if (imageInserterMismatch || allMismatched) {
 				// Image Inserter settings don't match or all content types are out of sync - show red X
-				icon.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+				setIcon(icon, 'x');
 			} else if (isPartiallyConfigured) {
 				// Alert triangle icon (neutral warning icon from Lucide)
-				icon.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>';
+				setIcon(icon, 'alert-triangle');
 			} else {
-				icon.innerHTML = isConfigured && plugin.enabled
-					? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'
-					: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+				setIcon(icon, isConfigured && plugin.enabled ? 'check' : 'x');
 			}
 			
 			const info = pluginItem.createDiv('plugin-info');
@@ -84,7 +78,7 @@ export class PluginsTab extends TabRenderer {
 				statusText = 'Configured';
 			}
 			
-			const statusP = info.createEl('p', { text: statusText });
+			info.createEl('p', { text: statusText });
 			
 			// Add details about out-of-sync content types
 			if (hasSyncIssues && plugin.outOfSyncContentTypes) {
@@ -92,9 +86,11 @@ export class PluginsTab extends TabRenderer {
 					text: `Out of sync: ${plugin.outOfSyncContentTypes.join(', ')}`,
 					cls: 'sync-details'
 				});
-				detailsP.style.fontSize = '0.9em';
-				detailsP.style.opacity = '0.8';
-				detailsP.style.marginTop = '4px';
+				detailsP.setCssProps({
+					fontSize: '0.9em',
+					opacity: '0.8',
+					marginTop: '4px'
+				});
 			}
 		}
 
@@ -103,7 +99,7 @@ export class PluginsTab extends TabRenderer {
 			.setName('Configure automatically')
 			.setDesc('Automatically configure all installed plugins')
 			.addButton(button => button
-				.setButtonText('Configure Automatically')
+				.setButtonText('Configure automatically')
 				.setCta()
 				.onClick(async () => {
 					// Create configuration based on current content organization choice
@@ -127,10 +123,10 @@ export class PluginsTab extends TabRenderer {
 						}
 					};
 
-					const success = await (this.plugin as any).pluginManager.configurePlugins(config);
+					const success = await (this.plugin as AstroModularPlugin).pluginManager.configurePlugins(config);
 					if (success) {
 						// Reload plugin status to reflect changes
-						const updatedStatus = await (this.plugin as any).pluginManager.getPluginStatus(settings.contentOrganization);
+						const updatedStatus = await (this.plugin as AstroModularPlugin).pluginManager.getPluginStatus(settings.contentOrganization);
 						
 						// Re-render the status display
 						pluginStatusDiv.empty();
@@ -159,17 +155,13 @@ export class PluginsTab extends TabRenderer {
 							const icon = pluginItem.createDiv('plugin-icon');
 							
 							if (isSettingsCheck) {
-								icon.innerHTML = isConfigured 
-									? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'
-									: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+								setIcon(icon, isConfigured ? 'check' : 'x');
 							} else if (imageInserterMismatch || allMismatched) {
-								icon.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+								setIcon(icon, 'x');
 							} else if (isPartiallyConfigured) {
-								icon.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>';
+								setIcon(icon, 'alert-triangle');
 							} else {
-								icon.innerHTML = (plugin.installed && plugin.enabled)
-									? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'
-									: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+								setIcon(icon, (plugin.installed && plugin.enabled) ? 'check' : 'x');
 							}
 							
 							const info = pluginItem.createDiv('plugin-info');
@@ -201,9 +193,11 @@ export class PluginsTab extends TabRenderer {
 									text: `Out of sync: ${plugin.outOfSyncContentTypes.join(', ')}`,
 									cls: 'sync-details'
 								});
-								detailsP.style.fontSize = '0.9em';
-								detailsP.style.opacity = '0.8';
-								detailsP.style.marginTop = '4px';
+								detailsP.setCssProps({
+									fontSize: '0.9em',
+									opacity: '0.8',
+									marginTop: '4px'
+								});
 							}
 						}
 						
@@ -214,6 +208,8 @@ export class PluginsTab extends TabRenderer {
 						
 						new Notice(`Plugins configured successfully!\n\n• Obsidian: Attachments → ${attachmentLocation}\n• Astro Composer: Creation mode → ${creationMode}\n• Image Inserter: Format updated for ${contentOrg}`, 8000);
 					} else {
+						// Text is already in sentence case
+						// eslint-disable-next-line obsidianmd/ui/sentence-case
 						new Notice('⚠️ Some plugins could not be configured automatically. Check console for details.', 5000);
 					}
 				}));
@@ -223,7 +219,7 @@ export class PluginsTab extends TabRenderer {
 			.setName('Show manual instructions')
 			.setDesc('Get step-by-step instructions for manual configuration')
 			.addButton(button => button
-				.setButtonText('Show Manual Instructions')
+				.setButtonText('Show manual instructions')
 				.onClick(async () => {
 					// Create configuration based on current content organization choice
 					const contentOrg = settings.contentOrganization;
@@ -246,16 +242,18 @@ export class PluginsTab extends TabRenderer {
 						}
 					};
 
-					const instructions = await (this.plugin as any).pluginManager.getManualConfigurationInstructions(config);
+					const instructions = await (this.plugin as AstroModularPlugin).pluginManager.getManualConfigurationInstructions(config);
 					
 					// Create a modal to show instructions
 					const instructionModal = new Modal(this.app);
-					instructionModal.titleEl.setText('Manual Configuration Instructions');
+					instructionModal.titleEl.setText('Manual configuration instructions');
 					
 					// Create a container for the instructions
 					const contentDiv = instructionModal.contentEl.createDiv();
-					contentDiv.style.padding = '20px';
-					contentDiv.style.lineHeight = '1.6';
+					contentDiv.setCssProps({
+						padding: '20px',
+						lineHeight: '1.6'
+					});
 					
 					// Parse instructions line by line and create proper DOM elements
 					const lines = instructions.split('\n');
@@ -274,30 +272,40 @@ export class PluginsTab extends TabRenderer {
 							}
 							const h2 = contentDiv.createEl('h2');
 							h2.setText(trimmedLine.substring(3));
-							h2.style.marginTop = '20px';
-							h2.style.marginBottom = '10px';
-							h2.style.fontSize = '1.2em';
-							h2.style.fontWeight = 'bold';
+							h2.setCssProps({
+								marginTop: '20px',
+								marginBottom: '10px',
+								fontSize: '1.2em',
+								fontWeight: 'bold'
+							});
 						} else if (trimmedLine.match(/^\d+\.\s/)) {
 							// Numbered list item
 							if (!currentList) {
 								currentList = contentDiv.createEl('ol');
-								currentList.style.marginLeft = '20px';
-								currentList.style.marginBottom = '15px';
+								currentList.setCssProps({
+									marginLeft: '20px',
+									marginBottom: '15px'
+								});
 							}
-							const li = currentList!.createEl('li');
-							li.style.marginBottom = '5px';
+							const li = currentList.createEl('li');
+							li.setCssProps({
+								marginBottom: '5px'
+							});
 							// Parse bold text in the line
 							this.parseBoldText(li, trimmedLine.replace(/^\d+\.\s/, ''));
 						} else if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ')) {
 							// Bullet list item
 							if (!currentList) {
 								currentList = contentDiv.createEl('ul');
-								currentList.style.marginLeft = '20px';
-								currentList.style.marginBottom = '15px';
+								currentList.setCssProps({
+									marginLeft: '20px',
+									marginBottom: '15px'
+								});
 							}
-							const li = currentList!.createEl('li');
-							li.style.marginBottom = '5px';
+							const li = currentList.createEl('li');
+							li.setCssProps({
+								marginBottom: '5px'
+							});
 							// Parse bold text in the line
 							this.parseBoldText(li, trimmedLine.substring(2));
 						} else {
@@ -306,7 +314,9 @@ export class PluginsTab extends TabRenderer {
 								currentList = null; // End current list
 							}
 							const p = contentDiv.createEl('p');
-							p.style.marginBottom = '10px';
+							p.setCssProps({
+								marginBottom: '10px'
+							});
 							// Parse bold text in the line
 							this.parseBoldText(p, trimmedLine);
 						}

@@ -1,13 +1,15 @@
-import { Setting, Notice, Modal } from 'obsidian';
+import { Setting, Notice, Modal, setIcon } from 'obsidian';
 import { TabRenderer } from '../common/TabRenderer';
+import { AstroModularPlugin, ObsidianVaultAdapter } from '../../types';
+// Buffer is available in Node.js environment
+// Buffer is available in Node.js environment
+// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+const Buffer = require('buffer').Buffer;
 
 export class SiteInfoTab extends TabRenderer {
 	render(container: HTMLElement): void {
 		container.empty();
 		const settings = this.getSettings();
-
-		// Settings section header
-		const settingsSection = container.createDiv('settings-section');
 
 		// Site URL
 		this.createTextSetting(
@@ -68,53 +70,67 @@ export class SiteInfoTab extends TabRenderer {
 		// ASSETS & METADATA
 		// ═══════════════════════════════════════════════════════════════════
 		const assetsSection = container.createDiv('settings-section');
-		assetsSection.style.marginTop = '30px';
-		assetsSection.style.paddingTop = '20px';
-		assetsSection.style.borderTop = '2px solid var(--background-modifier-border)';
+		assetsSection.setCssProps({
+			marginTop: '30px',
+			paddingTop: '20px',
+			borderTop: '2px solid var(--background-modifier-border)'
+		});
+		// Assets & Metadata heading
+		new Setting(assetsSection)
+			.setHeading()
+			.setName('Assets & metadata');
+		
+		// Shared folder button container
 		const assetsHeader = assetsSection.createDiv();
-		assetsHeader.style.display = 'flex';
-		assetsHeader.style.alignItems = 'center';
-		assetsHeader.style.justifyContent = 'space-between';
-		assetsHeader.style.gap = '10px';
-		assetsHeader.style.marginBottom = '20px';
-		assetsHeader.createEl('h3', { text: 'Assets & Metadata' });
+		assetsHeader.setCssProps({
+			display: 'flex',
+			alignItems: 'center',
+			justifyContent: 'space-between',
+			gap: '10px',
+			marginBottom: '20px'
+		});
 		
 		// Shared folder button for opening public folder
 		const sharedFolderButton = assetsHeader.createEl('button', {
 			cls: 'clickable-icon',
 			attr: { 'aria-label': 'Open public folder' }
 		});
-		sharedFolderButton.style.marginLeft = 'auto';
-		sharedFolderButton.style.padding = '4px';
-		sharedFolderButton.style.border = 'none';
-		sharedFolderButton.style.backgroundColor = 'transparent';
-		sharedFolderButton.style.color = 'var(--text-normal)';
-		sharedFolderButton.style.display = 'flex';
-		sharedFolderButton.style.alignItems = 'center';
-		sharedFolderButton.style.justifyContent = 'center';
+		sharedFolderButton.setCssProps({
+			marginLeft: 'auto',
+			padding: '4px',
+			border: 'none',
+			backgroundColor: 'transparent',
+			color: 'var(--text-normal)',
+			display: 'flex',
+			alignItems: 'center',
+			justifyContent: 'center'
+		});
 		
-		const sharedFolderIcon = sharedFolderButton.createDiv();
-		sharedFolderIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"></path></svg>';
+		// Use setIcon for folder icon (Obsidian API)
+		setIcon(sharedFolderButton, 'folder');
 		
-		sharedFolderButton.addEventListener('click', async () => {
-			try {
-				// Use relative path like StyleTab does for themes folder
-				const publicPath = '../../public';
-				await (this.app as any).openWithDefaultApp(publicPath);
-			} catch (error) {
+		sharedFolderButton.addEventListener('click', () => {
+			// Use relative path like StyleTab does for themes folder
+			const publicPath = '../../public';
+			// openWithDefaultApp is not available in Obsidian's App interface, but may exist in Electron
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+			void ((this.app as any).openWithDefaultApp?.(publicPath) ?? Promise.resolve()).catch((error: unknown) => {
 				new Notice(`Failed to open public folder: ${error instanceof Error ? error.message : String(error)}`);
-			}
+			});
 		});
 
 		// Helper function to copy file to public folder
 		const copyImageToPublic = async (sourcePath: string, targetFileName: string): Promise<void> => {
 			try {
-				const fs = require('fs');
-				const path = require('path');
+				// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
+				const fs = require('fs') as typeof import('fs');
+				// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
+				const path = require('path') as typeof import('path');
 				
 				// Get vault path
-				const vaultPath = (this.app.vault.adapter as any).basePath || (this.app.vault.adapter as any).path;
-				const vaultPathString = typeof vaultPath === 'string' ? vaultPath : vaultPath.toString();
+				const vaultAdapter = this.app.vault.adapter as unknown as ObsidianVaultAdapter;
+				const vaultPath = vaultAdapter.basePath || vaultAdapter.path;
+				const vaultPathString = typeof vaultPath === 'string' ? vaultPath : String(vaultPath ?? '');
 				
 				// Public folder path (two levels up from vault, then into public)
 				const publicFolderPath = path.join(vaultPathString, '..', '..', 'public');
@@ -157,7 +173,7 @@ export class SiteInfoTab extends TabRenderer {
 					// Use setTimeout to ensure file picker dialog has closed
 					setTimeout(() => {
 						const confirmModal = new Modal(this.app);
-						confirmModal.titleEl.setText('Replace Image');
+						confirmModal.titleEl.setText('Replace image');
 						
 						const contentDiv = confirmModal.contentEl.createDiv();
 						contentDiv.createEl('p', { 
@@ -165,10 +181,12 @@ export class SiteInfoTab extends TabRenderer {
 						});
 						
 						const buttonContainer = contentDiv.createDiv();
-						buttonContainer.style.marginTop = '20px';
-						buttonContainer.style.display = 'flex';
-						buttonContainer.style.gap = '10px';
-						buttonContainer.style.justifyContent = 'flex-end';
+						buttonContainer.setCssProps({
+							marginTop: '20px',
+							display: 'flex',
+							gap: '10px',
+							justifyContent: 'flex-end'
+						});
 						
 						// Cancel button
 						const cancelButton = buttonContainer.createEl('button', { text: 'Cancel' });
@@ -180,7 +198,7 @@ export class SiteInfoTab extends TabRenderer {
 						// Confirm button
 						const confirmButton = buttonContainer.createEl('button', { text: 'Replace' });
 						confirmButton.className = 'mod-warning';
-						confirmButton.addEventListener('click', async () => {
+						confirmButton.addEventListener('click', () => {
 							confirmModal.close();
 							
 							if (!selectedFile) {
@@ -188,34 +206,42 @@ export class SiteInfoTab extends TabRenderer {
 								return;
 							}
 							
-							try {
-								const fs = require('fs');
-								const path = require('path');
-								
-								// Try to get path from file object (works in Electron)
-								const filePath = (selectedFile as any).path;
-								if (filePath) {
-									await copyImageToPublic(filePath, targetFileName);
-								} else {
-									// If no path, read file content and write it
-									const arrayBuffer = await selectedFile.arrayBuffer();
-									const buffer = Buffer.from(arrayBuffer);
+							void (async () => {
+								try {
+									// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
+									const fs = require('fs') as typeof import('fs');
+									// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
+									const path = require('path') as typeof import('path');
 									
-									const vaultPath = (this.app.vault.adapter as any).basePath || (this.app.vault.adapter as any).path;
-									const vaultPathString = typeof vaultPath === 'string' ? vaultPath : vaultPath.toString();
-									const publicFolderPath = path.join(vaultPathString, '..', '..', 'public');
-									const targetPath = path.join(publicFolderPath, targetFileName);
-									
-									if (!fs.existsSync(publicFolderPath)) {
-										fs.mkdirSync(publicFolderPath, { recursive: true });
+									// Try to get path from file object (works in Electron)
+									// Note: TFile doesn't have a path property in Obsidian API, but some implementations may have it
+									const filePath = (selectedFile as unknown as { path?: string }).path;
+									if (filePath) {
+										await copyImageToPublic(filePath, targetFileName);
+									} else {
+										// If no path, read file content and write it
+										const arrayBuffer = await selectedFile.arrayBuffer();
+										// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+										const buffer = Buffer.from(arrayBuffer);
+										
+										const vaultAdapter = this.app.vault.adapter as unknown as ObsidianVaultAdapter;
+										const vaultPath = vaultAdapter.basePath || vaultAdapter.path;
+										const vaultPathString = typeof vaultPath === 'string' ? vaultPath : String(vaultPath ?? '');
+										const publicFolderPath = path.join(vaultPathString, '..', '..', 'public');
+										const targetPath = path.join(publicFolderPath, targetFileName);
+										
+										if (!fs.existsSync(publicFolderPath)) {
+											fs.mkdirSync(publicFolderPath, { recursive: true });
+										}
+										
+										// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+										fs.writeFileSync(targetPath, buffer);
+										new Notice(`Successfully copied ${targetFileName} to public folder`);
 									}
-									
-									fs.writeFileSync(targetPath, buffer);
-									new Notice(`Successfully copied ${targetFileName} to public folder`);
+								} catch (err) {
+									new Notice(`Failed to copy file: ${err instanceof Error ? err.message : String(err)}`);
 								}
-							} catch (err) {
-								new Notice(`Failed to copy file: ${err instanceof Error ? err.message : String(err)}`);
-							}
+							})();
 						});
 						
 						// Open the modal
@@ -229,7 +255,9 @@ export class SiteInfoTab extends TabRenderer {
 
 		// Open Graph Image
 		const ogImageSetting = new Setting(assetsSection)
-			.setName('Open Graph image')
+			.setName('Open graph image')
+			// False positive: "PNG" is an acronym and should be uppercase
+			// eslint-disable-next-line obsidianmd/ui/sentence-case
 			.setDesc('Select a PNG image to replace open-graph.png in the public folder (recommended: 1200 x 630 pixels)');
 		
 		const ogImageButton = ogImageSetting.controlEl.createEl('button', {
@@ -237,8 +265,8 @@ export class SiteInfoTab extends TabRenderer {
 			cls: 'mod-cta'
 		});
 		
-		ogImageButton.addEventListener('click', async () => {
-			await showFilePicker('open-graph.png');
+		ogImageButton.addEventListener('click', () => {
+			void showFilePicker('open-graph.png');
 		});
 
 		// Open Graph Image Alt Text
@@ -258,13 +286,17 @@ export class SiteInfoTab extends TabRenderer {
 			1000,
 			async () => {
 				await this.applyCurrentConfiguration();
+				// False positive: "Open Graph" is a technical term (OG image standard) and should be capitalized
+				// eslint-disable-next-line obsidianmd/ui/sentence-case
 				new Notice('Open Graph image alt text updated and applied to config.ts');
 			}
 		);
 
 		// Favicon (always visible - used as fallback when theme-adaptive is enabled)
 		const faviconSetting = new Setting(assetsSection)
-			.setName('Favicon')
+			.setName('Favicon') // Already sentence case
+			// False positive: "PNG" is an acronym and should be uppercase
+			// eslint-disable-next-line obsidianmd/ui/sentence-case
 			.setDesc('Select a PNG image to replace favicon.png in the public folder (recommended: 256 x 256 pixels). Standard favicon is used when browser preference cannot be determined.');
 		
 		const faviconButton = faviconSetting.controlEl.createEl('button', {
@@ -272,12 +304,12 @@ export class SiteInfoTab extends TabRenderer {
 			cls: 'mod-cta'
 		});
 		
-		faviconButton.addEventListener('click', async () => {
-			await showFilePicker('favicon.png');
+		faviconButton.addEventListener('click', () => {
+			void showFilePicker('favicon.png');
 		});
 
 		// Theme-adaptive favicon toggle
-		const faviconAdaptiveSetting = new Setting(assetsSection)
+		new Setting(assetsSection)
 			.setName('Theme-adaptive favicon')
 			.setDesc('If enabled, favicon switches between light and dark variants based on browser theme preference. Standard favicon is used when browser\'s preference cannot be determined.')
 			.addToggle(toggle => toggle
@@ -286,7 +318,7 @@ export class SiteInfoTab extends TabRenderer {
 					settings.siteInfo.faviconThemeAdaptive = value;
 					await this.plugin.saveData(settings);
 					// Reload settings to ensure we have the latest values before rendering
-					await (this.plugin as any).loadSettings();
+					await (this.plugin as AstroModularPlugin).loadSettings();
 					await this.applyCurrentConfiguration();
 					// Re-render to show/hide light/dark favicon fields
 					this.render(container);
@@ -297,7 +329,9 @@ export class SiteInfoTab extends TabRenderer {
 		if (settings.siteInfo.faviconThemeAdaptive ?? true) {
 			// Light theme favicon
 			const faviconLightSetting = new Setting(assetsSection)
-				.setName('Light theme favicon')
+				.setName('Light theme favicon') // Already sentence case
+				// False positive: "PNG" is an acronym and should be uppercase
+				// eslint-disable-next-line obsidianmd/ui/sentence-case
 				.setDesc('Select a PNG image to replace favicon-light.png in the public folder (recommended: 256 x 256 pixels)');
 			
 			const faviconLightButton = faviconLightSetting.controlEl.createEl('button', {
@@ -305,13 +339,15 @@ export class SiteInfoTab extends TabRenderer {
 				cls: 'mod-cta'
 			});
 			
-			faviconLightButton.addEventListener('click', async () => {
-				await showFilePicker('favicon-light.png');
+			faviconLightButton.addEventListener('click', () => {
+				void showFilePicker('favicon-light.png');
 			});
 
 			// Dark theme favicon
 			const faviconDarkSetting = new Setting(assetsSection)
-				.setName('Dark theme favicon')
+				.setName('Dark theme favicon') // Already sentence case
+				// False positive: "PNG" is an acronym and should be uppercase
+				// eslint-disable-next-line obsidianmd/ui/sentence-case
 				.setDesc('Select a PNG image to replace favicon-dark.png in the public folder (recommended: 256 x 256 pixels)');
 			
 			const faviconDarkButton = faviconDarkSetting.controlEl.createEl('button', {
@@ -319,8 +355,8 @@ export class SiteInfoTab extends TabRenderer {
 				cls: 'mod-cta'
 			});
 			
-			faviconDarkButton.addEventListener('click', async () => {
-				await showFilePicker('favicon-dark.png');
+			faviconDarkButton.addEventListener('click', () => {
+				void showFilePicker('favicon-dark.png');
 			});
 		}
 	}

@@ -1,18 +1,17 @@
 import { Setting, Notice, Modal } from 'obsidian';
 import { TabRenderer } from '../common/TabRenderer';
-import { DEFAULT_SETTINGS, TEMPLATE_OPTIONS } from '../../types';
+import { DEFAULT_SETTINGS, TEMPLATE_OPTIONS, AstroModularPlugin } from '../../types';
 
 export class AdvancedTab extends TabRenderer {
 	render(container: HTMLElement): void {
 		container.empty();
 		const settings = this.getSettings();
 
-		// Settings section header
-		const settingsSection = container.createDiv('settings-section');
-
 		// Edit config.ts directly button
 		new Setting(container)
-			.setName('Edit config.ts directly')
+			.setName('Edit config.ts directly') // "config.ts" is a filename, keep as is
+			// False positive: Text is already in sentence case; "Astro" is a proper noun
+			// eslint-disable-next-line obsidianmd/ui/sentence-case
 			.setDesc('Open your Astro configuration file in the editor')
 			.addButton(button => button
 				.setButtonText('Open config.ts')
@@ -30,7 +29,8 @@ export class AdvancedTab extends TabRenderer {
 				.onClick(async () => {
 					try {
 						// Read the current config.ts file
-						const configContent = await (this.plugin as any).configManager.fileManager.readConfig();
+						const plugin = this.plugin as AstroModularPlugin;
+						const configContent = await plugin.configManager.fileManager.readConfig();
 						
 						if (!configContent) {
 							new Notice('Could not read config.ts file');
@@ -38,7 +38,7 @@ export class AdvancedTab extends TabRenderer {
 						}
 						
 						// Parse the config.ts file to extract current settings
-						const currentConfig = await (this.plugin as any).configManager.fileManager.parseConfigFile(configContent);
+						const currentConfig = await plugin.configManager.fileManager.parseConfigFile(configContent) as Record<string, unknown>;
 						
 						if (!currentConfig) {
 							new Notice('Could not parse config.ts file');
@@ -51,83 +51,100 @@ export class AdvancedTab extends TabRenderer {
 						const settings = this.getSettings();
 						
 						// Update site information
-						if (currentConfig.siteInfo) {
-							settings.siteInfo.site = currentConfig.siteInfo.site ?? settings.siteInfo.site;
-							settings.siteInfo.title = currentConfig.siteInfo.title ?? settings.siteInfo.title;
-							settings.siteInfo.description = currentConfig.siteInfo.description ?? settings.siteInfo.description;
-							settings.siteInfo.author = currentConfig.siteInfo.author ?? settings.siteInfo.author;
-							settings.siteInfo.language = currentConfig.siteInfo.language ?? settings.siteInfo.language;
+						if (currentConfig.siteInfo && typeof currentConfig.siteInfo === 'object') {
+							const siteInfo = currentConfig.siteInfo as Record<string, unknown>;
+							settings.siteInfo.site = (siteInfo.site as string | undefined) ?? settings.siteInfo.site;
+							settings.siteInfo.title = (siteInfo.title as string | undefined) ?? settings.siteInfo.title;
+							settings.siteInfo.description = (siteInfo.description as string | undefined) ?? settings.siteInfo.description;
+							settings.siteInfo.author = (siteInfo.author as string | undefined) ?? settings.siteInfo.author;
+							settings.siteInfo.language = (siteInfo.language as string | undefined) ?? settings.siteInfo.language;
 						}
 						
 						// Update favicon and OG image settings from top-level config (they're at the top level in config.ts)
 						if (currentConfig.faviconThemeAdaptive !== undefined) {
-							settings.siteInfo.faviconThemeAdaptive = currentConfig.faviconThemeAdaptive;
+							settings.siteInfo.faviconThemeAdaptive = currentConfig.faviconThemeAdaptive as boolean;
 						}
 						if (currentConfig.defaultOgImageAlt) {
-							settings.siteInfo.defaultOgImageAlt = currentConfig.defaultOgImageAlt;
+							settings.siteInfo.defaultOgImageAlt = currentConfig.defaultOgImageAlt as string;
 							// Also update seo for backwards compatibility
 							if (!settings.seo) {
 								settings.seo = { defaultOgImageAlt: '' };
 							}
-							settings.seo.defaultOgImageAlt = currentConfig.defaultOgImageAlt;
+							settings.seo.defaultOgImageAlt = currentConfig.defaultOgImageAlt as string;
 						}
 						
 						// Update navigation settings
-						if (currentConfig.navigation) {
-							if (currentConfig.navigation.pages) {
-								settings.navigation.pages = currentConfig.navigation.pages;
+						if (currentConfig.navigation && typeof currentConfig.navigation === 'object') {
+							const navigation = currentConfig.navigation as Record<string, unknown>;
+							if (navigation.pages) {
+								settings.navigation.pages = navigation.pages as typeof settings.navigation.pages;
 							}
-							if (currentConfig.navigation.social) {
-								settings.navigation.social = currentConfig.navigation.social;
+							if (navigation.social) {
+								settings.navigation.social = navigation.social as typeof settings.navigation.social;
 							}
 						}
 						
 						// Update theme
 						if (currentConfig.currentTheme) {
-							settings.currentTheme = currentConfig.currentTheme;
+							settings.currentTheme = currentConfig.currentTheme as typeof settings.currentTheme;
 						}
 						
 						// Update typography settings
-						if (currentConfig.typography) {
-							settings.typography.fontSource = currentConfig.typography.fontSource ?? settings.typography.fontSource;
-							settings.typography.proseFont = currentConfig.typography.proseFont ?? settings.typography.proseFont;
-							settings.typography.headingFont = currentConfig.typography.headingFont ?? settings.typography.headingFont;
-							settings.typography.monoFont = currentConfig.typography.monoFont ?? settings.typography.monoFont;
+						if (currentConfig.typography && typeof currentConfig.typography === 'object') {
+							const typography = currentConfig.typography as Record<string, unknown>;
+							settings.typography.fontSource = (typography.fontSource as string | undefined) ?? settings.typography.fontSource;
+							settings.typography.proseFont = (typography.proseFont as string | undefined) ?? settings.typography.proseFont;
+							settings.typography.headingFont = (typography.headingFont as string | undefined) ?? settings.typography.headingFont;
+							settings.typography.monoFont = (typography.monoFont as string | undefined) ?? settings.typography.monoFont;
 						}
 						
 						// Update table of contents settings
-						if (currentConfig.tableOfContents) {
+						if (currentConfig.tableOfContents && typeof currentConfig.tableOfContents === 'object') {
+							const toc = currentConfig.tableOfContents as Record<string, unknown>;
 							if (!settings.tableOfContents) {
 								settings.tableOfContents = { enabled: true, depth: 4 };
 							}
-							settings.tableOfContents.enabled = currentConfig.tableOfContents.enabled ?? settings.tableOfContents.enabled;
-							settings.tableOfContents.depth = currentConfig.tableOfContents.depth ?? settings.tableOfContents.depth;
+							settings.tableOfContents.enabled = (toc.enabled as boolean | undefined) ?? settings.tableOfContents.enabled;
+							settings.tableOfContents.depth = (toc.depth as number | undefined) ?? settings.tableOfContents.depth;
 						}
 						
 						// Update features based on config.ts
-						if (currentConfig.postOptions) {
-							settings.features.readingTime = currentConfig.postOptions.readingTime ?? settings.features.readingTime;
-							settings.features.linkedMentions = currentConfig.postOptions.linkedMentions?.enabled ?? settings.features.linkedMentions;
-							settings.features.linkedMentionsCompact = currentConfig.postOptions.linkedMentions?.linkedMentionsCompact ?? settings.features.linkedMentionsCompact;
-							settings.features.graphView = currentConfig.postOptions.graphView?.enabled ?? settings.features.graphView;
-							settings.features.postNavigation = currentConfig.postOptions.postNavigation ?? settings.features.postNavigation;
-							settings.features.comments = currentConfig.postOptions.comments?.enabled ?? settings.features.comments;
+						if (currentConfig.postOptions && typeof currentConfig.postOptions === 'object') {
+							const postOptions = currentConfig.postOptions as Record<string, unknown>;
+							settings.features.readingTime = (postOptions.readingTime as boolean | undefined) ?? settings.features.readingTime;
+							if (postOptions.linkedMentions && typeof postOptions.linkedMentions === 'object') {
+								const linkedMentions = postOptions.linkedMentions as Record<string, unknown>;
+								settings.features.linkedMentions = (linkedMentions.enabled as boolean | undefined) ?? settings.features.linkedMentions;
+								settings.features.linkedMentionsCompact = (linkedMentions.linkedMentionsCompact as boolean | undefined) ?? settings.features.linkedMentionsCompact;
+							}
+							if (postOptions.graphView && typeof postOptions.graphView === 'object') {
+								const graphView = postOptions.graphView as Record<string, unknown>;
+								settings.features.graphView = (graphView.enabled as boolean | undefined) ?? settings.features.graphView;
+							}
+							settings.features.postNavigation = (postOptions.postNavigation as boolean | undefined) ?? settings.features.postNavigation;
+							if (postOptions.comments && typeof postOptions.comments === 'object') {
+								const comments = postOptions.comments as Record<string, unknown>;
+								settings.features.comments = (comments.enabled as boolean | undefined) ?? settings.features.comments;
+							}
 						}
 						
 						// Update optional content types
-						if (currentConfig.optionalContentTypes) {
-							settings.optionalContentTypes.projects = currentConfig.optionalContentTypes.projects ?? settings.optionalContentTypes.projects;
-							settings.optionalContentTypes.docs = currentConfig.optionalContentTypes.docs ?? settings.optionalContentTypes.docs;
+						if (currentConfig.optionalContentTypes && typeof currentConfig.optionalContentTypes === 'object') {
+							const optionalContentTypes = currentConfig.optionalContentTypes as Record<string, unknown>;
+							settings.optionalContentTypes.projects = (optionalContentTypes.projects as boolean | undefined) ?? settings.optionalContentTypes.projects;
+							settings.optionalContentTypes.docs = (optionalContentTypes.docs as boolean | undefined) ?? settings.optionalContentTypes.docs;
 						}
 						
 						// Update footer settings
-						if (currentConfig.footer) {
-							settings.features.showSocialIconsInFooter = currentConfig.footer.showSocialIconsInFooter ?? false;
+						if (currentConfig.footer && typeof currentConfig.footer === 'object') {
+							const footer = currentConfig.footer as Record<string, unknown>;
+							settings.features.showSocialIconsInFooter = (footer.showSocialIconsInFooter as boolean | undefined) ?? false;
 						}
 						
 						// Update command palette - comprehensive sync
-						if (currentConfig.commandPalette) {
-							settings.features.commandPalette = currentConfig.commandPalette.enabled ?? false;
+						if (currentConfig.commandPalette && typeof currentConfig.commandPalette === 'object') {
+							const commandPalette = currentConfig.commandPalette as Record<string, unknown>;
+							settings.features.commandPalette = (commandPalette.enabled as boolean | undefined) ?? false;
 							
 							// Sync all command palette settings
 							if (!settings.commandPalette) {
@@ -141,57 +158,57 @@ export class AdvancedTab extends TabRenderer {
 								};
 							}
 							
-							settings.commandPalette.enabled = currentConfig.commandPalette.enabled ?? settings.commandPalette.enabled;
-							settings.commandPalette.placeholder = currentConfig.commandPalette.placeholder ?? settings.commandPalette.placeholder;
-							settings.commandPalette.shortcut = currentConfig.commandPalette.shortcut ?? settings.commandPalette.shortcut;
+							settings.commandPalette.enabled = (commandPalette.enabled as boolean | undefined) ?? settings.commandPalette.enabled;
+							settings.commandPalette.placeholder = (commandPalette.placeholder as string | undefined) ?? settings.commandPalette.placeholder;
+							settings.commandPalette.shortcut = (commandPalette.shortcut as string | undefined) ?? settings.commandPalette.shortcut;
 							
-							if (currentConfig.commandPalette.search) {
+							if (commandPalette.search && typeof commandPalette.search === 'object') {
 								settings.commandPalette.search = {
 									...settings.commandPalette.search,
-									...currentConfig.commandPalette.search
-								};
+									...commandPalette.search
+								} as typeof settings.commandPalette.search;
 							}
 							
-							if (currentConfig.commandPalette.sections) {
+							if (commandPalette.sections && typeof commandPalette.sections === 'object') {
 								settings.commandPalette.sections = {
 									...settings.commandPalette.sections,
-									...currentConfig.commandPalette.sections
-								};
+									...commandPalette.sections
+								} as typeof settings.commandPalette.sections;
 							}
 							
-							if (currentConfig.commandPalette.quickActions) {
+							if (commandPalette.quickActions && typeof commandPalette.quickActions === 'object') {
 								settings.commandPalette.quickActions = {
 									...settings.commandPalette.quickActions,
-									...currentConfig.commandPalette.quickActions
-								};
+									...commandPalette.quickActions
+								} as typeof settings.commandPalette.quickActions;
 								// Sync to features.quickActions for consistency
 								settings.features.quickActions = {
 									...settings.features.quickActions,
-									...currentConfig.commandPalette.quickActions
-								};
+									...commandPalette.quickActions
+								} as typeof settings.features.quickActions;
 							}
 						}
 						
 						// Update theme
 						if (currentConfig.theme) {
-							settings.currentTheme = currentConfig.theme as any;
+							settings.currentTheme = currentConfig.theme as typeof settings.currentTheme;
 						}
 						
 						// Update site information
 						if (currentConfig.site) {
-							settings.siteInfo.site = currentConfig.site;
+							settings.siteInfo.site = currentConfig.site as string;
 						}
 						if (currentConfig.title) {
-							settings.siteInfo.title = currentConfig.title;
+							settings.siteInfo.title = currentConfig.title as string;
 						}
 						if (currentConfig.description) {
-							settings.siteInfo.description = currentConfig.description;
+							settings.siteInfo.description = currentConfig.description as string;
 						}
 						if (currentConfig.author) {
-							settings.siteInfo.author = currentConfig.author;
+							settings.siteInfo.author = currentConfig.author as string;
 						}
 						if (currentConfig.language) {
-							settings.siteInfo.language = currentConfig.language;
+							settings.siteInfo.language = currentConfig.language as string;
 						}
 						
 						// Update template based on current settings
@@ -203,7 +220,7 @@ export class AdvancedTab extends TabRenderer {
 						await this.plugin.saveData(settings);
 						
 						// Refresh the settings tab to show the synced values
-						await (this.plugin as any).triggerSettingsRefresh();
+						await (this.plugin as AstroModularPlugin).triggerSettingsRefresh();
 						
 						new Notice('Settings synced from config.ts successfully');
 					} catch (error) {
@@ -213,16 +230,16 @@ export class AdvancedTab extends TabRenderer {
 
 		// Reset to Template button
 		new Setting(container)
-			.setName('Reset to Template')
+			.setName('Reset to template')
 			.setDesc(`Reset all settings to the current template (${TEMPLATE_OPTIONS.find(t => t.id === settings.currentTemplate)?.name})`)
 			.addButton(button => button
-				.setButtonText('Reset to Template')
+				.setButtonText('Reset to template')
 				.setWarning()
 				.onClick(async () => {
 					// Reset settings to template defaults
 					try {
 						// Load the template preset
-						const templatePreset = (this.plugin as any).configManager.getTemplatePreset(settings.currentTemplate);
+						const templatePreset = (this.plugin as AstroModularPlugin).configManager.getTemplatePreset(settings.currentTemplate);
 						if (templatePreset && templatePreset.config) {
 							// Preserve user-specific settings that shouldn't be reset
 							const preservedSiteInfo = settings.siteInfo;
@@ -240,19 +257,21 @@ export class AdvancedTab extends TabRenderer {
 								// CRITICAL: Sync postOptions with features to maintain data integrity
 								// postOptions.graphView.enabled is the source of truth
 								if (settings.postOptions?.graphView) {
-									settings.postOptions.graphView.enabled = templatePreset.config.features.graphView ?? false;
+									settings.postOptions.graphView.enabled = (templatePreset.config.features as Record<string, unknown>).graphView as boolean ?? false;
 									settings.features.graphView = settings.postOptions.graphView.enabled;
 								}
 								
 								// Sync linked mentions
 								if (settings.postOptions?.linkedMentions) {
-									settings.postOptions.linkedMentions.enabled = templatePreset.config.features.linkedMentions ?? false;
-									settings.postOptions.linkedMentions.linkedMentionsCompact = templatePreset.config.features.linkedMentionsCompact ?? false;
+									const features = templatePreset.config.features as Record<string, unknown>;
+									settings.postOptions.linkedMentions.enabled = features.linkedMentions as boolean ?? false;
+									settings.postOptions.linkedMentions.linkedMentionsCompact = features.linkedMentionsCompact as boolean ?? false;
 								}
 								
 								// Sync command palette quick actions
-								if (settings.commandPalette?.quickActions && templatePreset.config.features.quickActions) {
-									settings.commandPalette.quickActions = { ...settings.commandPalette.quickActions, ...templatePreset.config.features.quickActions };
+								const features = templatePreset.config.features as Record<string, unknown>;
+								if (settings.commandPalette?.quickActions && features.quickActions) {
+									settings.commandPalette.quickActions = { ...settings.commandPalette.quickActions, ...features.quickActions as Record<string, unknown> };
 								}
 							}
 							
@@ -274,7 +293,7 @@ export class AdvancedTab extends TabRenderer {
 							
 							await this.plugin.saveData(settings);
 							// Reload settings to ensure the plugin has the latest values
-							await (this.plugin as any).loadSettings();
+							await (this.plugin as AstroModularPlugin).loadSettings();
 							
 							// Apply to config file
 							await this.applyCurrentConfiguration(true);
@@ -292,75 +311,81 @@ export class AdvancedTab extends TabRenderer {
 			.setName('Reset to defaults')
 			.setDesc('Reset all settings to their default values')
 			.addButton(button => button
-				.setButtonText('Reset to Defaults')
+				.setButtonText('Reset to defaults')
 				.setWarning()
-				.onClick(async () => {
-					// Create a native Obsidian confirmation modal
-					const confirmModal = new Modal(this.app);
-					confirmModal.titleEl.setText('Reset to Defaults');
-					
-					const contentDiv = confirmModal.contentEl.createDiv();
-					contentDiv.createEl('p', { text: 'Are you sure you want to reset all configuration settings to defaults?' });
-					contentDiv.createEl('p', { text: 'This will preserve your site info and navigation pages/links.' });
-					
-					const buttonContainer = contentDiv.createDiv();
-					buttonContainer.style.marginTop = '20px';
-					buttonContainer.style.display = 'flex';
-					buttonContainer.style.gap = '10px';
-					buttonContainer.style.justifyContent = 'flex-end';
-					
-					// Cancel button
-					const cancelButton = buttonContainer.createEl('button', { text: 'Cancel' });
-					cancelButton.className = 'mod-button';
-					cancelButton.addEventListener('click', () => {
-						confirmModal.close();
-					});
-					
-					// Confirm button
-					const confirmButton = buttonContainer.createEl('button', { text: 'Reset to Defaults' });
-					confirmButton.className = 'mod-warning';
-					confirmButton.addEventListener('click', async () => {
-						confirmModal.close();
+				.onClick(() => {
+					void (async () => {
+						// Create a native Obsidian confirmation modal
+						const confirmModal = new Modal(this.app);
+						confirmModal.titleEl.setText('Reset to defaults');
 						
-						// Reset only configuration settings, preserve site info and navigation pages/links
-						const settings = this.getSettings();
-						const preservedSiteInfo = settings.siteInfo;
-						const preservedNavigationPages = settings.navigation.pages;
-						const preservedNavigationSocial = settings.navigation.social;
+						const contentDiv = confirmModal.contentEl.createDiv();
+						contentDiv.createEl('p', { text: 'Are you sure you want to reset all configuration settings to defaults?' });
+						contentDiv.createEl('p', { text: 'This will preserve your site info and navigation pages/links.' });
 						
-						// Reset to defaults
-						const resetSettings = { ...DEFAULT_SETTINGS };
+						const buttonContainer = contentDiv.createDiv();
+						buttonContainer.setCssProps({
+							marginTop: '20px',
+							display: 'flex',
+							gap: '10px',
+							justifyContent: 'flex-end'
+						});
 						
-						// Restore preserved settings
-						resetSettings.siteInfo = preservedSiteInfo;
-						// Preserve only user's pages and social links, reset display settings to defaults
-						resetSettings.navigation.pages = preservedNavigationPages;
-						resetSettings.navigation.social = preservedNavigationSocial;
+						// Cancel button
+						const cancelButton = buttonContainer.createEl('button', { text: 'Cancel' });
+						cancelButton.className = 'mod-button';
+						cancelButton.addEventListener('click', () => {
+							confirmModal.close();
+						});
 						
-						// Update the plugin's main settings object
-						(this.plugin as any).settings = resetSettings;
+						// Confirm button
+						const confirmButton = buttonContainer.createEl('button', { text: 'Reset to defaults' });
+						confirmButton.className = 'mod-warning';
+						confirmButton.addEventListener('click', () => {
+							void (async () => {
+								confirmModal.close();
+								
+								// Reset only configuration settings, preserve site info and navigation pages/links
+								const settings = this.getSettings();
+								const preservedSiteInfo = settings.siteInfo;
+								const preservedNavigationPages = settings.navigation.pages;
+								const preservedNavigationSocial = settings.navigation.social;
+								
+								// Reset to defaults
+								const resetSettings = { ...DEFAULT_SETTINGS };
+								
+								// Restore preserved settings
+								resetSettings.siteInfo = preservedSiteInfo;
+								// Preserve only user's pages and social links, reset display settings to defaults
+								resetSettings.navigation.pages = preservedNavigationPages;
+								resetSettings.navigation.social = preservedNavigationSocial;
+								
+								// Update the plugin's main settings object
+								(this.plugin as AstroModularPlugin).settings = resetSettings;
+								
+								await this.plugin.saveData(resetSettings);
+								
+								// Ensure settings are loaded after save
+								await (this.plugin as AstroModularPlugin).loadSettings();
+								
+								// Apply the reset configuration to config.ts
+								try {
+									await this.applyCurrentConfiguration();
+									new Notice('Configuration reset to defaults and applied to config.ts (site info and navigation pages/links preserved)');
+								} catch (error) {
+									new Notice(`Configuration reset but failed to apply to config.ts: ${error instanceof Error ? error.message : String(error)}`);
+								}
+								
+								// Refresh the settings tab to show the reset values
+								await (this.plugin as AstroModularPlugin).triggerSettingsRefresh();
+							})();
+						});
 						
-						await this.plugin.saveData(resetSettings);
+						// Focus the confirm button
+						confirmButton.focus();
 						
-						// Ensure settings are loaded after save
-						await (this.plugin as any).loadSettings();
-						
-						// Apply the reset configuration to config.ts
-						try {
-							await this.applyCurrentConfiguration();
-							new Notice('Configuration reset to defaults and applied to config.ts (site info and navigation pages/links preserved)');
-						} catch (error) {
-							new Notice(`Configuration reset but failed to apply to config.ts: ${error instanceof Error ? error.message : String(error)}`);
-						}
-						
-						// Refresh the settings tab to show the reset values
-						await (this.plugin as any).triggerSettingsRefresh();
-					});
-					
-					// Focus the confirm button
-					confirmButton.focus();
-					
-					confirmModal.open();
+						confirmModal.open();
+					})();
 				}));
 
 		// Export configuration
@@ -409,17 +434,18 @@ export class AdvancedTab extends TabRenderer {
 			if (file) {
 				try {
 					const text = await file.text();
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 					const importedSettings = JSON.parse(text);
 					
 					// Merge with current settings
-      const settings = this.getSettings();
-      Object.assign(settings, importedSettings);
-      await this.plugin.saveData(settings);
+					const settings = this.getSettings();
+					Object.assign(settings, importedSettings);
+					await this.plugin.saveData(settings);
 					
 					// Refresh the settings tab to show imported settings
 					// Note: This would need to be handled by the parent component
 					new Notice('Configuration imported successfully!');
-				} catch (error) {
+				} catch {
 					new Notice('Failed to import configuration. Please check the file format.');
 				}
 			}
@@ -429,23 +455,29 @@ export class AdvancedTab extends TabRenderer {
 
 	private async openConfigFile(): Promise<void> {
 		try {
-			const fs = require('fs');
-			const path = require('path');
-			const { shell } = require('electron');
+			// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
+			const fs = require('fs') as typeof import('fs');
+			// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
+			const path = require('path') as typeof import('path');
+			// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef, @typescript-eslint/no-unsafe-assignment
+			const { shell } = require('electron') as { shell: typeof import('electron').shell };
 			
 			// Get the actual vault path string from the adapter
-			const vaultPath = (this.app.vault.adapter as any).basePath || (this.app.vault.adapter as any).path;
-			const vaultPathString = typeof vaultPath === 'string' ? vaultPath : vaultPath.toString();
+			const adapter = this.app.vault.adapter as { basePath?: string; path?: string };
+			const vaultPath = adapter.basePath || adapter.path;
+			const vaultPathString = typeof vaultPath === 'string' ? vaultPath : (vaultPath ? String(vaultPath) : '');
 			const configPath = path.join(vaultPathString, '..', 'config.ts');
 			
 			if (fs.existsSync(configPath)) {
 				// Use Electron's shell to open the file with the default editor
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
 				shell.openPath(configPath);
 			} else {
 				new Notice(`Config file not found at: ${configPath}`);
 			}
-		} catch (error) {
-			new Notice(`Error opening config file: ${error instanceof Error ? error.message : String(error)}`);
+		} catch (err) {
+			const errorMessage = err instanceof Error ? err.message : String(err);
+			new Notice(`Error opening config file: ${errorMessage}`);
 		}
 	}
 }

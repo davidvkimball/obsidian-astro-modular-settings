@@ -1,3 +1,7 @@
+import { Plugin } from 'obsidian';
+import { ConfigManager } from './utils/ConfigManager';
+import { PluginManager } from './utils/PluginManager';
+
 export interface AstroModularSettings {
 	// Wizard settings
 	runWizardOnStartup: boolean;
@@ -301,7 +305,7 @@ export interface WizardStep {
 	title: string;
 	description: string;
 	canSkip: boolean;
-	defaultValue?: any;
+	defaultValue?: unknown;
 }
 
 export interface ThemeOption {
@@ -326,7 +330,7 @@ export interface PluginStatus {
 	installed: boolean;
 	enabled: boolean;
 	configurable: boolean;
-	currentSettings?: any;
+	currentSettings?: Record<string, unknown>;
 	outOfSyncContentTypes?: string[]; // For Astro Composer: list of content types that are out of sync
 	settingsMatch?: boolean; // For Image Inserter: whether settings match content organization
 }
@@ -354,7 +358,7 @@ export interface ObsidianVaultAdapter {
 }
 
 export interface ObsidianPlugins {
-	plugins?: Record<string, any>;
+	plugins?: Record<string, unknown>;
 	enabledPlugins?: Set<string>;
 	communityPlugins?: string[];
 }
@@ -387,6 +391,15 @@ export interface ThemeColors {
 export interface SimpleThemeColors {
 	accent: string;
 	background: string;
+}
+
+export interface AstroModularPlugin extends Plugin {
+	settings: AstroModularSettings;
+	configManager: ConfigManager;
+	pluginManager: PluginManager;
+	loadSettings(): Promise<void>;
+	triggerSettingsRefresh(): Promise<void>;
+	updateRibbonIcon(): Promise<void>;
 }
 
 export interface ColorScale {

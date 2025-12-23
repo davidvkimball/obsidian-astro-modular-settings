@@ -17,37 +17,32 @@ export class PresetWarningModal extends Modal {
 		contentEl.empty();
 
 		// Modal header
-		const header = contentEl.createEl('h2', { text: 'Apply Template Preset' });
-		header.style.marginTop = '0';
+		const header = contentEl.createEl('h2', { text: 'Apply template preset' });
+		header.addClass('preset-warning-modal-header');
 
 		// Warning message
 		const warning = contentEl.createEl('p', { 
 			text: 'Applying this template will change the following settings:' 
 		});
-		warning.style.marginBottom = '16px';
+		warning.addClass('preset-warning-message');
 
 		// Changes list
 		const changesList = contentEl.createEl('ul');
-		changesList.style.marginBottom = '24px';
-		changesList.style.paddingLeft = '20px';
+		changesList.addClass('preset-warning-changes-list');
 
 		this.changes.forEach(change => {
 			const listItem = changesList.createEl('li', { text: change });
-			listItem.style.marginBottom = '4px';
+			listItem.addClass('preset-warning-list-item');
 		});
 
 		// Question
 		const question = contentEl.createEl('p', { 
 			text: 'Do you want to apply this template?' 
 		});
-		question.style.fontWeight = 'bold';
-		question.style.marginBottom = '24px';
+		question.addClass('preset-warning-question');
 
 		// Buttons container
 		const buttonContainer = contentEl.createDiv('modal-button-container');
-		buttonContainer.style.display = 'flex';
-		buttonContainer.style.gap = '12px';
-		buttonContainer.style.justifyContent = 'flex-end';
 
 		// Cancel button
 		const cancelButton = buttonContainer.createEl('button', { text: 'Cancel' });

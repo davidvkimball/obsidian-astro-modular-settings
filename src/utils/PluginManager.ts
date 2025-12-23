@@ -1,5 +1,9 @@
 import { App, Plugin } from 'obsidian';
-import type { PluginStatus, PluginConfiguration, ObsidianPlugins, ObsidianVaultConfig, ObsidianAppSettings, ContentOrganizationType } from '../types';
+import type { PluginStatus, PluginConfiguration, ObsidianPlugins, ObsidianVaultConfig, ContentOrganizationType, ObsidianSettings, AstroComposerSettings, ImageInserterSettings } from '../types';
+
+interface PluginWithSettings extends Plugin {
+	settings?: Record<string, unknown>;
+}
 
 export class PluginManager {
 	private app: App;
@@ -11,7 +15,7 @@ export class PluginManager {
 	}
 
 	async getPluginStatus(contentOrg?: ContentOrganizationType): Promise<PluginStatus[]> {
-		const plugins = (this.app as any).plugins as ObsidianPlugins;
+		const plugins = (this.app as unknown as { plugins?: ObsidianPlugins }).plugins;
 		const requiredPlugins = [
 			'astro-composer',
 			'insert-unsplash-image'
@@ -64,14 +68,14 @@ export class PluginManager {
 	private isPluginInstalled(pluginId: string): boolean {
 		// Check if plugin is in the community plugins list
 		// This works even when the plugin is disabled
-		const communityPlugins = (this.app as any).plugins?.communityPlugins as string[] | undefined;
+		const appPlugins = (this.app as unknown as { plugins?: ObsidianPlugins }).plugins;
+		const communityPlugins = appPlugins?.communityPlugins;
 		if (communityPlugins && Array.isArray(communityPlugins)) {
 			return communityPlugins.includes(pluginId);
 		}
 		
 		// Fallback: check if plugin exists in plugins object (only works when enabled)
-		const plugins = (this.app as any).plugins as ObsidianPlugins;
-		return !!plugins?.plugins?.[pluginId];
+		return !!appPlugins?.plugins?.[pluginId];
 	}
 
 	private getPluginDisplayName(pluginId: string): string {
@@ -84,7 +88,7 @@ export class PluginManager {
 
 	private checkObsidianSettings(contentOrg?: ContentOrganizationType): PluginStatus {
 		const contentOrgValue = contentOrg || this.getContentOrganization?.() || 'file-based';
-		const vaultConfig = (this.app.vault as any).config as ObsidianVaultConfig;
+		const vaultConfig = (this.app.vault as unknown as { config?: ObsidianVaultConfig }).config;
 		
 		// Get the expected attachment location based on content organization
 		const expectedLocation = contentOrgValue === 'file-based' ? 'subfolder' : 'same-folder';
@@ -130,51 +134,77 @@ export class PluginManager {
 		const expectedMode = contentOrgValue === 'file-based' ? 'file' : 'folder';
 		
 		try {
-			const pluginSettings = (plugin as any).settings;
+			const pluginSettings = (plugin as PluginWithSettings).settings;
 			if (!pluginSettings) {
 				return null;
 			}
 			
 			const mismatchedTypes: string[] = [];
 			
-			// Check posts: use global creationMode
-			if (pluginSettings.creationMode && typeof pluginSettings.creationMode === 'string') {
-				if (pluginSettings.creationMode !== expectedMode) {
-					mismatchedTypes.push('posts');
-				}
-			} else {
-				// No creationMode set, needs configuration
-				mismatchedTypes.push('posts');
-			}
-			
-			// Check pages: use pagesCreationMode
-			if (pluginSettings.pagesCreationMode) {
-				if (pluginSettings.pagesCreationMode !== expectedMode) {
-					mismatchedTypes.push('pages');
-				}
-			} else {
-				// No pagesCreationMode set, needs configuration
-				mismatchedTypes.push('pages');
-			}
-			
-			// Check projects and docs: use customContentTypes
-			if (Array.isArray(pluginSettings.customContentTypes)) {
-				for (const contentType of ['projects', 'docs']) {
-					const customType = pluginSettings.customContentTypes.find((ct: any) => 
-						ct && ct.folder && ct.folder.toLowerCase() === contentType
-					);
-					if (customType && customType.creationMode) {
-						if (customType.creationMode !== expectedMode) {
-							mismatchedTypes.push(contentType);
+			// Check if using new contentTypes array structure
+			if (Array.isArray(pluginSettings.contentTypes)) {
+				// New structure: check each content type in the contentTypes array
+				const expectedContentTypes = ['posts', 'pages', 'projects', 'docs'];
+				
+				for (const expectedType of expectedContentTypes) {
+					const contentType = pluginSettings.contentTypes.find((ct: unknown) => 
+						ct && typeof ct === 'object' && ct !== null && 'folder' in ct && typeof (ct as { folder?: unknown }).folder === 'string' && (ct as { folder: string }).folder.toLowerCase() === expectedType
+					) as { enabled?: boolean; creationMode?: string } | undefined;
+					
+					if (contentType) {
+						// Content type exists - check if it's enabled and matches expected mode
+						if (contentType.enabled !== false) { // Only check if enabled (or not explicitly disabled)
+							if (contentType.creationMode !== expectedMode) {
+								mismatchedTypes.push(expectedType);
+							}
 						}
+						// If disabled, we don't check it (don't add to mismatched)
 					} else {
-						// Custom type exists but no creationMode set, needs configuration
-						mismatchedTypes.push(contentType);
+						// Content type not found - only check if it's one of the required ones
+						// For now, we'll only check the ones that exist
 					}
 				}
 			} else {
-				// No customContentTypes array, projects and docs need configuration
-				mismatchedTypes.push('projects', 'docs');
+				// Fallback to old structure for backward compatibility
+				// Check posts: use global creationMode
+				if (pluginSettings.creationMode && typeof pluginSettings.creationMode === 'string') {
+					if (pluginSettings.creationMode !== expectedMode) {
+						mismatchedTypes.push('posts');
+					}
+				} else {
+					// No creationMode set, needs configuration
+					mismatchedTypes.push('posts');
+				}
+				
+				// Check pages: use pagesCreationMode
+				if (pluginSettings.pagesCreationMode) {
+					if (pluginSettings.pagesCreationMode !== expectedMode) {
+						mismatchedTypes.push('pages');
+					}
+				} else {
+					// No pagesCreationMode set, needs configuration
+					mismatchedTypes.push('pages');
+				}
+				
+				// Check projects and docs: use customContentTypes
+				if (Array.isArray(pluginSettings.customContentTypes)) {
+					for (const contentType of ['projects', 'docs']) {
+						const customType = pluginSettings.customContentTypes.find((ct: unknown) => 
+							ct && typeof ct === 'object' && ct !== null && 'folder' in ct && typeof (ct as { folder?: unknown }).folder === 'string' && (ct as { folder: string }).folder.toLowerCase() === contentType
+						) as { creationMode?: string } | undefined;
+						if (customType && customType.creationMode) {
+							if (customType.creationMode !== expectedMode) {
+								mismatchedTypes.push(contentType);
+							}
+						} else {
+							// Custom type exists but no creationMode set, needs configuration
+							mismatchedTypes.push(contentType);
+						}
+					}
+				} else {
+					// No customContentTypes array, projects and docs need configuration
+					mismatchedTypes.push('projects', 'docs');
+				}
 			}
 			
 			// If all content types match, return null (no issues)
@@ -197,13 +227,16 @@ export class PluginManager {
 			: '[[{image-url}]]';
 		
 		try {
-			const pluginSettings = (plugin as any).settings;
+			const pluginSettings = (plugin as PluginWithSettings).settings;
 			if (!pluginSettings) {
 				return false;
 			}
 			
 			// Check the frontmatter valueFormat
-			const actualFormat = pluginSettings.frontmatter?.valueFormat;
+			const frontmatter = pluginSettings.frontmatter;
+			const actualFormat = frontmatter && typeof frontmatter === 'object' && 'valueFormat' in frontmatter
+				? (frontmatter as { valueFormat?: unknown }).valueFormat
+				: undefined;
 			return actualFormat === expectedFormat;
 		} catch (error) {
 			console.error('Failed to check Image Inserter settings:', error);
@@ -219,29 +252,26 @@ export class PluginManager {
 		return configurablePlugins.includes(pluginId);
 	}
 
-	private async getPluginSettings(plugin: Plugin): Promise<any> {
+	private async getPluginSettings(plugin: Plugin): Promise<Record<string, unknown> | undefined> {
 		// This would need to be implemented based on each plugin's specific API
 		// For now, return a placeholder
-		return {};
+		const pluginWithSettings = plugin as PluginWithSettings;
+		return pluginWithSettings.settings;
 	}
 
 	async configurePlugins(config: PluginConfiguration): Promise<boolean> {
 		let successCount = 0;
-		let totalConfigurations = 0;
 		
 		try {
 			// Configure Obsidian settings
-			totalConfigurations++;
 			await this.configureObsidianSettings(config.obsidianSettings);
 			successCount++;
 			
 			// Configure Astro Composer settings
-			totalConfigurations++;
 			await this.configureAstroComposerSettings(config.astroComposerSettings);
 			successCount++;
 			
 			// Configure Image Inserter settings
-			totalConfigurations++;
 			await this.configureImageInserterSettings(config.imageInserterSettings);
 			successCount++;
 			
@@ -252,9 +282,9 @@ export class PluginManager {
 		}
 	}
 
-	private async configureObsidianSettings(settings: any): Promise<void> {
+	private async configureObsidianSettings(settings: ObsidianSettings): Promise<void> {
 		try {
-			const app = this.app as any;
+			const app = this.app as unknown as { setting?: { set?: (key: string, value: string) => Promise<void>; save?: () => Promise<void> } };
 			const targetPath = settings.attachmentLocation === 'subfolder' 
 				? `./${settings.subfolderName}` 
 				: './';
@@ -270,12 +300,17 @@ export class PluginManager {
 				}
 			} else {
 				// Method 2: Fallback to vault config (current approach)
-				const obsidianSettings = (this.app.vault as any).config as ObsidianVaultConfig;
+				const vault = this.app.vault as unknown as { config?: ObsidianVaultConfig; saveConfig?: () => Promise<void> };
+				const obsidianSettings = vault.config;
 				
-				obsidianSettings.newLinkFormat = 'relative';
-				obsidianSettings.attachmentFolderPath = targetPath;
-				
-				await (this.app.vault as any).saveConfig();
+				if (obsidianSettings) {
+					obsidianSettings.newLinkFormat = 'relative';
+					obsidianSettings.attachmentFolderPath = targetPath;
+					
+					if (typeof vault.saveConfig === 'function') {
+						await vault.saveConfig();
+					}
+				}
 			}
 			
 		} catch (error) {
@@ -284,9 +319,9 @@ export class PluginManager {
 		}
 	}
 
-	private async configureAstroComposerSettings(settings: any): Promise<void> {
+	private async configureAstroComposerSettings(settings: AstroComposerSettings): Promise<void> {
 		try {
-			const plugins = (this.app as any).plugins as ObsidianPlugins;
+			const plugins = (this.app as unknown as { plugins?: ObsidianPlugins }).plugins;
 			const astroComposerPlugin = plugins?.plugins?.['astro-composer'];
 			
 			if (!astroComposerPlugin) {
@@ -299,23 +334,41 @@ export class PluginManager {
 				return;
 			}
 			
-			const pluginSettings = astroComposerPlugin.settings;
+			const pluginSettings = astroComposerPlugin.settings as Record<string, unknown>;
 			const creationMode = settings.creationMode;
 			
-			// Update posts: use global creationMode (for posts)
-			pluginSettings.creationMode = creationMode;
-			
-			// Update pages: use pagesCreationMode
-			pluginSettings.pagesCreationMode = creationMode;
-			
-			// Update projects and docs: use customContentTypes array
-			if (Array.isArray(pluginSettings.customContentTypes)) {
-				for (const customType of pluginSettings.customContentTypes) {
-					if (customType && typeof customType === 'object') {
-						// Check if this is projects or docs by folder name
-						const folderName = (customType.folder || '').toLowerCase();
-						if (folderName === 'projects' || folderName === 'docs') {
-							customType.creationMode = creationMode;
+			// Check if using new contentTypes array structure
+			if (Array.isArray(pluginSettings.contentTypes)) {
+				// New structure: update each content type in the contentTypes array
+				const contentTypesToUpdate = ['posts', 'pages', 'projects', 'docs'];
+				
+				for (const contentType of pluginSettings.contentTypes) {
+					if (contentType && typeof contentType === 'object' && contentType !== null) {
+						const contentTypeObj = contentType as Record<string, unknown>;
+						const folderName = (typeof contentTypeObj.folder === 'string' ? contentTypeObj.folder : '').toLowerCase();
+						if (contentTypesToUpdate.includes(folderName)) {
+							contentTypeObj.creationMode = creationMode;
+						}
+					}
+				}
+			} else {
+				// Fallback to old structure for backward compatibility
+				// Update posts: use global creationMode (for posts)
+				pluginSettings.creationMode = creationMode;
+				
+				// Update pages: use pagesCreationMode
+				pluginSettings.pagesCreationMode = creationMode;
+				
+				// Update projects and docs: use customContentTypes array
+				if (Array.isArray(pluginSettings.customContentTypes)) {
+					for (const customType of pluginSettings.customContentTypes) {
+						if (customType && typeof customType === 'object' && customType !== null) {
+							const customTypeObj = customType as Record<string, unknown>;
+							// Check if this is projects or docs by folder name
+							const folderName = (typeof customTypeObj.folder === 'string' ? customTypeObj.folder : '').toLowerCase();
+							if (folderName === 'projects' || folderName === 'docs') {
+								customTypeObj.creationMode = creationMode;
+							}
 						}
 					}
 				}
@@ -325,8 +378,10 @@ export class PluginManager {
 			pluginSettings.indexFileName = settings.indexFileName;
 			
 			// Save the settings
-			if (typeof astroComposerPlugin.saveSettings === 'function') {
-				await astroComposerPlugin.saveSettings();
+			const pluginWithSave = astroComposerPlugin as { saveSettings?: () => Promise<void> };
+			const saveSettings = pluginWithSave.saveSettings;
+			if (saveSettings && typeof saveSettings === 'function') {
+				await saveSettings();
 			}
 		} catch (error) {
 			console.error('Failed to configure Astro Composer:', error);
@@ -334,20 +389,26 @@ export class PluginManager {
 		}
 	}
 
-	private async configureImageInserterSettings(settings: any): Promise<void> {
+	private async configureImageInserterSettings(settings: ImageInserterSettings): Promise<void> {
 		try {
-			const plugins = (this.app as any).plugins as ObsidianPlugins;
+			const plugins = (this.app as unknown as { plugins?: ObsidianPlugins }).plugins;
 			const imageInserterPlugin = plugins?.plugins?.['insert-unsplash-image'];
 			
 			if (imageInserterPlugin && imageInserterPlugin.settings) {
 				// Update Image Inserter settings
 				// Only update the frontmatter.valueFormat (this is the main setting)
-				if (imageInserterPlugin.settings.frontmatter) {
-					imageInserterPlugin.settings.frontmatter.valueFormat = settings.valueFormat;
+				const pluginSettings = imageInserterPlugin.settings as Record<string, unknown>;
+				if (pluginSettings.frontmatter && typeof pluginSettings.frontmatter === 'object' && pluginSettings.frontmatter !== null) {
+					const frontmatter = pluginSettings.frontmatter as Record<string, unknown>;
+					frontmatter.valueFormat = settings.valueFormat;
 				}
 				
 				// Save the settings
-				await imageInserterPlugin.saveSettings();
+				const pluginWithSave = imageInserterPlugin as { saveSettings?: () => Promise<void> };
+				const saveSettings = pluginWithSave.saveSettings;
+				if (saveSettings && typeof saveSettings === 'function') {
+					await saveSettings();
+				}
 			}
 		} catch (error) {
 			console.error('Failed to configure Image Inserter:', error);

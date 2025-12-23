@@ -1,7 +1,7 @@
-import { Setting, Notice } from 'obsidian';
+import { Setting } from 'obsidian';
 import { TabRenderer } from '../common/TabRenderer';
 import { SetupWizardModal } from '../SetupWizardModal';
-import { TEMPLATE_OPTIONS, THEME_OPTIONS } from '../../types';
+import { TEMPLATE_OPTIONS, THEME_OPTIONS, AstroModularPlugin, AstroModularSettings } from '../../types';
 
 export class GeneralTab extends TabRenderer {
 	render(container: HTMLElement): void {
@@ -13,7 +13,11 @@ export class GeneralTab extends TabRenderer {
 		// Current configuration display (moved to top)
 		const configDisplay = container.createDiv('config-display');
 		const configInfo = configDisplay.createDiv('config-info');
-		const configTitle = configInfo.createEl('h3', { text: 'Current Configuration' });
+		
+		// Current Configuration heading
+		new Setting(configInfo)
+			.setHeading()
+			.setName('Current configuration');
 		
 		const templateItem = configInfo.createDiv('config-item');
 		templateItem.createEl('strong', { text: 'Template: ' });
@@ -32,11 +36,11 @@ export class GeneralTab extends TabRenderer {
 		deploymentItem.createSpan({ text: this.formatDeploymentName(settings.deployment.platform) });
 		
 		const siteTitleItem = configInfo.createDiv('config-item');
-		siteTitleItem.createEl('strong', { text: 'Site Title: ' });
+		siteTitleItem.createEl('strong', { text: 'Site title: ' });
 		siteTitleItem.createSpan({ text: settings.siteInfo.title });
 		
 		const siteUrlItem = configInfo.createDiv('config-item');
-		siteUrlItem.createEl('strong', { text: 'Site URL: ' });
+		siteUrlItem.createEl('strong', { text: 'Site URL: ' }); // URL is an acronym, keep uppercase
 		siteUrlItem.createSpan({ text: settings.siteInfo.site });
 
 		// Run setup wizard button
@@ -44,14 +48,17 @@ export class GeneralTab extends TabRenderer {
 			.setName('Setup wizard')
 			.setDesc('Run the setup wizard to reconfigure your theme')
 			.addButton(button => button
-				.setButtonText('Run Setup Wizard')
+				.setButtonText('Run setup wizard')
 				.setCta()
 				.onClick(async () => {
 					// Reload settings to ensure we have the latest values
-					await this.plugin.loadData().then((data: any) => {
-						Object.assign((this.plugin as any).settings, data);
+					const plugin = this.plugin as AstroModularPlugin;
+					await this.plugin.loadData().then((data: Partial<AstroModularSettings> | null) => {
+						if (data) {
+							Object.assign(plugin.settings, data);
+						}
 					});
-					const wizard = new SetupWizardModal(this.app, this.plugin as any);
+					const wizard = new SetupWizardModal(this.app, plugin);
 					wizard.open();
 				}));
 
@@ -76,8 +83,9 @@ export class GeneralTab extends TabRenderer {
 					settings.removeRibbonIcon = value;
 					await this.plugin.saveData(settings);
 					// Update ribbon icon immediately
-					if ((this.plugin as any).updateRibbonIcon) {
-						await (this.plugin as any).updateRibbonIcon();
+					const plugin = this.plugin as AstroModularPlugin;
+					if (plugin.updateRibbonIcon) {
+						await plugin.updateRibbonIcon();
 					}
 				}));
 	}

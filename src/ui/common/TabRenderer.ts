@@ -1,5 +1,5 @@
 import { App, Setting, Notice, Plugin } from 'obsidian';
-import { AstroModularSettings } from '../../types';
+import { AstroModularSettings, AstroModularPlugin } from '../../types';
 
 export abstract class TabRenderer {
 	protected app: App;
@@ -17,7 +17,8 @@ export abstract class TabRenderer {
 
 	protected getSettings(): AstroModularSettings {
 		// Always get the plugin's current settings - reload from data to ensure we have the latest
-		return (this.plugin as any).settings || (this.plugin as any).data || {};
+		const plugin = this.plugin as AstroModularPlugin;
+		return plugin.settings || {};
 	}
 
 	protected async applyCurrentConfiguration(showNotice: boolean = false): Promise<void> {
@@ -25,13 +26,14 @@ export abstract class TabRenderer {
 			const settings = this.getSettings();
 			
 			// Apply the current settings to the config file using individual features
-			const success = await (this.plugin as any).configManager.updateIndividualFeatures(settings);
+			const plugin = this.plugin as AstroModularPlugin;
+			const success = await plugin.configManager.updateIndividualFeatures(settings);
 
 			if (success) {
 				if (showNotice) {
 					new Notice('Configuration applied successfully!');
 				}
-				await (this.plugin as any).configManager.triggerRebuild();
+				await plugin.configManager.triggerRebuild();
 			} else {
 				if (showNotice) {
 					new Notice('Failed to apply configuration. Check the console for errors.');
@@ -89,7 +91,7 @@ export abstract class TabRenderer {
 				}
 				
 				let timeoutId: number | null = null;
-				text.onChange(async (value) => {
+				text.onChange((value) => {
 					// Clear existing timeout
 					if (timeoutId) {
 						clearTimeout(timeoutId);
@@ -98,23 +100,23 @@ export abstract class TabRenderer {
 					// Update the value immediately for UI responsiveness
 					onChange(value);
 					
-					// Save settings immediately
-					await this.plugin.saveData(this.getSettings());
+					// Save settings immediately (fire and forget)
+					void this.plugin.saveData(this.getSettings());
 					
 					// Debounce the configuration application
-					timeoutId = window.setTimeout(async () => {
+					timeoutId = window.setTimeout(() => {
 						if (onApplyConfig) {
-							await onApplyConfig();
+							void onApplyConfig();
 						}
 					}, debounceMs);
 				});
 				
 				// Also apply on blur (when user leaves the field)
-				text.inputEl.addEventListener('blur', async () => {
+				text.inputEl.addEventListener('blur', () => {
 					if (timeoutId) {
 						clearTimeout(timeoutId);
 						if (onApplyConfig) {
-							await onApplyConfig();
+							void onApplyConfig();
 						}
 					}
 				});

@@ -1,4 +1,4 @@
-import { Plugin, Notice, setIcon } from 'obsidian';
+import { Plugin } from 'obsidian';
 import { AstroModularSettings, DEFAULT_SETTINGS } from './settings';
 import { registerCommands } from './commands';
 import { AstroModularSettingsTab } from './ui/SettingsTab';
@@ -14,7 +14,6 @@ export default class AstroModularSettingsPlugin extends Plugin {
 	configManager!: ConfigManager;
 	pluginManager!: PluginManager;
 	private ribbonIcon?: HTMLElement;
-	private ribbonContextMenuStyleEl?: HTMLStyleElement;
 	private ribbonContextMenuObserver?: MutationObserver;
 
 	async onload() {
@@ -33,7 +32,7 @@ export default class AstroModularSettingsPlugin extends Plugin {
 
 		// Add ribbon icon (only if not disabled)
 		if (!this.settings.removeRibbonIcon) {
-			this.ribbonIcon = this.addRibbonIcon('wand-sparkles', 'Open Astro Modular wizard', async () => {
+			this.ribbonIcon = this.addRibbonIcon('wand-sparkles', 'Open wizard', async () => {
 				// Reload settings from disk to get the latest values
 				await this.loadSettings();
 				
@@ -49,13 +48,16 @@ export default class AstroModularSettingsPlugin extends Plugin {
 		// Check if we should run the wizard on startup
 		if (this.settings.runWizardOnStartup) {
 			// Delay the wizard to let Obsidian fully load
-			this.startupTimeoutId = window.setTimeout(async () => {
-				// Reload settings to check if user disabled the setting
-				await this.loadSettings();
-				if (this.settings.runWizardOnStartup) {
-					const wizard = new SetupWizardModal(this.app, this);
-					wizard.open();
-				}
+			this.startupTimeoutId = window.setTimeout(() => {
+				// Use void to explicitly ignore promise return
+				void (async () => {
+					// Reload settings to check if user disabled the setting
+					await this.loadSettings();
+					if (this.settings.runWizardOnStartup) {
+						const wizard = new SetupWizardModal(this.app, this);
+						wizard.open();
+					}
+				})();
 			}, 2000);
 		}
 
@@ -84,16 +86,15 @@ export default class AstroModularSettingsPlugin extends Plugin {
 			this.ribbonContextMenuObserver = undefined;
 		}
 		
-		if (this.ribbonContextMenuStyleEl) {
-			this.ribbonContextMenuStyleEl.remove();
-			this.ribbonContextMenuStyleEl = undefined;
-		}
+		// Remove data attribute when unloading
+		document.body.removeAttribute('data-astro-modular-ribbon-removed');
 		
 		// Other cleanup is handled automatically by Obsidian
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		const data = await this.loadData() as Partial<AstroModularSettings> | null;
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
 	}
 
 	async saveSettings() {
@@ -178,7 +179,7 @@ export default class AstroModularSettingsPlugin extends Plugin {
 
 		// Add ribbon icon if not disabled
 		if (!this.settings.removeRibbonIcon) {
-			this.ribbonIcon = this.addRibbonIcon('wand-sparkles', 'Open Astro Modular wizard', async () => {
+			this.ribbonIcon = this.addRibbonIcon('wand-sparkles', 'Open wizard', async () => {
 				// Reload settings from disk to get the latest values
 				await this.loadSettings();
 				
@@ -199,26 +200,12 @@ export default class AstroModularSettingsPlugin extends Plugin {
 	}
 
 	private updateRibbonContextMenuCSS() {
-		// Remove existing style if any
-		if (this.ribbonContextMenuStyleEl) {
-			this.ribbonContextMenuStyleEl.remove();
-		}
-
-		// Only add CSS if ribbon icon is disabled
+		// Use data attribute on body instead of style element
+		// CSS in styles.css handles the hiding based on this attribute
 		if (this.settings.removeRibbonIcon) {
-			// Create style element to hide our ribbon icon from context menu
-			this.ribbonContextMenuStyleEl = document.createElement('style');
-			this.ribbonContextMenuStyleEl.id = 'astro-modular-settings-hide-ribbon-context-menu';
-			this.ribbonContextMenuStyleEl.textContent = `
-				/* Hide our ribbon icon from context menu when removed */
-				.menu-item:has(svg[data-lucide="wand-sparkles"]),
-				.menu-item:has(.lucide-wand-sparkles),
-				.menu-item .menu-item-icon:has(svg[data-lucide="wand-sparkles"]),
-				.menu-item .menu-item-icon:has(.lucide-wand-sparkles) {
-					display: none !important;
-				}
-			`;
-			document.head.appendChild(this.ribbonContextMenuStyleEl);
+			document.body.setAttribute('data-astro-modular-ribbon-removed', 'true');
+		} else {
+			document.body.removeAttribute('data-astro-modular-ribbon-removed');
 		}
 	}
 

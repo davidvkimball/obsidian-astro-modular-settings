@@ -17,9 +17,11 @@ export class ConfigFileManager {
 		// This is necessary for the plugin's core functionality of managing Astro Modular theme settings.
 		
 		// Try to access the file outside the vault using Node.js fs
+		// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
+		const fs = require('fs') as typeof import('fs');
+		// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
+		const path = require('path') as typeof import('path');
 		try {
-			const fs = require('fs');
-			const path = require('path');
 			// Get the actual vault path string from the adapter
 			const adapter = this.app.vault.adapter as ObsidianVaultAdapter;
 			const vaultPath = adapter.basePath || adapter.path;
@@ -28,9 +30,6 @@ export class ConfigFileManager {
 			const vaultPathString = typeof vaultPath === 'string' ? vaultPath : (vaultPath ? String(vaultPath) : '');
 			
 			const configPath = path.join(vaultPathString, '..', '..', 'src', 'config.ts');
-			
-			// Check if the parent directory exists
-			const parentDir = path.dirname(configPath);
 			
 			if (fs.existsSync(configPath)) {
 				const content = fs.readFileSync(configPath, 'utf8');
@@ -53,7 +52,7 @@ export class ConfigFileManager {
 					errors: ['Config file not found']
 				};
 			}
-		} catch (error) {
+		} catch {
 			return {
 				exists: false,
 				path: this.configPath,
@@ -79,9 +78,11 @@ export class ConfigFileManager {
 
 	async writeConfig(content: string): Promise<boolean> {
 		// Try to write the file outside the vault using Node.js fs
+		// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
+		const fs = require('fs') as typeof import('fs');
+		// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
+		const path = require('path') as typeof import('path');
 		try {
-			const fs = require('fs');
-			const path = require('path');
 			// Get the actual vault path string from the adapter
 			const adapter = this.app.vault.adapter as ObsidianVaultAdapter;
 			const vaultPath = adapter.basePath || adapter.path;
@@ -93,8 +94,7 @@ export class ConfigFileManager {
 			
 			fs.writeFileSync(configPath, content, 'utf8');
 			return true;
-		} catch (error) {
-			console.error('❌ Error writing config:', error);
+		} catch {
 			return false;
 		}
 	}
@@ -103,9 +103,9 @@ export class ConfigFileManager {
 		// Check if Astro dev server is running by looking for common indicators
 		// This is a simplified check - in reality you'd need more sophisticated detection
 		const packageJson = this.app.vault.getAbstractFileByPath('package.json');
-		if (packageJson) {
+		if (packageJson && packageJson instanceof TFile) {
 			try {
-				const content = await this.app.vault.read(packageJson as TFile);
+				const content = await this.app.vault.read(packageJson);
 				return content.includes('astro') && content.includes('dev');
 			} catch {
 				return false;
@@ -114,7 +114,7 @@ export class ConfigFileManager {
 		return false;
 	}
 
-	async parseConfigFile(content?: string): Promise<any> {
+	async parseConfigFile(content?: string): Promise<Record<string, unknown> | null> {
 		// Parse the config.ts file to extract current settings
 		// This extracts all key settings from the config using the marker system
 		
@@ -123,34 +123,35 @@ export class ConfigFileManager {
 			return null;
 		}
 
-		const config: any = {};
+		const config: Record<string, unknown> = {};
 
 		// Extract site information
-		config.siteInfo = {};
+		const siteInfo: Record<string, unknown> = {};
 		const siteUrlMatch = configContent.match(/\/\/ \[CONFIG:SITE_URL\]\s*\n\s*site:\s*"([^"]*)"/);
 		if (siteUrlMatch) {
-			config.siteInfo.site = siteUrlMatch[1];
+			siteInfo.site = siteUrlMatch[1];
 		}
 		
 		const siteTitleMatch = configContent.match(/\/\/ \[CONFIG:SITE_TITLE\]\s*\n\s*title:\s*"([^"]*)"/);
 		if (siteTitleMatch) {
-			config.siteInfo.title = siteTitleMatch[1];
+			siteInfo.title = siteTitleMatch[1];
 		}
 		
 		const siteDescMatch = configContent.match(/\/\/ \[CONFIG:SITE_DESCRIPTION\]\s*\n\s*description:\s*"([^"]*)"/);
 		if (siteDescMatch) {
-			config.siteInfo.description = siteDescMatch[1];
+			siteInfo.description = siteDescMatch[1];
 		}
 		
 		const siteAuthorMatch = configContent.match(/\/\/ \[CONFIG:SITE_AUTHOR\]\s*\n\s*author:\s*"([^"]*)"/);
 		if (siteAuthorMatch) {
-			config.siteInfo.author = siteAuthorMatch[1];
+			siteInfo.author = siteAuthorMatch[1];
 		}
 		
 		const siteLangMatch = configContent.match(/\/\/ \[CONFIG:SITE_LANGUAGE\]\s*\n\s*language:\s*"([^"]*)"/);
 		if (siteLangMatch) {
-			config.siteInfo.language = siteLangMatch[1];
+			siteInfo.language = siteLangMatch[1];
 		}
+		config.siteInfo = siteInfo;
 		
 		const faviconThemeAdaptiveMatch = configContent.match(/\/\/ \[CONFIG:FAVICON_THEME_ADAPTIVE\]\s*\n\s*faviconThemeAdaptive:\s*(true|false)/);
 		if (faviconThemeAdaptiveMatch) {
@@ -177,7 +178,7 @@ export class ConfigFileManager {
 			} else if (value?.startsWith('[') && value?.endsWith(']')) {
 				// Parse array format: ["oxygen", "minimal", "nord"]
 				const themesArray = value.slice(1, -1).split(',').map(theme => theme.trim().replace(/"/g, ''));
-				config.availableThemes = themesArray as any;
+				config.availableThemes = themesArray;
 			}
 		}
 
@@ -189,29 +190,30 @@ export class ConfigFileManager {
 		}
 
 		// Extract typography settings
-		config.typography = {};
+		const typography: Record<string, unknown> = {};
 		const fontSourceMatch = configContent.match(/\/\/ \[CONFIG:FONT_SOURCE\]\s*\n\s*source:\s*"([^"]*)"/);
 		if (fontSourceMatch) {
-			config.typography.fontSource = fontSourceMatch[1];
+			typography.fontSource = fontSourceMatch[1];
 		}
 		
 		const fontBodyMatch = configContent.match(/\/\/ \[CONFIG:FONT_BODY\]\s*\n\s*body:\s*"([^"]*)"/);
 		if (fontBodyMatch) {
-			config.typography.proseFont = fontBodyMatch[1];
+			typography.proseFont = fontBodyMatch[1];
 		}
 		
 		const fontHeadingMatch = configContent.match(/\/\/ \[CONFIG:FONT_HEADING\]\s*\n\s*heading:\s*"([^"]*)"/);
 		if (fontHeadingMatch) {
-			config.typography.headingFont = fontHeadingMatch[1];
+			typography.headingFont = fontHeadingMatch[1];
 		}
 		
 		const fontMonoMatch = configContent.match(/\/\/ \[CONFIG:FONT_MONO\]\s*\n\s*mono:\s*"([^"]*)"/);
 		if (fontMonoMatch) {
-			config.typography.monoFont = fontMonoMatch[1];
+			typography.monoFont = fontMonoMatch[1];
 		}
+		config.typography = typography;
 
 		// Extract navigation settings
-		config.navigation = { pages: [], social: [] };
+		const navigation: Record<string, unknown> = { pages: [], social: [] };
 		
 		// Extract navigation pages (supports nested structure)
 		const pagesMatch = configContent.match(/\/\/ \[CONFIG:NAVIGATION_PAGES\]\s*\n\s*pages:\s*\[([\s\S]*?)\]/);
@@ -219,9 +221,9 @@ export class ConfigFileManager {
 			const pagesContent = pagesMatch[1];
 			
 			// Parse navigation items (supports nested children)
-			const parseNavigationItem = (content: string, startPos: number = 0): { item: any, endPos: number } => {
+			const parseNavigationItem = (content: string, startPos: number = 0): { item: Record<string, unknown> | null, endPos: number } => {
 				let pos = startPos;
-				const item: any = {};
+				const item: Record<string, unknown> = {};
 				
 				// Skip whitespace
 				while (pos < content.length && /\s/.test(content[pos])) pos++;
@@ -262,7 +264,7 @@ export class ConfigFileManager {
 					} else if (fieldName === 'children') {
 						// Parse children array
 						pos++; // skip '['
-						item.children = [];
+						const children: Array<Record<string, unknown>> = [];
 						while (pos < content.length) {
 							// Skip whitespace
 							while (pos < content.length && /\s/.test(content[pos])) pos++;
@@ -276,7 +278,7 @@ export class ConfigFileManager {
 							// Parse child item
 							const childResult = parseNavigationItem(content, pos);
 							if (childResult.item) {
-								item.children.push(childResult.item);
+								children.push(childResult.item);
 								pos = childResult.endPos;
 							} else {
 								break;
@@ -286,6 +288,7 @@ export class ConfigFileManager {
 							while (pos < content.length && /\s/.test(content[pos])) pos++;
 							if (content[pos] === ',') pos++;
 						}
+						item.children = children;
 					}
 					
 					// Skip comma
@@ -308,13 +311,13 @@ export class ConfigFileManager {
 				// Parse item
 				const result = parseNavigationItem(pagesContent, pos);
 				if (result.item) {
-					config.navigation.pages.push(result.item);
+					(navigation.pages as Array<Record<string, unknown>>).push(result.item);
 					pos = result.endPos;
 				} else {
 					// Fallback to simple regex for backward compatibility
 					const simpleMatch = pagesContent.slice(pos).match(/\{\s*title:\s*"([^"]*)",\s*url:\s*"([^"]*)"\s*\}/);
 					if (simpleMatch) {
-						config.navigation.pages.push({
+						(navigation.pages as Array<Record<string, unknown>>).push({
 							title: simpleMatch[1],
 							url: simpleMatch[2]
 						});
@@ -337,27 +340,28 @@ export class ConfigFileManager {
 			// Match the multi-line format: { title: "...", url: "...", icon: "..." }
 			const socialMatches = socialContent.matchAll(/\{\s*\n\s*title:\s*"([^"]*)",\s*\n\s*url:\s*"([^"]*)",\s*\n\s*icon:\s*"([^"]*)",?\s*\n\s*\}/g);
 			for (const socialMatch of socialMatches) {
-				config.navigation.social.push({
+				(navigation.social as Array<Record<string, unknown>>).push({
 					title: socialMatch[1],
 					url: socialMatch[2],
 					icon: socialMatch[3]
 				});
 			}
 		}
+		config.navigation = navigation;
 
 		// Extract post options
-		config.postOptions = {};
+		const postOptions: Record<string, unknown> = {};
 		
 		// Extract table of contents
 		const tocMatch = configContent.match(/\/\/ \[CONFIG:POST_OPTIONS_TABLE_OF_CONTENTS\]\s*tableOfContents:\s*(true|false)/);
 		if (tocMatch) {
-			config.postOptions.tableOfContents = tocMatch[1] === 'true';
+			postOptions.tableOfContents = tocMatch[1] === 'true';
 		}
 
 		// Extract reading time
 		const readingTimeMatch = configContent.match(/\/\/ \[CONFIG:POST_OPTIONS_READING_TIME\]\s*readingTime:\s*(true|false)/);
 		if (readingTimeMatch) {
-			config.postOptions.readingTime = readingTimeMatch[1] === 'true';
+			postOptions.readingTime = readingTimeMatch[1] === 'true';
 		}
 
 		// Extract linked mentions
@@ -365,7 +369,7 @@ export class ConfigFileManager {
 		const linkedMentionsCompactMatch = configContent.match(/\/\/ \[CONFIG:POST_OPTIONS_LINKED_MENTIONS_COMPACT\]\s*linkedMentionsCompact:\s*(true|false)/);
 		
 		if (linkedMentionsEnabledMatch || linkedMentionsCompactMatch) {
-			config.postOptions.linkedMentions = {
+			postOptions.linkedMentions = {
 				enabled: linkedMentionsEnabledMatch ? linkedMentionsEnabledMatch[1] === 'true' : false,
 				linkedMentionsCompact: linkedMentionsCompactMatch ? linkedMentionsCompactMatch[1] === 'true' : false
 			};
@@ -374,7 +378,7 @@ export class ConfigFileManager {
 		// Extract graph view
 		const graphViewMatch = configContent.match(/\/\/ \[CONFIG:POST_OPTIONS_GRAPH_VIEW_ENABLED\]\s*enabled:\s*(true|false)/);
 		if (graphViewMatch) {
-			config.postOptions.graphView = {
+			postOptions.graphView = {
 				enabled: graphViewMatch[1] === 'true'
 			};
 		}
@@ -382,116 +386,123 @@ export class ConfigFileManager {
 		// Extract post navigation
 		const postNavigationMatch = configContent.match(/\/\/ \[CONFIG:POST_OPTIONS_POST_NAVIGATION\]\s*postNavigation:\s*(true|false)/);
 		if (postNavigationMatch) {
-			config.postOptions.postNavigation = postNavigationMatch[1] === 'true';
+			postOptions.postNavigation = postNavigationMatch[1] === 'true';
 		}
 
 		// Extract comments
 		const commentsMatch = configContent.match(/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_ENABLED\]\s*enabled:\s*(true|false)/);
 		if (commentsMatch) {
-			config.postOptions.comments = {
+			postOptions.comments = {
 				enabled: commentsMatch[1] === 'true'
 			};
 		}
+		config.postOptions = postOptions;
 
 		// Extract optional content types
-		config.optionalContentTypes = {};
+		const optionalContentTypes: Record<string, unknown> = {};
 		
 		const projectsMatch = configContent.match(/\/\/ \[CONFIG:OPTIONAL_CONTENT_TYPES_PROJECTS\]\s*projects:\s*(true|false)/);
 		if (projectsMatch) {
-			config.optionalContentTypes.projects = projectsMatch[1] === 'true';
+			optionalContentTypes.projects = projectsMatch[1] === 'true';
 		}
 
 		const docsMatch = configContent.match(/\/\/ \[CONFIG:OPTIONAL_CONTENT_TYPES_DOCS\]\s*docs:\s*(true|false)/);
 		if (docsMatch) {
-			config.optionalContentTypes.docs = docsMatch[1] === 'true';
+			optionalContentTypes.docs = docsMatch[1] === 'true';
 		}
+		config.optionalContentTypes = optionalContentTypes;
 
 		// Extract footer settings
-		config.footer = {};
+		const footer: Record<string, unknown> = {};
 		
 		const footerSocialMatch = configContent.match(/\/\/ \[CONFIG:FOOTER_SHOW_SOCIAL_ICONS\]\s*showSocialIconsInFooter:\s*(true|false)/);
 		if (footerSocialMatch) {
-			config.footer.showSocialIconsInFooter = footerSocialMatch[1] === 'true';
+			footer.showSocialIconsInFooter = footerSocialMatch[1] === 'true';
 		}
+		config.footer = footer;
 
 		// Extract command palette
-		config.commandPalette = {};
+		const commandPalette: Record<string, unknown> = {};
 		
 		const commandPaletteMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_ENABLED\]\s*enabled:\s*(true|false)/);
 		if (commandPaletteMatch) {
-			config.commandPalette.enabled = commandPaletteMatch[1] === 'true';
+			commandPalette.enabled = commandPaletteMatch[1] === 'true';
 		}
 		
 		const commandPalettePlaceholderMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_PLACEHOLDER\]\s*placeholder:\s*['"`]([^'"`]+)['"`]/);
 		if (commandPalettePlaceholderMatch) {
-			config.commandPalette.placeholder = commandPalettePlaceholderMatch[1];
+			commandPalette.placeholder = commandPalettePlaceholderMatch[1];
 		}
 		
 		const commandPaletteShortcutMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_SHORTCUT\]\s*shortcut:\s*['"`]([^'"`]+)['"`]/);
 		if (commandPaletteShortcutMatch) {
-			config.commandPalette.shortcut = commandPaletteShortcutMatch[1];
+			commandPalette.shortcut = commandPaletteShortcutMatch[1];
 		}
 		
 		// Command palette search options
-		config.commandPalette.search = {};
+		const search: Record<string, unknown> = {};
 		const searchPostsMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_SEARCH_POSTS\]\s*posts:\s*(true|false)/);
 		if (searchPostsMatch) {
-			config.commandPalette.search.posts = searchPostsMatch[1] === 'true';
+			search.posts = searchPostsMatch[1] === 'true';
 		}
 		
 		const searchPagesMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_SEARCH_PAGES\]\s*pages:\s*(true|false)/);
 		if (searchPagesMatch) {
-			config.commandPalette.search.pages = searchPagesMatch[1] === 'true';
+			search.pages = searchPagesMatch[1] === 'true';
 		}
 		
 		const searchProjectsMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_SEARCH_PROJECTS\]\s*projects:\s*(true|false)/);
 		if (searchProjectsMatch) {
-			config.commandPalette.search.projects = searchProjectsMatch[1] === 'true';
+			search.projects = searchProjectsMatch[1] === 'true';
 		}
 		
 		const searchDocsMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_SEARCH_DOCS\]\s*docs:\s*(true|false)/);
 		if (searchDocsMatch) {
-			config.commandPalette.search.docs = searchDocsMatch[1] === 'true';
+			search.docs = searchDocsMatch[1] === 'true';
 		}
+		commandPalette.search = search;
 		
 		// Command palette sections
-		config.commandPalette.sections = {};
+		const sections: Record<string, unknown> = {};
 		const sectionsQuickActionsMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_SECTIONS_QUICK_ACTIONS\]\s*quickActions:\s*(true|false)/);
 		if (sectionsQuickActionsMatch) {
-			config.commandPalette.sections.quickActions = sectionsQuickActionsMatch[1] === 'true';
+			sections.quickActions = sectionsQuickActionsMatch[1] === 'true';
 		}
 		
 		const sectionsPagesMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_SECTIONS_PAGES\]\s*pages:\s*(true|false)/);
 		if (sectionsPagesMatch) {
-			config.commandPalette.sections.pages = sectionsPagesMatch[1] === 'true';
+			sections.pages = sectionsPagesMatch[1] === 'true';
 		}
 		
 		const sectionsSocialMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_SECTIONS_SOCIAL\]\s*social:\s*(true|false)/);
 		if (sectionsSocialMatch) {
-			config.commandPalette.sections.social = sectionsSocialMatch[1] === 'true';
+			sections.social = sectionsSocialMatch[1] === 'true';
 		}
+		commandPalette.sections = sections;
 		
 		// Command palette quick actions
-		config.commandPalette.quickActions = {};
+		const quickActions: Record<string, unknown> = {};
 		const qaEnabledMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_ENABLED\]\s*enabled:\s*(true|false)/);
 		if (qaEnabledMatch) {
-			config.commandPalette.quickActions.enabled = qaEnabledMatch[1] === 'true';
+			quickActions.enabled = qaEnabledMatch[1] === 'true';
 		}
 		
 		const qaToggleModeMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_TOGGLE_MODE\]\s*toggleMode:\s*(true|false)/);
 		if (qaToggleModeMatch) {
-			config.commandPalette.quickActions.toggleMode = qaToggleModeMatch[1] === 'true';
+			quickActions.toggleMode = qaToggleModeMatch[1] === 'true';
 		}
 		
 		const qaGraphViewMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_GRAPH_VIEW\]\s*graphView:\s*(true|false)/);
 		if (qaGraphViewMatch) {
-			config.commandPalette.quickActions.graphView = qaGraphViewMatch[1] === 'true';
+			quickActions.graphView = qaGraphViewMatch[1] === 'true';
 		}
 		
 		const qaChangeThemeMatch = configContent.match(/\/\/ \[CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_CHANGE_THEME\]\s*changeTheme:\s*(true|false)/);
 		if (qaChangeThemeMatch) {
-			config.commandPalette.quickActions.changeTheme = qaChangeThemeMatch[1] === 'true';
+			quickActions.changeTheme = qaChangeThemeMatch[1] === 'true';
 		}
+		commandPalette.quickActions = quickActions;
+		config.commandPalette = commandPalette;
 
 		// Extract site information
 		const siteMatch = configContent.match(/\/\/ \[CONFIG:SITE_URL\]\s*site:\s*['"`]([^'"`]+)['"`]/);

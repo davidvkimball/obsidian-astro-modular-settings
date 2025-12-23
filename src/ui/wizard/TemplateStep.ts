@@ -1,55 +1,56 @@
 import { BaseWizardStep } from './BaseWizardStep';
-import { TEMPLATE_OPTIONS, TemplateType } from '../../types';
+import { TEMPLATE_OPTIONS, AstroModularPlugin } from '../../types';
 import { Notice, Setting } from 'obsidian';
 
 export class TemplateStep extends BaseWizardStep {
 	render(container: HTMLElement): void {
 		const state = this.getState();
 		
-		container.innerHTML = `
-			<div class="template-selection">
-				<h2>Choose your preset</h2>
-				<p>Select a preset that best fits your content type and goals.</p>
-				<div class="template-options">
-					${TEMPLATE_OPTIONS.map(template => `
-						<div class="template-option ${state.selectedTemplate === template.id ? 'selected' : ''}" 
-							 data-template="${template.id}">
-							<div class="template-header">
-								<h3>${template.name}</h3>
-								${template.recommended ? '<span class="recommended">Default</span>' : ''}
-							</div>
-							<p class="template-description">${template.description}</p>
-							<div class="template-features">
-								${template.features.map(feature => `<span class="feature-tag">${feature}</span>`).join('')}
-							</div>
-						</div>
-					`).join('')}
-				</div>
-			</div>
-		`;
+		const templateSelection = container.createDiv('template-selection');
+		templateSelection.createEl('h2', { text: 'Choose your preset' });
+		templateSelection.createEl('p', { text: 'Select a preset that best fits your content type and goals.' });
+		
+		const templateOptions = templateSelection.createDiv('template-options');
+		
+		TEMPLATE_OPTIONS.forEach(template => {
+			const templateOption = templateOptions.createDiv('template-option');
+			if (state.selectedTemplate === template.id) {
+				templateOption.addClass('selected');
+			}
+			templateOption.setAttribute('data-template', template.id);
+			
+			const templateHeader = templateOption.createDiv('template-header');
+			templateHeader.createEl('h3', { text: template.name });
+			if (template.recommended) {
+				templateHeader.createEl('span', { text: 'Default', cls: 'recommended' });
+			}
+			
+			templateOption.createEl('p', { text: template.description, cls: 'template-description' });
+			
+			const templateFeatures = templateOption.createDiv('template-features');
+			template.features.forEach(feature => {
+				templateFeatures.createEl('span', { text: feature, cls: 'feature-tag' });
+			});
+			
+			// Add click handler
+			templateOption.addEventListener('click', () => {
+				const templateId = template.id;
+				this.updateState({ selectedTemplate: templateId });
+				
+				// Sync optional content types based on template selection
+				const isStandard = templateId === 'standard';
+				this.updateState({
+					selectedOptionalContentTypes: {
+						projects: isStandard,
+						docs: isStandard
+					}
+				});
 
-		// Add click handlers for template options
-		container.querySelectorAll('.template-option').forEach(option => {
-			option.addEventListener('click', () => {
-				const template = option.getAttribute('data-template');
-				if (template) {
-					this.updateState({ selectedTemplate: template as TemplateType });
-					
-					// Sync optional content types based on template selection
-					const isStandard = template === 'standard';
-					this.updateState({
-						selectedOptionalContentTypes: {
-							projects: isStandard,
-							docs: isStandard
-						}
-					});
-
-					// Sync all features based on template selection
-					this.syncFeaturesWithTemplate(template);
-					
-					// Re-render to update the UI
-					this.render(container);
-				}
+				// Sync all features based on template selection
+				this.syncFeaturesWithTemplate(templateId);
+				
+				// Re-render to update the UI
+				this.render(container);
 			});
 		});
 
@@ -58,6 +59,7 @@ export class TemplateStep extends BaseWizardStep {
 		if (templateSelection) {
 			const setting = new Setting(templateSelection as HTMLElement)
 				.setName('Edit config.ts directly (advanced)')
+				// eslint-disable-next-line obsidianmd/ui/sentence-case -- "Astro" is a proper noun
 				.setDesc('Skip the wizard and edit your Astro configuration file directly.')
 				.addButton(button => button
 					.setButtonText('Edit config.ts')
@@ -68,14 +70,15 @@ export class TemplateStep extends BaseWizardStep {
 			// Add spacing above the setting
 			const settingEl = setting.settingEl;
 			if (settingEl) {
-				settingEl.style.marginTop = '2rem';
+				settingEl.setCssProps({ marginTop: '2rem' });
 			}
 		}
 	}
 
 	private syncFeaturesWithTemplate(template: string): void {
 		// Load features from preset JSON (single source of truth)
-		const templatePreset = (this.plugin as any).configManager.getTemplatePreset(template);
+		const plugin = this.plugin as AstroModularPlugin;
+		const templatePreset = plugin.configManager.getTemplatePreset(template);
 		if (!templatePreset || !templatePreset.config || !templatePreset.config.features) {
 			console.error('Template preset not found:', template);
 			return;
@@ -89,17 +92,18 @@ export class TemplateStep extends BaseWizardStep {
 
 	private async updatePluginSettingsWithTemplate(template: string): Promise<void> {
 		// Get the current plugin settings
-		const settings = (this.plugin as any).settings;
+		const plugin = this.plugin as AstroModularPlugin;
+		const settings = plugin.settings;
 		
 		// Load the template preset from JSON (single source of truth)
-		const templatePreset = (this.plugin as any).configManager.getTemplatePreset(template);
+		const templatePreset = plugin.configManager.getTemplatePreset(template);
 		if (!templatePreset || !templatePreset.config) {
 			console.error('Template preset not found:', template);
 			return;
 		}
 
 		// CRITICAL: Get full template config including all settings
-		const templateConfig = (this.plugin as any).configManager.getTemplateConfig(template, settings);
+		const templateConfig = plugin.configManager.getTemplateConfig(template, settings);
 
 		// Update settings from the preset's config
 		// NOTE: We do NOT update theme or contentOrganization - those are separate user choices
@@ -134,19 +138,20 @@ export class TemplateStep extends BaseWizardStep {
 		// CRITICAL: Update ALL settings from template config (same as ConfigTab)
 		
 		// Update command palette
-		if (templateConfig.commandPalette) {
+		if (templateConfig.commandPalette && typeof templateConfig.commandPalette === 'object') {
+			const commandPalette = templateConfig.commandPalette as Record<string, unknown>;
 			settings.commandPalette = {
 				...settings.commandPalette,
-				enabled: templateConfig.commandPalette.enabled ?? settings.commandPalette.enabled,
-				placeholder: templateConfig.commandPalette.placeholder ?? settings.commandPalette.placeholder,
-				shortcut: templateConfig.commandPalette.shortcut ?? settings.commandPalette.shortcut,
+				enabled: (commandPalette.enabled as boolean | undefined) ?? settings.commandPalette.enabled,
+				placeholder: (commandPalette.placeholder as string | undefined) ?? settings.commandPalette.placeholder,
+				shortcut: (commandPalette.shortcut as string | undefined) ?? settings.commandPalette.shortcut,
 				search: {
 					...settings.commandPalette.search,
-					...(templateConfig.commandPalette.search || {})
+					...(commandPalette.search && typeof commandPalette.search === 'object' ? commandPalette.search as Record<string, unknown> : {})
 				},
 				sections: {
 					...settings.commandPalette.sections,
-					...(templateConfig.commandPalette.sections || {})
+					...(commandPalette.sections && typeof commandPalette.sections === 'object' ? commandPalette.sections as Record<string, unknown> : {})
 				},
 				quickActions: {
 					...settings.commandPalette.quickActions,
@@ -163,65 +168,68 @@ export class TemplateStep extends BaseWizardStep {
 		}
 		
 		// Update home options
-		if (templateConfig.homeOptions) {
+		if (templateConfig.homeOptions && typeof templateConfig.homeOptions === 'object') {
+			const homeOptions = templateConfig.homeOptions as Record<string, unknown>;
 			settings.homeOptions = {
 				...settings.homeOptions,
 				featuredPost: {
 					...settings.homeOptions.featuredPost,
-					...(templateConfig.homeOptions.featuredPost || {})
+					...(homeOptions.featuredPost && typeof homeOptions.featuredPost === 'object' ? homeOptions.featuredPost as Record<string, unknown> : {})
 				},
 				recentPosts: {
 					...settings.homeOptions.recentPosts,
-					...(templateConfig.homeOptions.recentPosts || {})
+					...(homeOptions.recentPosts && typeof homeOptions.recentPosts === 'object' ? homeOptions.recentPosts as Record<string, unknown> : {})
 				},
 				projects: {
 					...settings.homeOptions.projects,
-					...(templateConfig.homeOptions.projects || {})
+					...(homeOptions.projects && typeof homeOptions.projects === 'object' ? homeOptions.projects as Record<string, unknown> : {})
 				},
 				docs: {
 					...settings.homeOptions.docs,
-					...(templateConfig.homeOptions.docs || {})
+					...(homeOptions.docs && typeof homeOptions.docs === 'object' ? homeOptions.docs as Record<string, unknown> : {})
 				},
 				blurb: {
 					...settings.homeOptions.blurb,
-					...(templateConfig.homeOptions.blurb || {})
+					...(homeOptions.blurb && typeof homeOptions.blurb === 'object' ? homeOptions.blurb as Record<string, unknown> : {})
 				}
 			};
 		}
 		
 		// Update post options
-		if (templateConfig.postOptions) {
+		if (templateConfig.postOptions && typeof templateConfig.postOptions === 'object') {
+			const postOptions = templateConfig.postOptions as Record<string, unknown>;
 			settings.postOptions = {
 				...settings.postOptions,
-				postsPerPage: templateConfig.postOptions.postsPerPage ?? settings.postOptions.postsPerPage,
-				readingTime: templateConfig.postOptions.readingTime ?? settings.postOptions.readingTime,
-				wordCount: templateConfig.postOptions.wordCount ?? settings.postOptions.wordCount,
-				tags: templateConfig.postOptions.tags ?? settings.postOptions.tags,
-				postNavigation: templateConfig.postOptions.postNavigation ?? settings.postOptions.postNavigation,
-				showPostCardCoverImages: templateConfig.postOptions.showPostCardCoverImages ?? settings.postOptions.showPostCardCoverImages,
-				postCardAspectRatio: templateConfig.postOptions.postCardAspectRatio ?? settings.postOptions.postCardAspectRatio,
+				postsPerPage: (postOptions.postsPerPage as number | undefined) ?? settings.postOptions.postsPerPage,
+				readingTime: (postOptions.readingTime as boolean | undefined) ?? settings.postOptions.readingTime,
+				wordCount: (postOptions.wordCount as boolean | undefined) ?? settings.postOptions.wordCount,
+				tags: (postOptions.tags as boolean | undefined) ?? settings.postOptions.tags,
+				postNavigation: (postOptions.postNavigation as boolean | undefined) ?? settings.postOptions.postNavigation,
+				showPostCardCoverImages: (postOptions.showPostCardCoverImages as string | undefined) ?? settings.postOptions.showPostCardCoverImages,
+				postCardAspectRatio: (postOptions.postCardAspectRatio as string | undefined) ?? settings.postOptions.postCardAspectRatio,
 				linkedMentions: {
 					...settings.postOptions.linkedMentions,
-					...(templateConfig.postOptions.linkedMentions || {})
+					...(postOptions.linkedMentions && typeof postOptions.linkedMentions === 'object' ? postOptions.linkedMentions as Record<string, unknown> : {})
 				},
 				graphView: {
 					...settings.postOptions.graphView,
-					enabled: templateConfig.postOptions.graphView?.enabled ?? settings.postOptions.graphView.enabled,
-					showInSidebar: templateConfig.postOptions.graphView?.showInSidebar ?? settings.postOptions.graphView.showInSidebar,
-					maxNodes: templateConfig.postOptions.graphView?.maxNodes ?? settings.postOptions.graphView.maxNodes,
-					showOrphanedPosts: templateConfig.postOptions.graphView?.showOrphanedPosts ?? settings.postOptions.graphView.showOrphanedPosts
+					enabled: (postOptions.graphView && typeof postOptions.graphView === 'object' ? (postOptions.graphView as Record<string, unknown>).enabled as boolean | undefined : undefined) ?? settings.postOptions.graphView.enabled,
+					showInSidebar: (postOptions.graphView && typeof postOptions.graphView === 'object' ? (postOptions.graphView as Record<string, unknown>).showInSidebar as boolean | undefined : undefined) ?? settings.postOptions.graphView.showInSidebar,
+					maxNodes: (postOptions.graphView && typeof postOptions.graphView === 'object' ? (postOptions.graphView as Record<string, unknown>).maxNodes as number | undefined : undefined) ?? settings.postOptions.graphView.maxNodes,
+					showOrphanedPosts: (postOptions.graphView && typeof postOptions.graphView === 'object' ? (postOptions.graphView as Record<string, unknown>).showOrphanedPosts as boolean | undefined : undefined) ?? settings.postOptions.graphView.showOrphanedPosts
 				},
 				comments: settings.postOptions.comments  // Preserve comments
 			};
 		}
 		
 		// Update navigation
-		if (templateConfig.navigation) {
+		if (templateConfig.navigation && typeof templateConfig.navigation === 'object') {
+			const navigation = templateConfig.navigation as Record<string, unknown>;
 			settings.navigation = {
 				...settings.navigation,
-				showNavigation: templateConfig.navigation.showNavigation ?? settings.navigation.showNavigation,
-				showMobileMenu: templateConfig.navigation.showMobileMenu ?? settings.navigation.showMobileMenu,
-				style: templateConfig.navigation.style ?? settings.navigation.style
+				showNavigation: (navigation.showNavigation as boolean | undefined) ?? settings.navigation.showNavigation,
+				showMobileMenu: (navigation.showMobileMenu as boolean | undefined) ?? settings.navigation.showMobileMenu,
+				style: (navigation.style as string | undefined) ?? settings.navigation.style
 				// Preserve pages and social arrays from user settings
 			};
 		}
@@ -232,28 +240,32 @@ export class TemplateStep extends BaseWizardStep {
 		}
 		
 		// Update optional content types from template config
-		if (templateConfig.optionalContentTypes) {
+		if (templateConfig.optionalContentTypes && typeof templateConfig.optionalContentTypes === 'object') {
+			const optionalContentTypes = templateConfig.optionalContentTypes as Record<string, unknown>;
 			settings.optionalContentTypes = {
-				projects: templateConfig.optionalContentTypes.projects ?? false,
-				docs: templateConfig.optionalContentTypes.docs ?? false
+				projects: (optionalContentTypes.projects as boolean | undefined) ?? false,
+				docs: (optionalContentTypes.docs as boolean | undefined) ?? false
 			};
 		}
 		
 		// CRITICAL: Update footer settings from template config
-		if (templateConfig.footer) {
+		if (templateConfig.footer && typeof templateConfig.footer === 'object') {
+			const footer = templateConfig.footer as Record<string, unknown>;
+			const showSocialIconsInFooter = (footer.showSocialIconsInFooter as boolean | undefined) ?? settings.footer.showSocialIconsInFooter;
 			settings.footer = {
 				...settings.footer,
-				showSocialIconsInFooter: templateConfig.footer.showSocialIconsInFooter ?? settings.footer.showSocialIconsInFooter
+				showSocialIconsInFooter
 			};
 			// Sync features.showSocialIconsInFooter
-			settings.features.showSocialIconsInFooter = templateConfig.footer.showSocialIconsInFooter ?? settings.features.showSocialIconsInFooter;
+			settings.features.showSocialIconsInFooter = showSocialIconsInFooter;
 		}
 
 		// Save the updated settings
 		await this.plugin.saveData(settings);
 		
 		// Reload settings to ensure the plugin has the latest values
-		await (this.plugin as any).loadSettings();
+		const plugin = this.plugin as AstroModularPlugin;
+		await plugin.loadSettings();
 		
 		// Trigger a refresh of the settings tab if it's open
 		this.refreshSettingsTab();
@@ -261,7 +273,8 @@ export class TemplateStep extends BaseWizardStep {
 
 	private refreshSettingsTab(): void {
 		// Check if the settings tab is currently open and refresh it
-		const settingsTab = (this.plugin as any).settingsTab;
+		const plugin = this.plugin as unknown as { settingsTab?: { display?: () => void } };
+		const settingsTab = plugin.settingsTab;
 		if (settingsTab && typeof settingsTab.display === 'function') {
 			settingsTab.display();
 		}
@@ -270,21 +283,34 @@ export class TemplateStep extends BaseWizardStep {
 	private openConfigFile(): void {
 		// Open config.ts file - it's one level up from the vault
 		try {
-			const fs = require('fs');
-			const path = require('path');
-			const { shell } = require('electron');
+			// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
+			const fs = require('fs') as typeof import('fs');
+			// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
+			const path = require('path') as typeof import('path');
+			// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
+			const electronModule = require('electron') as unknown as { shell?: typeof import('electron').shell };
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+			const shellRaw = electronModule.shell;
 			
 			// Get the actual vault path string from the adapter
-			const vaultPath = (this.app.vault.adapter as any).basePath || (this.app.vault.adapter as any).path;
-			const vaultPathString = typeof vaultPath === 'string' ? vaultPath : vaultPath.toString();
+			const vaultAdapter = this.app.vault.adapter as unknown as { basePath?: string; path?: string };
+			const vaultPath = vaultAdapter.basePath || vaultAdapter.path;
+			const vaultPathString = typeof vaultPath === 'string' ? vaultPath : (vaultPath ? String(vaultPath) : '');
+			if (!shellRaw || typeof shellRaw !== 'object' || !('openPath' in shellRaw) || typeof (shellRaw as { openPath?: unknown }).openPath !== 'function') {
+				throw new Error('Electron shell API not available');
+			}
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Runtime type guard ensures safety
+			const shell = shellRaw as typeof import('electron').shell;
 			const configPath = path.join(vaultPathString, '..', 'config.ts');
 			
 			if (fs.existsSync(configPath)) {
 				// Use Electron's shell to open the file with the default editor
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
 				shell.openPath(configPath);
 			} else {
 				// Create the file if it doesn't exist
 				fs.writeFileSync(configPath, '// Astro Modular Configuration\n// Customize your settings here\n\nexport const siteConfig = {\n  // Add your configuration here\n};\n');
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
 				shell.openPath(configPath);
 			}
 			new Notice('Opening config.ts for direct editing');

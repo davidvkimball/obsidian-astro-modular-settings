@@ -1,4 +1,4 @@
-import { AstroModularSettings, PresetTemplate } from '../../types';
+import { AstroModularSettings, PresetTemplate, NavigationItem } from '../../types';
 import { ConfigTemplateManager } from './ConfigTemplateManager';
 import { ConfigMarkerValidator } from './ConfigMarkerValidator';
 
@@ -11,7 +11,24 @@ export class ConfigPresetModifier {
 		this.markerValidator = new ConfigMarkerValidator();
 	}
 
-	getTemplateConfig(templateName: string, settings: any): any {
+	private safeStringify(value: unknown): string {
+		if (typeof value === 'boolean') {
+			return String(value);
+		}
+		if (typeof value === 'number') {
+			return String(value);
+		}
+		if (typeof value === 'string') {
+			return value;
+		}
+		// For other types, convert to boolean or number if possible, otherwise use JSON.stringify
+		if (value === null || value === undefined) {
+			return String(value);
+		}
+		return JSON.stringify(value);
+	}
+
+	getTemplateConfig(templateName: string, settings: AstroModularSettings): Record<string, unknown> {
 		// Expose template config for external use
 		return this.templateManager.getTemplateConfig(templateName, settings);
 	}
@@ -77,7 +94,6 @@ export class ConfigPresetModifier {
 		
 		if (themeMarkerExists) {
 			const themeRegex = /\/\/ \[CONFIG:THEME\]\s*\n\s*theme:\s*"[^"]*"/;
-			const themeMatch = modifiedConfig.match(themeRegex);
 			
 			modifiedConfig = modifiedConfig.replace(
 				themeRegex,
@@ -157,9 +173,12 @@ export class ConfigPresetModifier {
 		
 		// Update feature button if specified in template
 		if (templateConfig.featureButton) {
+			const featureButtonValue = typeof templateConfig.featureButton === 'string' 
+				? templateConfig.featureButton 
+				: JSON.stringify(templateConfig.featureButton);
 			modifiedConfig = modifiedConfig.replace(
 				/\/\/ \[CONFIG:FEATURE_BUTTON\]\s*\n\s*featureButton:\s*"[^"]*"/,
-				`// [CONFIG:FEATURE_BUTTON]\n  featureButton: "${templateConfig.featureButton}"`
+				`// [CONFIG:FEATURE_BUTTON]\n  featureButton: "${featureButtonValue}"`
 			);
 		}
 		
@@ -235,176 +254,204 @@ export class ConfigPresetModifier {
 				);
 			}
 			
-		// Update search settings - use individual markers
-		if (templateConfig.commandPalette.search) {
-			
-			// Update each search setting individually
-			if (templateConfig.commandPalette.search.posts !== undefined) {
-				modifiedConfig = modifiedConfig.replace(
-					/\/\/ \[CONFIG:COMMAND_PALETTE_SEARCH_POSTS\]\s*posts:\s*(true|false)/,
-					`// [CONFIG:COMMAND_PALETTE_SEARCH_POSTS]\n      posts: ${templateConfig.commandPalette.search.posts}`
-				);
+			// Update search settings - use individual markers
+			if (templateConfig.commandPalette.search && typeof templateConfig.commandPalette.search === 'object' && templateConfig.commandPalette.search !== null) {
+				const search = templateConfig.commandPalette.search as Record<string, unknown>;
+				
+				// Update each search setting individually
+				if (search.posts !== undefined) {
+					const postsValue = this.safeStringify(search.posts);
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:COMMAND_PALETTE_SEARCH_POSTS\]\s*posts:\s*(true|false)/,
+						`// [CONFIG:COMMAND_PALETTE_SEARCH_POSTS]\n      posts: ${postsValue}`
+					);
+				}
+				if (search.pages !== undefined) {
+					const pagesValue = this.safeStringify(search.pages);
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:COMMAND_PALETTE_SEARCH_PAGES\]\s*pages:\s*(true|false)/,
+						`// [CONFIG:COMMAND_PALETTE_SEARCH_PAGES]\n      pages: ${pagesValue}`
+					);
+				}
+				if (search.projects !== undefined) {
+					const projectsValue = this.safeStringify(search.projects);
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:COMMAND_PALETTE_SEARCH_PROJECTS\]\s*projects:\s*(true|false)/,
+						`// [CONFIG:COMMAND_PALETTE_SEARCH_PROJECTS]\n      projects: ${projectsValue}`
+					);
+				}
+				if (search.docs !== undefined) {
+					const docsValue = this.safeStringify(search.docs);
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:COMMAND_PALETTE_SEARCH_DOCS\]\s*docs:\s*(true|false)/,
+						`// [CONFIG:COMMAND_PALETTE_SEARCH_DOCS]\n      docs: ${docsValue}`
+					);
+				}
 			}
-			if (templateConfig.commandPalette.search.pages !== undefined) {
-				modifiedConfig = modifiedConfig.replace(
-					/\/\/ \[CONFIG:COMMAND_PALETTE_SEARCH_PAGES\]\s*pages:\s*(true|false)/,
-					`// [CONFIG:COMMAND_PALETTE_SEARCH_PAGES]\n      pages: ${templateConfig.commandPalette.search.pages}`
-				);
-			}
-			if (templateConfig.commandPalette.search.projects !== undefined) {
-				modifiedConfig = modifiedConfig.replace(
-					/\/\/ \[CONFIG:COMMAND_PALETTE_SEARCH_PROJECTS\]\s*projects:\s*(true|false)/,
-					`// [CONFIG:COMMAND_PALETTE_SEARCH_PROJECTS]\n      projects: ${templateConfig.commandPalette.search.projects}`
-				);
-			}
-			if (templateConfig.commandPalette.search.docs !== undefined) {
-				modifiedConfig = modifiedConfig.replace(
-					/\/\/ \[CONFIG:COMMAND_PALETTE_SEARCH_DOCS\]\s*docs:\s*(true|false)/,
-					`// [CONFIG:COMMAND_PALETTE_SEARCH_DOCS]\n      docs: ${templateConfig.commandPalette.search.docs}`
-				);
-			}
-			
-		}
 			
 			// Update sections settings - use individual markers
-			if (templateConfig.commandPalette.sections) {
+			if (templateConfig.commandPalette.sections && typeof templateConfig.commandPalette.sections === 'object' && templateConfig.commandPalette.sections !== null) {
+				const sections = templateConfig.commandPalette.sections as Record<string, unknown>;
 				
 				// Update each section setting individually
-				if (templateConfig.commandPalette.sections.quickActions !== undefined) {
+				if (sections.quickActions !== undefined) {
+					const quickActionsValue = this.safeStringify(sections.quickActions);
 					modifiedConfig = modifiedConfig.replace(
 						/\/\/ \[CONFIG:COMMAND_PALETTE_SECTIONS_QUICK_ACTIONS\]\s*quickActions:\s*(true|false)/,
-						`// [CONFIG:COMMAND_PALETTE_SECTIONS_QUICK_ACTIONS]\n      quickActions: ${templateConfig.commandPalette.sections.quickActions}`
+						`// [CONFIG:COMMAND_PALETTE_SECTIONS_QUICK_ACTIONS]\n      quickActions: ${quickActionsValue}`
 					);
 				}
-				if (templateConfig.commandPalette.sections.pages !== undefined) {
+				if (sections.pages !== undefined) {
+					const pagesValue = this.safeStringify(sections.pages);
 					modifiedConfig = modifiedConfig.replace(
 						/\/\/ \[CONFIG:COMMAND_PALETTE_SECTIONS_PAGES\]\s*pages:\s*(true|false)/,
-						`// [CONFIG:COMMAND_PALETTE_SECTIONS_PAGES]\n      pages: ${templateConfig.commandPalette.sections.pages}`
+						`// [CONFIG:COMMAND_PALETTE_SECTIONS_PAGES]\n      pages: ${pagesValue}`
 					);
 				}
-				if (templateConfig.commandPalette.sections.social !== undefined) {
+				if (sections.social !== undefined) {
+					const socialValue = this.safeStringify(sections.social);
 					modifiedConfig = modifiedConfig.replace(
 						/\/\/ \[CONFIG:COMMAND_PALETTE_SECTIONS_SOCIAL\]\s*social:\s*(true|false)/,
-						`// [CONFIG:COMMAND_PALETTE_SECTIONS_SOCIAL]\n      social: ${templateConfig.commandPalette.sections.social}`
+						`// [CONFIG:COMMAND_PALETTE_SECTIONS_SOCIAL]\n      social: ${socialValue}`
 					);
 				}
-				
 			}
 			
 			// Update quick actions settings - use individual markers
-			if (templateConfig.commandPalette.quickActions) {
+			if (templateConfig.commandPalette.quickActions && typeof templateConfig.commandPalette.quickActions === 'object' && templateConfig.commandPalette.quickActions !== null) {
+				const quickActions = templateConfig.commandPalette.quickActions as Record<string, unknown>;
 				
 				// Update each quick action setting individually
-				if (templateConfig.commandPalette.quickActions.enabled !== undefined) {
+				if (quickActions.enabled !== undefined) {
+					const enabledValue = this.safeStringify(quickActions.enabled);
 					modifiedConfig = modifiedConfig.replace(
 						/\/\/ \[CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_ENABLED\]\s*enabled:\s*(true|false)/,
-						`// [CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_ENABLED]\n      enabled: ${templateConfig.commandPalette.quickActions.enabled}`
+						`// [CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_ENABLED]\n      enabled: ${enabledValue}`
 					);
 				}
-				if (templateConfig.commandPalette.quickActions.toggleMode !== undefined) {
+				if (quickActions.toggleMode !== undefined) {
+					const toggleModeValue = this.safeStringify(quickActions.toggleMode);
 					modifiedConfig = modifiedConfig.replace(
 						/\/\/ \[CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_TOGGLE_MODE\]\s*toggleMode:\s*(true|false)/,
-						`// [CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_TOGGLE_MODE]\n      toggleMode: ${templateConfig.commandPalette.quickActions.toggleMode}`
+						`// [CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_TOGGLE_MODE]\n      toggleMode: ${toggleModeValue}`
 					);
 				}
-				if (templateConfig.commandPalette.quickActions.graphView !== undefined) {
+				if (quickActions.graphView !== undefined) {
+					const graphViewValue = this.safeStringify(quickActions.graphView);
 					modifiedConfig = modifiedConfig.replace(
 						/\/\/ \[CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_GRAPH_VIEW\]\s*graphView:\s*(true|false)/,
-						`// [CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_GRAPH_VIEW]\n      graphView: ${templateConfig.commandPalette.quickActions.graphView}`
+						`// [CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_GRAPH_VIEW]\n      graphView: ${graphViewValue}`
 					);
 				}
-				if (templateConfig.commandPalette.quickActions.changeTheme !== undefined) {
+				if (quickActions.changeTheme !== undefined) {
+					const changeThemeValue = this.safeStringify(quickActions.changeTheme);
 					modifiedConfig = modifiedConfig.replace(
 						/\/\/ \[CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_CHANGE_THEME\]\s*changeTheme:\s*(true|false)/,
-						`// [CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_CHANGE_THEME]\n      changeTheme: ${templateConfig.commandPalette.quickActions.changeTheme}`
+						`// [CONFIG:COMMAND_PALETTE_QUICK_ACTIONS_CHANGE_THEME]\n      changeTheme: ${changeThemeValue}`
 					);
 				}
-				
 			}
 		}
 		
 		// Update home options if specified in template
-		if (templateConfig.homeOptions) {
+		if (templateConfig.homeOptions && typeof templateConfig.homeOptions === 'object' && templateConfig.homeOptions !== null) {
+			const homeOptions = templateConfig.homeOptions as Record<string, unknown>;
 			// Update featured post settings
-			if (templateConfig.homeOptions.featuredPost) {
-				if (templateConfig.homeOptions.featuredPost.enabled !== undefined) {
+			if (homeOptions.featuredPost && typeof homeOptions.featuredPost === 'object' && homeOptions.featuredPost !== null) {
+				const featuredPost = homeOptions.featuredPost as Record<string, unknown>;
+				if (featuredPost.enabled !== undefined) {
+					const enabledValue = this.safeStringify(featuredPost.enabled);
 					modifiedConfig = modifiedConfig.replace(
 						/\/\/ \[CONFIG:HOME_OPTIONS_FEATURED_POST_ENABLED\]\s*enabled:\s*(true|false)/,
-						`// [CONFIG:HOME_OPTIONS_FEATURED_POST_ENABLED]\n      enabled: ${templateConfig.homeOptions.featuredPost.enabled}`
+						`// [CONFIG:HOME_OPTIONS_FEATURED_POST_ENABLED]\n      enabled: ${enabledValue}`
 					);
 				}
-				if (templateConfig.homeOptions.featuredPost.type) {
+				if (featuredPost.type && typeof featuredPost.type === 'string') {
 					modifiedConfig = modifiedConfig.replace(
 						/\/\/ \[CONFIG:HOME_OPTIONS_FEATURED_POST_TYPE\]\s*type:\s*"[^"]*"/,
-						`// [CONFIG:HOME_OPTIONS_FEATURED_POST_TYPE]\n      type: "${templateConfig.homeOptions.featuredPost.type}"`
+						`// [CONFIG:HOME_OPTIONS_FEATURED_POST_TYPE]\n      type: "${featuredPost.type}"`
 					);
 				}
 			}
 			
 			// Update recent posts settings
-			if (templateConfig.homeOptions.recentPosts) {
-				if (templateConfig.homeOptions.recentPosts.enabled !== undefined) {
+			if (homeOptions.recentPosts && typeof homeOptions.recentPosts === 'object' && homeOptions.recentPosts !== null) {
+				const recentPosts = homeOptions.recentPosts as Record<string, unknown>;
+				if (recentPosts.enabled !== undefined) {
+					const enabledValue = this.safeStringify(recentPosts.enabled);
 					modifiedConfig = modifiedConfig.replace(
 						/\/\/ \[CONFIG:HOME_OPTIONS_RECENT_POSTS_ENABLED\]\s*enabled:\s*(true|false)/,
-						`// [CONFIG:HOME_OPTIONS_RECENT_POSTS_ENABLED]\n      enabled: ${templateConfig.homeOptions.recentPosts.enabled}`
+						`// [CONFIG:HOME_OPTIONS_RECENT_POSTS_ENABLED]\n      enabled: ${enabledValue}`
 					);
 				}
-				if (templateConfig.homeOptions.recentPosts.count) {
+				if (recentPosts.count !== undefined) {
+					const countValue = this.safeStringify(recentPosts.count);
 					modifiedConfig = modifiedConfig.replace(
 						/\/\/ \[CONFIG:HOME_OPTIONS_RECENT_POSTS_COUNT\]\s*count:\s*\d+/,
-						`// [CONFIG:HOME_OPTIONS_RECENT_POSTS_COUNT]\n      count: ${templateConfig.homeOptions.recentPosts.count}`
+						`// [CONFIG:HOME_OPTIONS_RECENT_POSTS_COUNT]\n      count: ${countValue}`
 					);
 				}
 			}
 			
 			// Update projects settings
-			if (templateConfig.homeOptions.projects) {
-				if (templateConfig.homeOptions.projects.enabled !== undefined) {
+			if (homeOptions.projects && typeof homeOptions.projects === 'object' && homeOptions.projects !== null) {
+				const projects = homeOptions.projects as Record<string, unknown>;
+				if (projects.enabled !== undefined) {
+					const enabledValue = this.safeStringify(projects.enabled);
 					modifiedConfig = modifiedConfig.replace(
 						/\/\/ \[CONFIG:HOME_OPTIONS_PROJECTS_ENABLED\]\s*enabled:\s*(true|false)/,
-						`// [CONFIG:HOME_OPTIONS_PROJECTS_ENABLED]\n      enabled: ${templateConfig.homeOptions.projects.enabled}`
+						`// [CONFIG:HOME_OPTIONS_PROJECTS_ENABLED]\n      enabled: ${enabledValue}`
 					);
 				}
-				if (templateConfig.homeOptions.projects.count) {
+				if (projects.count !== undefined) {
+					const countValue = this.safeStringify(projects.count);
 					modifiedConfig = modifiedConfig.replace(
 						/\/\/ \[CONFIG:HOME_OPTIONS_PROJECTS_COUNT\]\s*count:\s*\d+/,
-						`// [CONFIG:HOME_OPTIONS_PROJECTS_COUNT]\n      count: ${templateConfig.homeOptions.projects.count}`
+						`// [CONFIG:HOME_OPTIONS_PROJECTS_COUNT]\n      count: ${countValue}`
 					);
 				}
 			}
 			
 			// Update docs settings
-			if (templateConfig.homeOptions.docs) {
-				if (templateConfig.homeOptions.docs.enabled !== undefined) {
+			if (homeOptions.docs && typeof homeOptions.docs === 'object' && homeOptions.docs !== null) {
+				const docs = homeOptions.docs as Record<string, unknown>;
+				if (docs.enabled !== undefined) {
+					const enabledValue = this.safeStringify(docs.enabled);
 					modifiedConfig = modifiedConfig.replace(
 						/\/\/ \[CONFIG:HOME_OPTIONS_DOCS_ENABLED\]\s*enabled:\s*(true|false)/,
-						`// [CONFIG:HOME_OPTIONS_DOCS_ENABLED]\n      enabled: ${templateConfig.homeOptions.docs.enabled}`
+						`// [CONFIG:HOME_OPTIONS_DOCS_ENABLED]\n      enabled: ${enabledValue}`
 					);
 				}
-				if (templateConfig.homeOptions.docs.count) {
+				if (docs.count !== undefined) {
+					const countValue = this.safeStringify(docs.count);
 					modifiedConfig = modifiedConfig.replace(
 						/\/\/ \[CONFIG:HOME_OPTIONS_DOCS_COUNT\]\s*count:\s*\d+/,
-						`// [CONFIG:HOME_OPTIONS_DOCS_COUNT]\n      count: ${templateConfig.homeOptions.docs.count}`
+						`// [CONFIG:HOME_OPTIONS_DOCS_COUNT]\n      count: ${countValue}`
 					);
 				}
 			}
 			
 			// Update blurb placement
-			if (templateConfig.homeOptions.blurb?.placement) {
-				modifiedConfig = modifiedConfig.replace(
-					/\/\/ \[CONFIG:HOME_OPTIONS_BLURB_PLACEMENT\]\s*placement:\s*"[^"]*"/,
-					`// [CONFIG:HOME_OPTIONS_BLURB_PLACEMENT]\n      placement: "${templateConfig.homeOptions.blurb.placement}"`
-				);
+			if (homeOptions.blurb && typeof homeOptions.blurb === 'object' && homeOptions.blurb !== null) {
+				const blurb = homeOptions.blurb as Record<string, unknown>;
+				if (blurb.placement && typeof blurb.placement === 'string') {
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:HOME_OPTIONS_BLURB_PLACEMENT\]\s*placement:\s*"[^"]*"/,
+						`// [CONFIG:HOME_OPTIONS_BLURB_PLACEMENT]\n      placement: "${blurb.placement}"`
+					);
+				}
 			}
 		}
 		
 		// Update post options if specified in template
-		if (templateConfig.postOptions) {
+		if (templateConfig.postOptions && typeof templateConfig.postOptions === 'object' && templateConfig.postOptions !== null) {
+			const postOptions = templateConfig.postOptions as Record<string, unknown>;
 			// Update posts per page
-			if (templateConfig.postOptions.postsPerPage) {
+			if (postOptions.postsPerPage !== undefined) {
+				const postsPerPageValue = this.safeStringify(postOptions.postsPerPage);
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:POST_OPTIONS_POSTS_PER_PAGE\]\s*postsPerPage:\s*\d+/,
-					`// [CONFIG:POST_OPTIONS_POSTS_PER_PAGE]\n    postsPerPage: ${templateConfig.postOptions.postsPerPage}`
+					`// [CONFIG:POST_OPTIONS_POSTS_PER_PAGE]\n    postsPerPage: ${postsPerPageValue}`
 				);
 			}
 			
@@ -417,192 +464,202 @@ export class ConfigPresetModifier {
 			];
 			
 			booleanFeatures.forEach(feature => {
-				if (templateConfig.postOptions[feature.key] !== undefined) {
+				if (postOptions[feature.key] !== undefined) {
+					const featureValue = this.safeStringify(postOptions[feature.key]);
 					modifiedConfig = modifiedConfig.replace(
 						new RegExp(`// \\[${feature.marker}\\]\\s*${feature.key}:\\s*(true|false)`),
-						`// [${feature.marker}]\n    ${feature.key}: ${templateConfig.postOptions[feature.key]}`
+						`// [${feature.marker}]\n    ${feature.key}: ${featureValue}`
 					);
 				}
 			});
 			
 			// Update linked mentions settings
-			if (templateConfig.postOptions.linkedMentions) {
-				if (templateConfig.postOptions.linkedMentions.enabled !== undefined) {
+			if (postOptions.linkedMentions && typeof postOptions.linkedMentions === 'object' && postOptions.linkedMentions !== null) {
+				const linkedMentions = postOptions.linkedMentions as Record<string, unknown>;
+				if (linkedMentions.enabled !== undefined) {
+					const enabledValue = this.safeStringify(linkedMentions.enabled);
 					modifiedConfig = modifiedConfig.replace(
 						/\/\/ \[CONFIG:POST_OPTIONS_LINKED_MENTIONS_ENABLED\]\s*enabled:\s*(true|false)/,
-						`// [CONFIG:POST_OPTIONS_LINKED_MENTIONS_ENABLED]\n      enabled: ${templateConfig.postOptions.linkedMentions.enabled}`
+						`// [CONFIG:POST_OPTIONS_LINKED_MENTIONS_ENABLED]\n      enabled: ${enabledValue}`
 					);
 				}
-				if (templateConfig.postOptions.linkedMentions.linkedMentionsCompact !== undefined) {
+				if (linkedMentions.linkedMentionsCompact !== undefined) {
+					const compactValue = this.safeStringify(linkedMentions.linkedMentionsCompact);
 					modifiedConfig = modifiedConfig.replace(
 						/\/\/ \[CONFIG:POST_OPTIONS_LINKED_MENTIONS_COMPACT\]\s*linkedMentionsCompact:\s*(true|false)/,
-						`// [CONFIG:POST_OPTIONS_LINKED_MENTIONS_COMPACT]\n      linkedMentionsCompact: ${templateConfig.postOptions.linkedMentions.linkedMentionsCompact}`
+						`// [CONFIG:POST_OPTIONS_LINKED_MENTIONS_COMPACT]\n      linkedMentionsCompact: ${compactValue}`
 					);
 				}
 			}
 			
-		// Update graph view settings with marker-based replacement
-		if (templateConfig.postOptions.graphView) {
-			// Update enabled state
-			if (templateConfig.postOptions.graphView.enabled !== undefined) {
-				modifiedConfig = modifiedConfig.replace(
-					/\/\/ \[CONFIG:POST_OPTIONS_GRAPH_VIEW_ENABLED\]\s*enabled:\s*(true|false)/,
-					`// [CONFIG:POST_OPTIONS_GRAPH_VIEW_ENABLED]\n      enabled: ${templateConfig.postOptions.graphView.enabled}`
-				);
+			// Update graph view settings with marker-based replacement
+			if (postOptions.graphView && typeof postOptions.graphView === 'object' && postOptions.graphView !== null) {
+				const graphView = postOptions.graphView as Record<string, unknown>;
+				// Update enabled state
+				if (graphView.enabled !== undefined) {
+					const enabledValue = this.safeStringify(graphView.enabled);
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:POST_OPTIONS_GRAPH_VIEW_ENABLED\]\s*enabled:\s*(true|false)/,
+						`// [CONFIG:POST_OPTIONS_GRAPH_VIEW_ENABLED]\n      enabled: ${enabledValue}`
+					);
+				}
+				// Update showInSidebar state
+				if (graphView.showInSidebar !== undefined) {
+					const showInSidebarValue = this.safeStringify(graphView.showInSidebar);
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_IN_SIDEBAR\]\s*\n?\s*showInSidebar:\s*(true|false)/,
+						`// [CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_IN_SIDEBAR]\n      showInSidebar: ${showInSidebarValue}`
+					);
+				}
+				// Update showInCommandPalette state
+				if (graphView.showInCommandPalette !== undefined) {
+					const showInCommandPaletteValue = this.safeStringify(graphView.showInCommandPalette);
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_IN_COMMAND_PALETTE\]\s*showInCommandPalette:\s*(true|false)/,
+						`// [CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_IN_COMMAND_PALETTE]\n      showInCommandPalette: ${showInCommandPaletteValue}`
+					);
+				}
+				// Update maxNodes
+				if (graphView.maxNodes !== undefined) {
+					const maxNodesValue = this.safeStringify(graphView.maxNodes);
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:POST_OPTIONS_GRAPH_VIEW_MAX_NODES\]\s*maxNodes:\s*\d+/,
+						`// [CONFIG:POST_OPTIONS_GRAPH_VIEW_MAX_NODES]\n      maxNodes: ${maxNodesValue}`
+					);
+				}
+				// Update showOrphanedPosts
+				if (graphView.showOrphanedPosts !== undefined) {
+					const showOrphanedPostsValue = this.safeStringify(graphView.showOrphanedPosts);
+					modifiedConfig = modifiedConfig.replace(
+						/\/\/ \[CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_ORPHANED_POSTS\]\s*showOrphanedPosts:\s*(true|false)/,
+						`// [CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_ORPHANED_POSTS]\n      showOrphanedPosts: ${showOrphanedPostsValue}`
+					);
+				}
 			}
-			// Update showInSidebar state
-			if (templateConfig.postOptions.graphView.showInSidebar !== undefined) {
-				modifiedConfig = modifiedConfig.replace(
-					/\/\/ \[CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_IN_SIDEBAR\]\s*\n?\s*showInSidebar:\s*(true|false)/,
-					`// [CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_IN_SIDEBAR]\n      showInSidebar: ${templateConfig.postOptions.graphView.showInSidebar}`
-				);
-			}
-			// Update showInCommandPalette state
-			if (templateConfig.postOptions.graphView.showInCommandPalette !== undefined) {
-				modifiedConfig = modifiedConfig.replace(
-					/\/\/ \[CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_IN_COMMAND_PALETTE\]\s*showInCommandPalette:\s*(true|false)/,
-					`// [CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_IN_COMMAND_PALETTE]\n      showInCommandPalette: ${templateConfig.postOptions.graphView.showInCommandPalette}`
-				);
-			}
-			// Update maxNodes
-			if (templateConfig.postOptions.graphView.maxNodes) {
-				modifiedConfig = modifiedConfig.replace(
-					/\/\/ \[CONFIG:POST_OPTIONS_GRAPH_VIEW_MAX_NODES\]\s*maxNodes:\s*\d+/,
-					`// [CONFIG:POST_OPTIONS_GRAPH_VIEW_MAX_NODES]\n      maxNodes: ${templateConfig.postOptions.graphView.maxNodes}`
-				);
-			}
-			// Update showOrphanedPosts
-			if (templateConfig.postOptions.graphView.showOrphanedPosts !== undefined) {
-				modifiedConfig = modifiedConfig.replace(
-					/\/\/ \[CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_ORPHANED_POSTS\]\s*showOrphanedPosts:\s*(true|false)/,
-					`// [CONFIG:POST_OPTIONS_GRAPH_VIEW_SHOW_ORPHANED_POSTS]\n      showOrphanedPosts: ${templateConfig.postOptions.graphView.showOrphanedPosts}`
-				);
-			}
-		}
 			
 			// Update post card settings
-			if (templateConfig.postOptions.showPostCardCoverImages) {
+			if (postOptions.showPostCardCoverImages && typeof postOptions.showPostCardCoverImages === 'string') {
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:POST_OPTIONS_SHOW_POST_CARD_COVER_IMAGES\]\s*showPostCardCoverImages:\s*"[^"]*"/,
-					`// [CONFIG:POST_OPTIONS_SHOW_POST_CARD_COVER_IMAGES]\n    showPostCardCoverImages: "${templateConfig.postOptions.showPostCardCoverImages}"`
+					`// [CONFIG:POST_OPTIONS_SHOW_POST_CARD_COVER_IMAGES]\n    showPostCardCoverImages: "${postOptions.showPostCardCoverImages}"`
 				);
 			}
-			if (templateConfig.postOptions.postCardAspectRatio) {
+			if (postOptions.postCardAspectRatio && typeof postOptions.postCardAspectRatio === 'string') {
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:POST_OPTIONS_POST_CARD_ASPECT_RATIO\]\s*postCardAspectRatio:\s*"[^"]*"/,
-					`// [CONFIG:POST_OPTIONS_POST_CARD_ASPECT_RATIO]\n    postCardAspectRatio: "${templateConfig.postOptions.postCardAspectRatio}"`
+					`// [CONFIG:POST_OPTIONS_POST_CARD_ASPECT_RATIO]\n    postCardAspectRatio: "${postOptions.postCardAspectRatio}"`
 				);
 			}
-			if (templateConfig.postOptions.customPostCardAspectRatio) {
+			if (postOptions.customPostCardAspectRatio && typeof postOptions.customPostCardAspectRatio === 'string') {
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:POST_OPTIONS_CUSTOM_POST_CARD_ASPECT_RATIO\]\s*customPostCardAspectRatio:\s*"[^"]*"/,
-					`// [CONFIG:POST_OPTIONS_CUSTOM_POST_CARD_ASPECT_RATIO]\n    customPostCardAspectRatio: "${templateConfig.postOptions.customPostCardAspectRatio}"`
+					`// [CONFIG:POST_OPTIONS_CUSTOM_POST_CARD_ASPECT_RATIO]\n    customPostCardAspectRatio: "${postOptions.customPostCardAspectRatio}"`
 				);
 			}
 		}
 		
-	// Update comments settings
-	if (settings.optionalFeatures?.comments?.enabled !== undefined) {
-		modifiedConfig = modifiedConfig.replace(
-			/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_ENABLED\]\s*enabled:\s*(true|false)/,
-			`// [CONFIG:POST_OPTIONS_COMMENTS_ENABLED]\n      enabled: ${settings.optionalFeatures.comments.enabled}`
-		);
-	}
-	
-	// Update other comments settings only if enabled
-	if (settings.optionalFeatures?.comments?.enabled) {
-		// Update provider
-		if (settings.optionalFeatures.comments.provider) {
+		// Update comments settings
+		if (settings.optionalFeatures?.comments?.enabled !== undefined) {
 			modifiedConfig = modifiedConfig.replace(
-				/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_PROVIDER\]\s*provider:\s*"[^"]*"/,
-				`// [CONFIG:POST_OPTIONS_COMMENTS_PROVIDER]\n      provider: "${settings.optionalFeatures.comments.provider}"`
+				/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_ENABLED\]\s*enabled:\s*(true|false)/,
+				`// [CONFIG:POST_OPTIONS_COMMENTS_ENABLED]\n      enabled: ${settings.optionalFeatures.comments.enabled}`
 			);
 		}
-		// Update repo
-		if (settings.optionalFeatures.comments.repo) {
-			modifiedConfig = modifiedConfig.replace(
-				/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_REPO\]\s*repo:\s*"[^"]*"/,
-				`// [CONFIG:POST_OPTIONS_COMMENTS_REPO]\n      repo: "${settings.optionalFeatures.comments.repo}"`
-			);
+		
+		// Update other comments settings only if enabled
+		if (settings.optionalFeatures?.comments?.enabled) {
+			// Update provider
+			if (settings.optionalFeatures.comments.provider) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_PROVIDER\]\s*provider:\s*"[^"]*"/,
+					`// [CONFIG:POST_OPTIONS_COMMENTS_PROVIDER]\n      provider: "${settings.optionalFeatures.comments.provider}"`
+				);
+			}
+			// Update repo
+			if (settings.optionalFeatures.comments.repo) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_REPO\]\s*repo:\s*"[^"]*"/,
+					`// [CONFIG:POST_OPTIONS_COMMENTS_REPO]\n      repo: "${settings.optionalFeatures.comments.repo}"`
+				);
+			}
+			// Update repoId
+			if (settings.optionalFeatures.comments.repoId) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_REPO_ID\]\s*repoId:\s*"[^"]*"/,
+					`// [CONFIG:POST_OPTIONS_COMMENTS_REPO_ID]\n      repoId: "${settings.optionalFeatures.comments.repoId}"`
+				);
+			}
+			// Update category
+			if (settings.optionalFeatures.comments.category) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_CATEGORY\]\s*category:\s*"[^"]*"/,
+					`// [CONFIG:POST_OPTIONS_COMMENTS_CATEGORY]\n      category: "${settings.optionalFeatures.comments.category}"`
+				);
+			}
+			// Update categoryId
+			if (settings.optionalFeatures.comments.categoryId) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_CATEGORY_ID\]\s*categoryId:\s*"[^"]*"/,
+					`// [CONFIG:POST_OPTIONS_COMMENTS_CATEGORY_ID]\n      categoryId: "${settings.optionalFeatures.comments.categoryId}"`
+				);
+			}
+			// Update mapping
+			if (settings.optionalFeatures.comments.mapping) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_MAPPING\]\s*mapping:\s*"[^"]*"/,
+					`// [CONFIG:POST_OPTIONS_COMMENTS_MAPPING]\n      mapping: "${settings.optionalFeatures.comments.mapping}"`
+				);
+			}
+			// Update strict
+			if (settings.optionalFeatures.comments.strict) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_STRICT\]\s*strict:\s*"[^"]*"/,
+					`// [CONFIG:POST_OPTIONS_COMMENTS_STRICT]\n      strict: "${settings.optionalFeatures.comments.strict}"`
+				);
+			}
+			// Update reactions
+			if (settings.optionalFeatures.comments.reactions) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_REACTIONS\]\s*reactions:\s*"[^"]*"/,
+					`// [CONFIG:POST_OPTIONS_COMMENTS_REACTIONS]\n      reactions: "${settings.optionalFeatures.comments.reactions}"`
+				);
+			}
+			// Update metadata
+			if (settings.optionalFeatures.comments.metadata) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_METADATA\]\s*metadata:\s*"[^"]*"/,
+					`// [CONFIG:POST_OPTIONS_COMMENTS_METADATA]\n      metadata: "${settings.optionalFeatures.comments.metadata}"`
+				);
+			}
+			// Update inputPosition
+			if (settings.optionalFeatures.comments.inputPosition) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_INPUT_POSITION\]\s*inputPosition:\s*"[^"]*"/,
+					`// [CONFIG:POST_OPTIONS_COMMENTS_INPUT_POSITION]\n      inputPosition: "${settings.optionalFeatures.comments.inputPosition}"`
+				);
+			}
+			// Update theme
+			if (settings.optionalFeatures.comments.theme) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_THEME\]\s*theme:\s*"[^"]*"/,
+					`// [CONFIG:POST_OPTIONS_COMMENTS_THEME]\n      theme: "${settings.optionalFeatures.comments.theme}"`
+				);
+			}
+			// Update lang
+			if (settings.optionalFeatures.comments.lang) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_LANG\]\s*lang:\s*"[^"]*"/,
+					`// [CONFIG:POST_OPTIONS_COMMENTS_LANG]\n      lang: "${settings.optionalFeatures.comments.lang}"`
+				);
+			}
+			// Update loading
+			if (settings.optionalFeatures.comments.loading) {
+				modifiedConfig = modifiedConfig.replace(
+					/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_LOADING\]\s*loading:\s*"[^"]*"/,
+					`// [CONFIG:POST_OPTIONS_COMMENTS_LOADING]\n      loading: "${settings.optionalFeatures.comments.loading}"`
+				);
+			}
 		}
-		// Update repoId
-		if (settings.optionalFeatures.comments.repoId) {
-			modifiedConfig = modifiedConfig.replace(
-				/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_REPO_ID\]\s*repoId:\s*"[^"]*"/,
-				`// [CONFIG:POST_OPTIONS_COMMENTS_REPO_ID]\n      repoId: "${settings.optionalFeatures.comments.repoId}"`
-			);
-		}
-		// Update category
-		if (settings.optionalFeatures.comments.category) {
-			modifiedConfig = modifiedConfig.replace(
-				/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_CATEGORY\]\s*category:\s*"[^"]*"/,
-				`// [CONFIG:POST_OPTIONS_COMMENTS_CATEGORY]\n      category: "${settings.optionalFeatures.comments.category}"`
-			);
-		}
-		// Update categoryId
-		if (settings.optionalFeatures.comments.categoryId) {
-			modifiedConfig = modifiedConfig.replace(
-				/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_CATEGORY_ID\]\s*categoryId:\s*"[^"]*"/,
-				`// [CONFIG:POST_OPTIONS_COMMENTS_CATEGORY_ID]\n      categoryId: "${settings.optionalFeatures.comments.categoryId}"`
-			);
-		}
-		// Update mapping
-		if (settings.optionalFeatures.comments.mapping) {
-			modifiedConfig = modifiedConfig.replace(
-				/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_MAPPING\]\s*mapping:\s*"[^"]*"/,
-				`// [CONFIG:POST_OPTIONS_COMMENTS_MAPPING]\n      mapping: "${settings.optionalFeatures.comments.mapping}"`
-			);
-		}
-		// Update strict
-		if (settings.optionalFeatures.comments.strict) {
-			modifiedConfig = modifiedConfig.replace(
-				/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_STRICT\]\s*strict:\s*"[^"]*"/,
-				`// [CONFIG:POST_OPTIONS_COMMENTS_STRICT]\n      strict: "${settings.optionalFeatures.comments.strict}"`
-			);
-		}
-		// Update reactions
-		if (settings.optionalFeatures.comments.reactions) {
-			modifiedConfig = modifiedConfig.replace(
-				/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_REACTIONS\]\s*reactions:\s*"[^"]*"/,
-				`// [CONFIG:POST_OPTIONS_COMMENTS_REACTIONS]\n      reactions: "${settings.optionalFeatures.comments.reactions}"`
-			);
-		}
-		// Update metadata
-		if (settings.optionalFeatures.comments.metadata) {
-			modifiedConfig = modifiedConfig.replace(
-				/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_METADATA\]\s*metadata:\s*"[^"]*"/,
-				`// [CONFIG:POST_OPTIONS_COMMENTS_METADATA]\n      metadata: "${settings.optionalFeatures.comments.metadata}"`
-			);
-		}
-		// Update inputPosition
-		if (settings.optionalFeatures.comments.inputPosition) {
-			modifiedConfig = modifiedConfig.replace(
-				/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_INPUT_POSITION\]\s*inputPosition:\s*"[^"]*"/,
-				`// [CONFIG:POST_OPTIONS_COMMENTS_INPUT_POSITION]\n      inputPosition: "${settings.optionalFeatures.comments.inputPosition}"`
-			);
-		}
-		// Update theme
-		if (settings.optionalFeatures.comments.theme) {
-			modifiedConfig = modifiedConfig.replace(
-				/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_THEME\]\s*theme:\s*"[^"]*"/,
-				`// [CONFIG:POST_OPTIONS_COMMENTS_THEME]\n      theme: "${settings.optionalFeatures.comments.theme}"`
-			);
-		}
-		// Update lang
-		if (settings.optionalFeatures.comments.lang) {
-			modifiedConfig = modifiedConfig.replace(
-				/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_LANG\]\s*lang:\s*"[^"]*"/,
-				`// [CONFIG:POST_OPTIONS_COMMENTS_LANG]\n      lang: "${settings.optionalFeatures.comments.lang}"`
-			);
-		}
-		// Update loading
-		if (settings.optionalFeatures.comments.loading) {
-			modifiedConfig = modifiedConfig.replace(
-				/\/\/ \[CONFIG:POST_OPTIONS_COMMENTS_LOADING\]\s*loading:\s*"[^"]*"/,
-				`// [CONFIG:POST_OPTIONS_COMMENTS_LOADING]\n      loading: "${settings.optionalFeatures.comments.loading}"`
-			);
-		}
-	}
 		
 		// Validate markers are present
 		const markerValidation = this.markerValidator.validateMarkers(modifiedConfig);
@@ -658,7 +715,7 @@ export class ConfigPresetModifier {
 		}
 		
 		// Update navigation pages (with nested support)
-		const serializeNavigationItem = (item: any, indent: string = '      '): string => {
+		const serializeNavigationItem = (item: NavigationItem, indent: string = '      '): string => {
 			let result = `${indent}{ title: "${item.title}"`;
 			if (item.url) {
 				result += `, url: "${item.url}"`;
@@ -666,7 +723,7 @@ export class ConfigPresetModifier {
 			if (item.children && item.children.length > 0) {
 				result += `,\n${indent}  children: [\n`;
 				// Children are flat - they don't have their own children
-				result += item.children.map((child: any) => {
+				result += item.children.map((child: NavigationItem) => {
 					let childResult = `${indent}    { title: "${child.title}", url: "${child.url}" }`;
 					return childResult;
 				}).join(',\n');
@@ -695,9 +752,9 @@ export class ConfigPresetModifier {
 		}
 		
 		// Update navigation social
-		const socialArray = settings.navigation.social.map(social => 
-			`      {\n        title: "${social.title}",\n        url: "${social.url}",\n        icon: "${social.icon}",\n      }`
-		).join(',\n');
+		const socialArray = settings.navigation.social.map((social) => {
+			return `      {\n        title: "${social.title}",\n        url: "${social.url}",\n        icon: "${social.icon}",\n      }`;
+		}).join(',\n');
 		modifiedConfig = modifiedConfig.replace(
 			/\/\/ \[CONFIG:NAVIGATION_SOCIAL\]\s*\n\s*social:\s*\[[\s\S]*?\]/,
 			`// [CONFIG:NAVIGATION_SOCIAL]\n    social: [\n${socialArray},\n    ]`
@@ -756,8 +813,8 @@ export class ConfigPresetModifier {
 				
 				// If custom themes are specified, add them to the array
 				if (settings.customThemes && settings.customThemes.trim()) {
-					const customThemesList = settings.customThemes.split(',').map(theme => theme.trim()).filter(theme => theme);
-					themesArray = [...themesArray, ...customThemesList] as any;
+					const customThemesList = settings.customThemes.split(',').map(theme => theme.trim()).filter(theme => theme).filter((theme): theme is Exclude<string, 'custom'> => theme !== 'custom');
+					themesArray = [...themesArray, ...customThemesList];
 				}
 				
 				const themesString = themesArray.map(theme => `"${theme}"`).join(', ');
@@ -847,8 +904,6 @@ export class ConfigPresetModifier {
 				);
 			}
 			if (settings.footer.content) {
-				// Escape special characters in the content
-				const escapedContent = settings.footer.content.replace(/"/g, '\\"').replace(/\n/g, '\\n');
 				modifiedConfig = modifiedConfig.replace(
 					/\/\/ \[CONFIG:FOOTER_CONTENT\]\s*\n\s*content:\s*`[^`]*`/,
 					`// [CONFIG:FOOTER_CONTENT]\n    content: \`${settings.footer.content}\``
@@ -906,7 +961,7 @@ export class ConfigPresetModifier {
 			}
 			// Update navigation pages (with nested support)
 			if (settings.navigation.pages) {
-				const serializeNavigationItem = (item: any, indent: string = '      '): string => {
+				const serializeNavigationItem = (item: { title: string; url?: string; children?: Array<{ title: string; url: string }> }, indent: string = '      '): string => {
 					let result = `${indent}{ title: "${item.title}"`;
 					if (item.url) {
 						result += `, url: "${item.url}"`;
@@ -914,7 +969,7 @@ export class ConfigPresetModifier {
 					if (item.children && item.children.length > 0) {
 						result += `,\n${indent}  children: [\n`;
 						// Children are flat - they don't have their own children
-						result += item.children.map((child: any) => {
+						result += item.children.map((child: NavigationItem) => {
 							let childResult = `${indent}    { title: "${child.title}", url: "${child.url}" }`;
 							return childResult;
 						}).join(',\n');
@@ -1165,19 +1220,19 @@ export class ConfigPresetModifier {
 			`// [CONFIG:POST_OPTIONS_READING_TIME]\n    readingTime: ${settings.features.readingTime}`
 		);
 		
-		// Update word count (if it exists in features)
-		if ('wordCount' in settings.features) {
+		// Update word count (from postOptions, not features)
+		if (settings.postOptions?.wordCount !== undefined) {
 			modifiedConfig = modifiedConfig.replace(
 				/\/\/ \[CONFIG:POST_OPTIONS_WORD_COUNT\]\s*wordCount:\s*(true|false)/,
-				`// [CONFIG:POST_OPTIONS_WORD_COUNT]\n    wordCount: ${(settings.features as any).wordCount}`
+				`// [CONFIG:POST_OPTIONS_WORD_COUNT]\n    wordCount: ${settings.postOptions.wordCount}`
 			);
 		}
 		
-		// Update tags (if it exists in features)
-		if ('tags' in settings.features) {
+		// Update tags (from postOptions, not features)
+		if (settings.postOptions?.tags !== undefined) {
 			modifiedConfig = modifiedConfig.replace(
 				/\/\/ \[CONFIG:POST_OPTIONS_TAGS\]\s*tags:\s*(true|false)/,
-				`// [CONFIG:POST_OPTIONS_TAGS]\n    tags: ${(settings.features as any).tags}`
+				`// [CONFIG:POST_OPTIONS_TAGS]\n    tags: ${settings.postOptions.tags}`
 			);
 		}
 		

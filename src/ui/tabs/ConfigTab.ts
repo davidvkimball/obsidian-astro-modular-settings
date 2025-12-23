@@ -1,15 +1,12 @@
-import { Setting, Notice, Modal } from 'obsidian';
+import { Setting, Notice, Modal, setIcon } from 'obsidian';
 import { TabRenderer } from '../common/TabRenderer';
-import { TEMPLATE_OPTIONS } from '../../types';
+import { TEMPLATE_OPTIONS, AstroModularPlugin, TemplateType, AstroModularSettings, CommandPaletteSettings, HomeOptions, PostOptions, NavigationSettings } from '../../types';
 import { PresetWarningModal } from '../PresetWarningModal';
 
 export class ConfigTab extends TabRenderer {
 	async render(container: HTMLElement): Promise<void> {
 		container.empty();
 		const settings = this.getSettings();
-
-		// Settings section header
-		const settingsSection = container.createDiv('settings-section');
 
 		// Template selector
 		new Setting(container)
@@ -20,26 +17,28 @@ export class ConfigTab extends TabRenderer {
 					dropdown.addOption(template.id, template.name);
 				});
 				dropdown.setValue(settings.currentTemplate);
-				dropdown.onChange(async (value) => {
+				dropdown.onChange((value) => {
 					// Show warning modal for template changes
-					const changes = this.getTemplateChanges(value as any);
+					const changes = this.getTemplateChanges(value as TemplateType);
 					const modal = new PresetWarningModal(
 						this.app,
 						changes,
-						async () => {
+						() => {
+							void (async () => {
 							// User confirmed - apply exactly like TemplateStep does
 							try {
 								// Update template settings exactly like the wizard does
 								await this.updatePluginSettingsWithTemplate(value);
 								
 								// Reload settings to ensure the plugin has the latest values
-								await (this.plugin as any).loadSettings();
+								const plugin = this.plugin as AstroModularPlugin;
+								await plugin.loadSettings();
 								
 								// Get fresh settings after reload
-								const freshSettings = (this.plugin as any).settings;
+								const freshSettings = plugin.settings;
 								
 								// Apply the configuration
-								const presetSuccess = await (this.plugin as any).configManager.applyPreset({
+								const presetSuccess = await plugin.configManager.applyPreset({
 									name: freshSettings.currentTemplate,
 									description: '',
 									features: freshSettings.features,
@@ -57,6 +56,7 @@ export class ConfigTab extends TabRenderer {
 								new Notice(`Failed to apply template change: ${error instanceof Error ? error.message : String(error)}`);
 								dropdown.setValue(settings.currentTemplate);
 							}
+							})();
 						},
 						() => {
 							// User cancelled - reset dropdown to current value
@@ -74,14 +74,16 @@ export class ConfigTab extends TabRenderer {
 			.addDropdown(dropdown => {
 				dropdown.addOption('netlify', 'Netlify');
 				dropdown.addOption('vercel', 'Vercel');
-				dropdown.addOption('github-pages', 'GitHub Pages');
+				dropdown.addOption('github-pages', 'GitHub pages');
+				// False positive: "Cloudflare Workers" is a proper noun (product name) and should be capitalized
+				// eslint-disable-next-line obsidianmd/ui/sentence-case
 				dropdown.addOption('cloudflare-workers', 'Cloudflare Workers');
 				dropdown.setValue(settings.deployment.platform);
 				dropdown.onChange(async (value) => {
-				settings.deployment.platform = value as any;
+				settings.deployment.platform = value as 'netlify' | 'vercel' | 'github-pages' | 'cloudflare-workers';
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				
 				// Apply changes immediately to config.ts
 				try {
@@ -102,10 +104,10 @@ export class ConfigTab extends TabRenderer {
 				dropdown.addOption('folder-based', 'Folder-based');
 				dropdown.setValue(settings.contentOrganization);
 				dropdown.onChange(async (value) => {
-				settings.contentOrganization = value as any;
+				settings.contentOrganization = value as 'file-based' | 'folder-based';
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				
 				// Build plugin config dynamically based on new content organization (like wizard does)
 					const contentOrg = value as 'file-based' | 'folder-based';
@@ -130,7 +132,7 @@ export class ConfigTab extends TabRenderer {
 					
 					// Configure plugins with the new config
 					try {
-						await (this.plugin as any).pluginManager.configurePlugins(config);
+						await (this.plugin as AstroModularPlugin).pluginManager.configurePlugins(config);
 						const attachmentLocation = contentOrg === 'file-based' ? 'subfolder (attachments/)' : 'same folder';
 						const creationMode = contentOrg === 'file-based' ? 'file' : 'folder';
 						new Notice(`Content organization changed to ${value}\n\n• Obsidian: Attachments → ${attachmentLocation}\n• Astro Composer: Creation mode → ${creationMode}\n• Image Inserter: Format updated`, 8000);
@@ -141,16 +143,19 @@ export class ConfigTab extends TabRenderer {
 			});
 
 		// Plugin configuration section
-		container.createEl('h2', { text: 'Plugin configuration' });
+		// Plugin configuration heading
+		new Setting(container)
+			.setHeading()
+			.setName('Plugin configuration');
 		
 		// Get plugin status (async, so we need to handle this)
-		this.renderPluginStatus(container, settings);
+		void this.renderPluginStatus(container, settings);
 	}
 
-	private async renderPluginStatus(container: HTMLElement, settings: any): Promise<void> {
+	private async renderPluginStatus(container: HTMLElement, settings: AstroModularSettings): Promise<void> {
 		// Get plugin status
 		const contentOrg = settings.contentOrganization;
-		const pluginStatus = await (this.plugin as any).pluginManager.getPluginStatus(contentOrg);
+		const pluginStatus = await (this.plugin as AstroModularPlugin).pluginManager.getPluginStatus(contentOrg);
 
 		// Display plugin status
 		const statusContainer = container.createDiv('plugin-status-container');
@@ -184,21 +189,17 @@ export class ConfigTab extends TabRenderer {
 			const pluginItem = pluginStatusDiv.createDiv(itemClass);
 			const icon = pluginItem.createDiv('plugin-icon');
 			
-			// Set icon based on status
+			// Set icon based on status using setIcon
 			if (isSettingsCheck) {
-				icon.innerHTML = isConfigured 
-					? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'
-					: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+				setIcon(icon, isConfigured ? 'check' : 'x');
 			} else if (imageInserterMismatch || allMismatched) {
 				// Image Inserter settings don't match or all content types are out of sync - show red X
-				icon.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+				setIcon(icon, 'x');
 			} else if (isPartiallyConfigured) {
 				// Alert triangle icon (neutral warning icon from Lucide)
-				icon.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>';
+				setIcon(icon, 'alert-triangle');
 			} else {
-				icon.innerHTML = plugin.installed && plugin.enabled
-					? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'
-					: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+				setIcon(icon, plugin.installed && plugin.enabled ? 'check' : 'x');
 			}
 			
 			const info = pluginItem.createDiv('plugin-info');
@@ -231,9 +232,12 @@ export class ConfigTab extends TabRenderer {
 					text: `Out of sync: ${plugin.outOfSyncContentTypes.join(', ')}`,
 					cls: 'sync-details'
 				});
-				detailsP.style.fontSize = '0.9em';
-				detailsP.style.opacity = '0.8';
-				detailsP.style.marginTop = '4px';
+				// Set dynamic styles
+				detailsP.setCssProps({
+					fontSize: '0.9em',
+					opacity: '0.8',
+					marginTop: '4px'
+				});
 			}
 		}
 
@@ -242,7 +246,7 @@ export class ConfigTab extends TabRenderer {
 			.setName('Re-apply configuration')
 			.setDesc('Re-apply plugin settings based on your content organization choice (useful if settings were changed manually or configuration failed)')
 			.addButton(button => button
-				.setButtonText('Re-apply Configuration')
+				.setButtonText('Re-apply configuration')
 				.setCta()
 				.onClick(async () => {
 					// Create configuration based on current content organization choice
@@ -266,7 +270,7 @@ export class ConfigTab extends TabRenderer {
 						}
 					};
 
-					const success = await (this.plugin as any).pluginManager.configurePlugins(config);
+					const success = await (this.plugin as AstroModularPlugin).pluginManager.configurePlugins(config);
 					if (success) {
 						// Show detailed success message
 						const contentOrg = settings.contentOrganization;
@@ -281,6 +285,8 @@ export class ConfigTab extends TabRenderer {
 							await this.renderPluginStatus(container, settings);
 						}
 					} else {
+						// Text is already in sentence case
+						// eslint-disable-next-line obsidianmd/ui/sentence-case
 						new Notice('⚠️ Some plugins could not be configured automatically. Check console for details.', 5000);
 					}
 				}));
@@ -290,7 +296,7 @@ export class ConfigTab extends TabRenderer {
 			.setName('Show manual instructions')
 			.setDesc('Get step-by-step instructions for manual configuration')
 			.addButton(button => button
-				.setButtonText('Show Manual Instructions')
+				.setButtonText('Show manual instructions')
 				.onClick(async () => {
 					// Create configuration based on current content organization choice
 					const contentOrg = settings.contentOrganization;
@@ -313,16 +319,18 @@ export class ConfigTab extends TabRenderer {
 						}
 					};
 
-					const instructions = await (this.plugin as any).pluginManager.getManualConfigurationInstructions(config);
+					const instructions = await (this.plugin as AstroModularPlugin).pluginManager.getManualConfigurationInstructions(config);
 					
 					// Create a modal to show instructions
 					const instructionModal = new Modal(this.app);
-					instructionModal.titleEl.setText('Manual Configuration Instructions');
+					instructionModal.titleEl.setText('Manual configuration instructions');
 					
 					// Create a container for the instructions
 					const contentDiv = instructionModal.contentEl.createDiv();
-					contentDiv.style.padding = '20px';
-					contentDiv.style.lineHeight = '1.6';
+					contentDiv.setCssProps({
+						padding: '20px',
+						lineHeight: '1.6'
+					});
 					
 					// Parse instructions line by line and create proper DOM elements
 					const lines = instructions.split('\n');
@@ -341,30 +349,40 @@ export class ConfigTab extends TabRenderer {
 							}
 							const h2 = contentDiv.createEl('h2');
 							h2.setText(trimmedLine.substring(3));
-							h2.style.marginTop = '20px';
-							h2.style.marginBottom = '10px';
-							h2.style.fontSize = '1.2em';
-							h2.style.fontWeight = 'bold';
+							h2.setCssProps({
+								marginTop: '20px',
+								marginBottom: '10px',
+								fontSize: '1.2em',
+								fontWeight: 'bold'
+							});
 						} else if (trimmedLine.match(/^\d+\.\s/)) {
 							// Numbered list item
 							if (!currentList) {
 								currentList = contentDiv.createEl('ol');
-								currentList.style.marginLeft = '20px';
-								currentList.style.marginBottom = '15px';
+								currentList.setCssProps({
+									marginLeft: '20px',
+									marginBottom: '15px'
+								});
 							}
-							const li = currentList!.createEl('li');
-							li.style.marginBottom = '5px';
+							const li = currentList.createEl('li');
+							li.setCssProps({
+								marginBottom: '5px'
+							});
 							// Parse bold text in the line
 							this.parseBoldText(li, trimmedLine.replace(/^\d+\.\s/, ''));
 						} else if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ')) {
 							// Bullet list item
 							if (!currentList) {
 								currentList = contentDiv.createEl('ul');
-								currentList.style.marginLeft = '20px';
-								currentList.style.marginBottom = '15px';
+								currentList.setCssProps({
+									marginLeft: '20px',
+									marginBottom: '15px'
+								});
 							}
-							const li = currentList!.createEl('li');
-							li.style.marginBottom = '5px';
+							const li = currentList.createEl('li');
+							li.setCssProps({
+								marginBottom: '5px'
+							});
 							// Parse bold text in the line
 							this.parseBoldText(li, trimmedLine.substring(2));
 						} else {
@@ -373,7 +391,9 @@ export class ConfigTab extends TabRenderer {
 								currentList = null; // End current list
 							}
 							const p = contentDiv.createEl('p');
-							p.style.marginBottom = '10px';
+							p.setCssProps({
+								marginBottom: '10px'
+							});
 							// Parse bold text in the line
 							this.parseBoldText(p, trimmedLine);
 						}
@@ -401,17 +421,18 @@ export class ConfigTab extends TabRenderer {
 
 	private async updatePluginSettingsWithTemplate(template: string): Promise<void> {
 		// Get the current plugin settings
-		const settings = (this.plugin as any).settings;
+		const plugin = this.plugin as AstroModularPlugin;
+		const settings = plugin.settings;
 		
 		// Load the template preset from JSON (single source of truth)
-		const templatePreset = (this.plugin as any).configManager.getTemplatePreset(template);
+		const templatePreset = plugin.configManager.getTemplatePreset(template);
 		if (!templatePreset || !templatePreset.config) {
 			new Notice('Template preset not found');
 			return;
 		}
 
 		// CRITICAL: Get full template config including command palette settings
-		const templateConfig = (this.plugin as any).configManager.getTemplateConfig(template, settings);
+		const templateConfig = plugin.configManager.getTemplateConfig(template, settings);
 
 		// Update settings from the preset's config
 		settings.currentTemplate = template;
@@ -449,28 +470,29 @@ export class ConfigTab extends TabRenderer {
 		// This ensures data.json matches what config.ts will show
 		
 		// Update command palette
-		if (templateConfig.commandPalette) {
+		const commandPalette = templateConfig.commandPalette as Partial<CommandPaletteSettings> | undefined;
+		if (commandPalette) {
 			settings.commandPalette = {
 				...settings.commandPalette,
-				enabled: templateConfig.commandPalette.enabled ?? settings.commandPalette.enabled,
-				placeholder: templateConfig.commandPalette.placeholder ?? settings.commandPalette.placeholder,
-				shortcut: templateConfig.commandPalette.shortcut ?? settings.commandPalette.shortcut,
+				enabled: commandPalette.enabled ?? settings.commandPalette.enabled,
+				placeholder: commandPalette.placeholder ?? settings.commandPalette.placeholder,
+				shortcut: commandPalette.shortcut ?? settings.commandPalette.shortcut,
 				search: {
 					...settings.commandPalette.search,
-					...(templateConfig.commandPalette.search || {})
+					...(commandPalette.search || {})
 				},
 				sections: {
 					...settings.commandPalette.sections,
-					...(templateConfig.commandPalette.sections || {})
+					...(commandPalette.sections || {})
 				},
 				quickActions: {
 					...settings.commandPalette.quickActions,
-					...(templatePreset.config.features.quickActions || {})
+					...(templatePreset.config.features?.quickActions || {})
 				}
 			};
 			
 			// Sync features.quickActions
-			if (templatePreset.config.features.quickActions) {
+			if (templatePreset.config.features?.quickActions) {
 				settings.features.quickActions = {
 					...settings.features.quickActions,
 					...templatePreset.config.features.quickActions
@@ -479,65 +501,68 @@ export class ConfigTab extends TabRenderer {
 		}
 		
 		// Update home options
-		if (templateConfig.homeOptions) {
+		const homeOptions = templateConfig.homeOptions as Partial<HomeOptions> | undefined;
+		if (homeOptions) {
 			settings.homeOptions = {
 				...settings.homeOptions,
 				featuredPost: {
 					...settings.homeOptions.featuredPost,
-					...(templateConfig.homeOptions.featuredPost || {})
+					...(homeOptions.featuredPost || {})
 				},
 				recentPosts: {
 					...settings.homeOptions.recentPosts,
-					...(templateConfig.homeOptions.recentPosts || {})
+					...(homeOptions.recentPosts || {})
 				},
 				projects: {
 					...settings.homeOptions.projects,
-					...(templateConfig.homeOptions.projects || {})
+					...(homeOptions.projects || {})
 				},
 				docs: {
 					...settings.homeOptions.docs,
-					...(templateConfig.homeOptions.docs || {})
+					...(homeOptions.docs || {})
 				},
 				blurb: {
 					...settings.homeOptions.blurb,
-					...(templateConfig.homeOptions.blurb || {})
+					...(homeOptions.blurb || {})
 				}
 			};
 		}
 		
 		// Update post options
-		if (templateConfig.postOptions) {
+		const postOptions = templateConfig.postOptions as Partial<PostOptions> | undefined;
+		if (postOptions) {
 			settings.postOptions = {
 				...settings.postOptions,
-				postsPerPage: templateConfig.postOptions.postsPerPage ?? settings.postOptions.postsPerPage,
-				readingTime: templateConfig.postOptions.readingTime ?? settings.postOptions.readingTime,
-				wordCount: templateConfig.postOptions.wordCount ?? settings.postOptions.wordCount,
-				tags: templateConfig.postOptions.tags ?? settings.postOptions.tags,
-				postNavigation: templateConfig.postOptions.postNavigation ?? settings.postOptions.postNavigation,
-				showPostCardCoverImages: templateConfig.postOptions.showPostCardCoverImages ?? settings.postOptions.showPostCardCoverImages,
-				postCardAspectRatio: templateConfig.postOptions.postCardAspectRatio ?? settings.postOptions.postCardAspectRatio,
+				postsPerPage: postOptions.postsPerPage ?? settings.postOptions.postsPerPage,
+				readingTime: postOptions.readingTime ?? settings.postOptions.readingTime,
+				wordCount: postOptions.wordCount ?? settings.postOptions.wordCount,
+				tags: postOptions.tags ?? settings.postOptions.tags,
+				postNavigation: postOptions.postNavigation ?? settings.postOptions.postNavigation,
+				showPostCardCoverImages: postOptions.showPostCardCoverImages ?? settings.postOptions.showPostCardCoverImages,
+				postCardAspectRatio: postOptions.postCardAspectRatio ?? settings.postOptions.postCardAspectRatio,
 				linkedMentions: {
 					...settings.postOptions.linkedMentions,
-					...(templateConfig.postOptions.linkedMentions || {})
+					...(postOptions.linkedMentions || {})
 				},
 				graphView: {
 					...settings.postOptions.graphView,
-					enabled: templateConfig.postOptions.graphView?.enabled ?? settings.postOptions.graphView.enabled,
-					showInSidebar: templateConfig.postOptions.graphView?.showInSidebar ?? settings.postOptions.graphView.showInSidebar,
-					maxNodes: templateConfig.postOptions.graphView?.maxNodes ?? settings.postOptions.graphView.maxNodes,
-					showOrphanedPosts: templateConfig.postOptions.graphView?.showOrphanedPosts ?? settings.postOptions.graphView.showOrphanedPosts
+					enabled: postOptions.graphView?.enabled ?? settings.postOptions.graphView.enabled,
+					showInSidebar: postOptions.graphView?.showInSidebar ?? settings.postOptions.graphView.showInSidebar,
+					maxNodes: postOptions.graphView?.maxNodes ?? settings.postOptions.graphView.maxNodes,
+					showOrphanedPosts: postOptions.graphView?.showOrphanedPosts ?? settings.postOptions.graphView.showOrphanedPosts
 				},
 				comments: settings.postOptions.comments  // Preserve comments
 			};
 		}
 		
 		// Update navigation
-		if (templateConfig.navigation) {
+		const navigation = templateConfig.navigation as Partial<NavigationSettings> | undefined;
+		if (navigation) {
 			settings.navigation = {
 				...settings.navigation,
-				showNavigation: templateConfig.navigation.showNavigation ?? settings.navigation.showNavigation,
-				showMobileMenu: templateConfig.navigation.showMobileMenu ?? settings.navigation.showMobileMenu,
-				style: templateConfig.navigation.style ?? settings.navigation.style
+				showNavigation: navigation.showNavigation ?? settings.navigation.showNavigation,
+				showMobileMenu: navigation.showMobileMenu ?? settings.navigation.showMobileMenu,
+				style: navigation.style ?? settings.navigation.style
 				// Preserve pages and social arrays from user settings
 			};
 		}
@@ -548,21 +573,23 @@ export class ConfigTab extends TabRenderer {
 		}
 		
 		// Update optional content types from template config
-		if (templateConfig.optionalContentTypes) {
+		const optionalContentTypes = templateConfig.optionalContentTypes as { projects?: boolean; docs?: boolean } | undefined;
+		if (optionalContentTypes) {
 			settings.optionalContentTypes = {
-				projects: templateConfig.optionalContentTypes.projects ?? false,
-				docs: templateConfig.optionalContentTypes.docs ?? false
+				projects: optionalContentTypes.projects ?? false,
+				docs: optionalContentTypes.docs ?? false
 			};
 		}
 		
 		// CRITICAL: Update footer settings from template config
-		if (templateConfig.footer) {
+		const footer = templateConfig.footer as { showSocialIconsInFooter?: boolean } | undefined;
+		if (footer) {
 			settings.footer = {
 				...settings.footer,
-				showSocialIconsInFooter: templateConfig.footer.showSocialIconsInFooter ?? settings.footer.showSocialIconsInFooter
+				showSocialIconsInFooter: footer.showSocialIconsInFooter ?? settings.footer.showSocialIconsInFooter
 			};
 			// Sync features.showSocialIconsInFooter
-			settings.features.showSocialIconsInFooter = templateConfig.footer.showSocialIconsInFooter ?? settings.features.showSocialIconsInFooter;
+			settings.features.showSocialIconsInFooter = footer.showSocialIconsInFooter ?? settings.features.showSocialIconsInFooter;
 		}
 
 		// Save the updated settings
@@ -574,7 +601,7 @@ export class ConfigTab extends TabRenderer {
 		const settings = this.getSettings();
 		
 		// Load the template preset from JSON
-		const templatePreset = (this.plugin as any).configManager.getTemplatePreset(templateId);
+		const templatePreset = (this.plugin as AstroModularPlugin).configManager.getTemplatePreset(templateId);
 		if (!templatePreset || !templatePreset.config) {
 			changes.push('This will apply the template settings to your configuration.');
 			return changes;
@@ -600,17 +627,17 @@ export class ConfigTab extends TabRenderer {
 			];
 
 			keyFeatures.forEach(({ key, label }) => {
-				const oldFeature = (settings.features as any)[key];
-				const newFeature = (newConfig.features as any)[key];
-				if (newFeature !== undefined && oldFeature !== newFeature) {
-					const oldVal = typeof oldFeature === 'boolean' 
-						? (oldFeature ? 'ON' : 'OFF')
-						: oldFeature;
-					const newVal = typeof newFeature === 'boolean'
-						? (newFeature ? 'ON' : 'OFF')
-						: newFeature;
-					featureChanges.push(`${label}: ${oldVal} → ${newVal}`);
-				}
+				const oldFeature = (settings.features as unknown as Record<string, unknown>)[key];
+				const newFeature = (newConfig.features as unknown as Record<string, unknown>)[key];
+			if (newFeature !== undefined && oldFeature !== newFeature) {
+				const oldVal = typeof oldFeature === 'boolean' 
+					? (oldFeature ? 'ON' : 'OFF')
+					: (oldFeature === null || oldFeature === undefined ? '' : (typeof oldFeature === 'string' || typeof oldFeature === 'number' ? String(oldFeature) : JSON.stringify(oldFeature)));
+				const newVal = typeof newFeature === 'boolean'
+					? (newFeature ? 'ON' : 'OFF')
+					: (newFeature === null || newFeature === undefined ? '' : (typeof newFeature === 'string' || typeof newFeature === 'number' ? String(newFeature) : JSON.stringify(newFeature)));
+				featureChanges.push(`${label}: ${oldVal} → ${newVal}`);
+			}
 			});
 
 			// Check quickActions changes

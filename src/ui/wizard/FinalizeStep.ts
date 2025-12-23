@@ -1,6 +1,6 @@
 import { BaseWizardStep } from './BaseWizardStep';
 import { Notice } from 'obsidian';
-import { TEMPLATE_OPTIONS, THEME_OPTIONS } from '../../types';
+import { TEMPLATE_OPTIONS, THEME_OPTIONS, AstroModularPlugin } from '../../types';
 
 export class FinalizeStep extends BaseWizardStep {
 	render(container: HTMLElement): void {
@@ -12,35 +12,25 @@ export class FinalizeStep extends BaseWizardStep {
 		const contentOrgName = this.formatContentOrganization(state.selectedContentOrg);
 		const deploymentName = this.formatDeploymentName(state.selectedDeployment);
 		
-		container.innerHTML = `
-			<div class="finalize-step">
-				<h2>Finalize your configuration</h2>
-				<p>Review your settings and complete the setup.</p>
-				
-				<div class="config-summary">
-					<h3>Configuration Summary</h3>
-					<div class="config-item">
-						<strong>Template:</strong> ${templateName}
-					</div>
-					<div class="config-item">
-						<strong>Theme:</strong> ${themeName}
-					</div>
-					<div class="config-item">
-						<strong>Content Organization:</strong> ${contentOrgName}
-					</div>
-					<div class="config-item">
-						<strong>Deployment:</strong> ${deploymentName}
-					</div>
-					<div class="config-item">
-						<strong>Site Title:</strong> ${state.selectedSiteInfo.title}
-					</div>
-					<div class="config-item">
-						<strong>Site URL:</strong> ${state.selectedSiteInfo.site}
-					</div>
-				</div>
-				
-			</div>
-		`;
+		const finalizeDiv = container.createDiv('finalize-step');
+		finalizeDiv.createEl('h2', { text: 'Finalize your configuration' });
+		finalizeDiv.createEl('p', { text: 'Review your settings and complete the setup.' });
+		
+		const configSummary = finalizeDiv.createDiv('config-summary');
+		configSummary.createEl('h3', { text: 'Configuration summary' });
+		
+		const createConfigItem = (label: string, value: string) => {
+			const item = configSummary.createDiv('config-item');
+			item.createEl('strong', { text: `${label}: ` });
+			item.appendText(value);
+		};
+		
+		createConfigItem('Template', templateName);
+		createConfigItem('Theme', themeName);
+		createConfigItem('Content Organization', contentOrgName);
+		createConfigItem('Deployment', deploymentName);
+		createConfigItem('Site Title', state.selectedSiteInfo.title);
+		createConfigItem('Site URL', state.selectedSiteInfo.site);
 
 		this.setupEventHandlers(container);
 	}
@@ -50,21 +40,20 @@ export class FinalizeStep extends BaseWizardStep {
 	}
 
 	async completeWizard(): Promise<void> {
-		const state = this.getState();
-		
 		try {
 			// Build final settings - this now updates plugin.settings directly
 			this.stateManager.buildFinalSettings();
 			
 			// Save the settings to disk
-			await (this.plugin as any).saveData((this.plugin as any).settings);
+			const plugin = this.plugin as AstroModularPlugin;
+			await plugin.saveData(plugin.settings);
 			
 			// Reload settings to ensure the plugin has the latest values
-			await (this.plugin as any).loadSettings();
+			await plugin.loadSettings();
 			
 			// Always apply the configuration
-			const settings = (this.plugin as any).settings;
-			const presetSuccess = await (this.plugin as any).configManager.applyPreset({
+			const settings = plugin.settings;
+			const presetSuccess = await plugin.configManager.applyPreset({
 				name: settings.currentTemplate,
 				description: '',
 				features: settings.features,

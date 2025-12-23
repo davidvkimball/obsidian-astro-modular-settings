@@ -28,7 +28,7 @@ export class ConfigTemplateManager {
 		return result;
 	}
 
-	getTemplateConfig(templateName: string, settings: AstroModularSettings): any {
+	getTemplateConfig(templateName: string, settings: AstroModularSettings): Record<string, unknown> {
 		// Return template-specific configuration based on the preset name
 		switch (templateName) {
             case 'standard':

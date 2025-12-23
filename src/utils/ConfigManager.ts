@@ -1,4 +1,4 @@
-import { App, Notice } from 'obsidian';
+import { App } from 'obsidian';
 import { AstroModularSettings, PresetTemplate } from '../types';
 import { ConfigFileManager } from './config/ConfigFileManager';
 import { ConfigPresetModifier } from './config/ConfigPresetModifier';
@@ -8,7 +8,7 @@ import * as compactPreset from '../presets/compact.json';
 
 export class ConfigManager {
 	private app: App;
-	private fileManager: ConfigFileManager;
+	public fileManager: ConfigFileManager;
 	private presetModifier: ConfigPresetModifier;
 
 	constructor(app: App) {
@@ -121,7 +121,7 @@ export class ConfigManager {
 		}
 	}
 
-	getTemplateConfig(templateName: string, settings: AstroModularSettings): any {
+	getTemplateConfig(templateName: string, settings: AstroModularSettings): Record<string, unknown> {
 		// Expose template config from presetModifier for template switching
 		return this.presetModifier.getTemplateConfig(templateName, settings);
 	}

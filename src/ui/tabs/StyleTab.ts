@@ -1,6 +1,6 @@
-import { Setting, Notice } from 'obsidian';
+import { Setting, Notice, setIcon } from 'obsidian';
 import { TabRenderer } from '../common/TabRenderer';
-import { THEME_OPTIONS, FONT_OPTIONS } from '../../types';
+import { THEME_OPTIONS, FONT_OPTIONS, AstroModularPlugin, ThemeType, AstroModularSettings, ColorScale } from '../../types';
 import { ThemeColorExtractor } from '../../utils/ThemeColorExtractor';
 
 export class StyleTab extends TabRenderer {
@@ -11,9 +11,10 @@ export class StyleTab extends TabRenderer {
 		this.mainContainer = container; // Store reference to main container
 		const settings = this.getSettings();
 
-		// Settings section header
-		const settingsSection = container.createDiv('settings-section');
-		const header = settingsSection.createEl('h2', { text: 'Colors' });
+		// Colors heading
+		new Setting(container)
+			.setHeading()
+			.setName('Colors');
 
 		// Theme selector
 		new Setting(container)
@@ -25,17 +26,17 @@ export class StyleTab extends TabRenderer {
 				});
 				dropdown.setValue(settings.currentTheme);
 				dropdown.onChange(async (value) => {
-				settings.currentTheme = value as any;
+				settings.currentTheme = value as ThemeType;
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				
 				// Re-render to show/hide custom theme file field
 				this.render(container);
 				
 				// Apply only theme change to config.ts (not all settings)
 				try {
-					const success = await (this.plugin as any).configManager.updateThemeOnly(value);
+					const success = await (this.plugin as AstroModularPlugin).configManager.updateThemeOnly(value);
 					if (success) {
 						new Notice(`Theme changed to ${value} and applied to config.ts`);
 					} else {
@@ -58,15 +59,15 @@ export class StyleTab extends TabRenderer {
 				toggle.onChange(async (value) => {
 					if (value) {
 						// Enable customization - set to all themes except 'custom'
-						const allThemes = THEME_OPTIONS.filter(theme => theme.id !== 'custom').map(theme => theme.id);
-						settings.availableThemes = allThemes as any;
+						const allThemes = THEME_OPTIONS.filter(theme => theme.id !== 'custom').map(theme => theme.id) as Array<Exclude<ThemeType, 'custom'>>;
+						settings.availableThemes = allThemes;
 					} else {
 						// Disable customization - set to "default"
 						settings.availableThemes = 'default';
 					}
 					await this.plugin.saveData(settings);
 					// Reload settings to ensure the plugin has the latest values
-					await (this.plugin as any).loadSettings();
+					await (this.plugin as AstroModularPlugin).loadSettings();
 					
 					// Re-render to show/hide theme pills
 					if (this.mainContainer) {
@@ -86,21 +87,27 @@ export class StyleTab extends TabRenderer {
 		// Show theme pills when customization is enabled
 		if (Array.isArray(settings.availableThemes)) {
 			const themePillsContainer = container.createDiv('theme-pills-container');
-			themePillsContainer.style.marginTop = '10px';
-			themePillsContainer.style.marginBottom = '20px';
+			themePillsContainer.setCssProps({
+				marginTop: '10px',
+				marginBottom: '20px'
+			});
 			
 			const pillsHeader = themePillsContainer.createEl('p', { 
 				text: 'Available themes (click to toggle selection):',
 				cls: 'theme-pills-header'
 			});
-			pillsHeader.style.fontSize = '14px';
-			pillsHeader.style.marginBottom = '8px';
-			pillsHeader.style.color = 'var(--text-muted)';
+			pillsHeader.setCssProps({
+				fontSize: '14px',
+				marginBottom: '8px',
+				color: 'var(--text-muted)'
+			});
 			
 			const pillsWrapper = themePillsContainer.createDiv('theme-pills-wrapper');
-			pillsWrapper.style.display = 'flex';
-			pillsWrapper.style.flexWrap = 'wrap';
-			pillsWrapper.style.gap = '8px';
+			pillsWrapper.setCssProps({
+				display: 'flex',
+				flexWrap: 'wrap',
+				gap: '8px'
+			});
 			
 			// Show all themes (except custom) with selection state
 			const allThemes = THEME_OPTIONS.filter(theme => theme.id !== 'custom');
@@ -108,49 +115,58 @@ export class StyleTab extends TabRenderer {
 				const isSelected = (settings.availableThemes as string[]).includes(theme.id);
 				
 					const pill = pillsWrapper.createDiv('theme-pill');
-					pill.style.display = 'inline-flex';
-					pill.style.alignItems = 'center';
-					pill.style.padding = '4px 8px';
-					pill.style.borderRadius = '12px';
-					pill.style.fontSize = '12px';
-					pill.style.gap = '6px';
-				pill.style.cursor = 'pointer';
-				pill.style.transition = 'all 0.2s ease';
-				
-				// Style based on selection state
-				if (isSelected) {
-					pill.style.backgroundColor = 'var(--interactive-accent)';
-					pill.style.color = 'var(--text-on-accent)';
-					pill.style.border = '1px solid var(--interactive-accent)';
-				} else {
-					pill.style.backgroundColor = 'var(--background-secondary)';
-					pill.style.color = 'var(--text-muted)';
-					pill.style.border = '1px solid var(--background-modifier-border)';
-				}
+					pill.setCssProps({
+						display: 'inline-flex',
+						alignItems: 'center',
+						padding: '4px 8px',
+						borderRadius: '12px',
+						fontSize: '12px',
+						gap: '6px',
+						cursor: 'pointer',
+						transition: 'all 0.2s ease'
+					});
+					
+					// Style based on selection state
+					if (isSelected) {
+						pill.setCssProps({
+							backgroundColor: 'var(--interactive-accent)',
+							color: 'var(--text-on-accent)',
+							border: '1px solid var(--interactive-accent)'
+						});
+					} else {
+						pill.setCssProps({
+							backgroundColor: 'var(--background-secondary)',
+							color: 'var(--text-muted)',
+							border: '1px solid var(--background-modifier-border)'
+						});
+					}
 					
 					pill.createSpan({ text: theme.name });
 					
 				// Add selection indicator
 				const indicator = pill.createSpan({ text: isSelected ? '✓' : '○' });
-				indicator.style.fontSize = '10px';
-				indicator.style.opacity = '0.8';
+				indicator.setCssProps({
+					fontSize: '10px',
+					opacity: '0.8'
+				});
 				
-				pill.addEventListener('click', async () => {
+				pill.addEventListener('click', () => {
+					void (async () => {
 						const currentThemes = settings.availableThemes as string[];
-					let newThemes: string[];
-					
-					if (isSelected) {
-						// Remove theme from selection
-						newThemes = currentThemes.filter((id: string) => id !== theme.id);
-					} else {
-						// Add theme to selection
-						newThemes = [...currentThemes, theme.id];
+						let newThemes: string[];
+						
+						if (isSelected) {
+							// Remove theme from selection
+							newThemes = currentThemes.filter((id: string) => id !== theme.id);
+						} else {
+							// Add theme to selection
+							newThemes = [...currentThemes, theme.id];
 						}
 						
-						settings.availableThemes = newThemes as any;
+						settings.availableThemes = newThemes as Array<Exclude<ThemeType, 'custom'>>;
 						await this.plugin.saveData(settings);
 						// Reload settings to ensure the plugin has the latest values
-						await (this.plugin as any).loadSettings();
+						await (this.plugin as AstroModularPlugin).loadSettings();
 						
 						// Re-render to update pills
 						if (this.mainContainer) {
@@ -160,35 +176,42 @@ export class StyleTab extends TabRenderer {
 						// Apply changes immediately to config.ts
 						try {
 							await this.applyCurrentConfiguration();
-						new Notice(`Theme "${theme.name}" ${isSelected ? 'removed from' : 'added to'} available themes`);
-					} catch (error) {
-						new Notice(`Failed to apply theme change: ${error instanceof Error ? error.message : String(error)}`);
-					}
+							new Notice(`Theme "${theme.name}" ${isSelected ? 'removed from' : 'added to'} available themes`);
+						} catch (error) {
+							new Notice(`Failed to apply theme change: ${error instanceof Error ? error.message : String(error)}`);
+						}
+					})();
 				});
 			});
 			
 			// Add custom themes input field
 			const customThemesSection = themePillsContainer.createDiv('custom-themes-section');
-			customThemesSection.style.marginTop = '15px';
-			customThemesSection.style.padding = '10px';
-			customThemesSection.style.backgroundColor = 'var(--background-secondary)';
-			customThemesSection.style.borderRadius = '6px';
-			customThemesSection.style.border = '1px solid var(--background-modifier-border)';
+			customThemesSection.setCssProps({
+				marginTop: '15px',
+				padding: '10px',
+				backgroundColor: 'var(--background-secondary)',
+				borderRadius: '6px',
+				border: '1px solid var(--background-modifier-border)'
+			});
 			
 			const customThemesLabel = customThemesSection.createEl('label', { 
 				text: 'Custom themes (comma-separated):',
 				cls: 'custom-themes-label'
 			});
-			customThemesLabel.style.display = 'block';
-			customThemesLabel.style.fontSize = '12px';
-			customThemesLabel.style.color = 'var(--text-muted)';
-			customThemesLabel.style.marginBottom = '6px';
+			customThemesLabel.setCssProps({
+				display: 'block',
+				fontSize: '12px',
+				color: 'var(--text-muted)',
+				marginBottom: '6px'
+			});
 			
 			// Create input container with folder button
 			const inputContainer = customThemesSection.createDiv('custom-themes-input-container');
-			inputContainer.style.display = 'flex';
-			inputContainer.style.gap = '6px';
-			inputContainer.style.alignItems = 'center';
+			inputContainer.setCssProps({
+				display: 'flex',
+				gap: '6px',
+				alignItems: 'center'
+			});
 			
 			const customThemesInput = inputContainer.createEl('input', {
 				type: 'text',
@@ -198,13 +221,15 @@ export class StyleTab extends TabRenderer {
 					spellcheck: 'false'
 				}
 			});
-			customThemesInput.style.flex = '1';
-			customThemesInput.style.padding = '6px 8px';
-			customThemesInput.style.border = '1px solid var(--background-modifier-border)';
-			customThemesInput.style.borderRadius = '4px';
-			customThemesInput.style.backgroundColor = 'var(--background-primary)';
-			customThemesInput.style.color = 'var(--text-normal)';
-			customThemesInput.style.fontSize = '12px';
+			customThemesInput.setCssProps({
+				flex: '1',
+				padding: '6px 8px',
+				border: '1px solid var(--background-modifier-border)',
+				borderRadius: '4px',
+				backgroundColor: 'var(--background-primary)',
+				color: 'var(--text-normal)',
+				fontSize: '12px'
+			});
 			
 			// Add folder button
 			const folderButton = inputContainer.createEl('button', {
@@ -213,38 +238,41 @@ export class StyleTab extends TabRenderer {
 					'aria-label': 'Open themes folder'
 				}
 			});
-			folderButton.style.padding = '4px';
-			folderButton.style.border = 'none';
-			folderButton.style.backgroundColor = 'transparent';
-			folderButton.style.color = 'var(--text-normal)';
-			folderButton.style.display = 'flex';
-			folderButton.style.alignItems = 'center';
-			folderButton.style.justifyContent = 'center';
-			folderButton.style.marginTop = '2px';
+			folderButton.setCssProps({
+				padding: '4px',
+				border: 'none',
+				backgroundColor: 'transparent',
+				color: 'var(--text-normal)',
+				display: 'flex',
+				alignItems: 'center',
+				justifyContent: 'center',
+				marginTop: '2px'
+			});
 			
 			// Add folder icon using Obsidian's icon system
 			const folderIcon = folderButton.createDiv();
-			folderIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"></path></svg>';
+			setIcon(folderIcon, 'folder');
 			
 			// Add click handler for folder button
-			folderButton.addEventListener('click', async () => {
-				try {
-					// Open file explorer to the themes/custom directory
-					// Path: go up two levels from vault (src/content) to project root, then down to src/themes/custom
-					const themesPath = '../../src/themes/custom';
-					await (this.app as any).openWithDefaultApp(themesPath);
-				} catch (error) {
+			folderButton.addEventListener('click', () => {
+				// Open file explorer to the themes/custom directory
+				// Path: go up two levels from vault (src/content) to project root, then down to src/themes/custom
+				const themesPath = '../../src/themes/custom';
+				// openWithDefaultApp is not available in Obsidian's App interface, but may exist in Electron
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+				void ((this.app as any).openWithDefaultApp?.(themesPath) ?? Promise.resolve()).catch((error: unknown) => {
 					new Notice(`Failed to open themes folder: ${error instanceof Error ? error.message : String(error)}`);
-				}
+				});
 			});
 			
 			// Use debounced input like other text fields
 			let timeoutId: number | null = null;
-			customThemesInput.addEventListener('input', async () => {
+			customThemesInput.addEventListener('input', () => {
 				// Update the value immediately for UI responsiveness
 				settings.customThemes = customThemesInput.value.trim();
-				await this.plugin.saveData(settings);
-				await (this.plugin as any).loadSettings();
+				void this.plugin.saveData(settings).then(() => {
+					return (this.plugin as AstroModularPlugin).loadSettings();
+				});
 				
 				// Clear existing timeout
 				if (timeoutId) {
@@ -252,13 +280,12 @@ export class StyleTab extends TabRenderer {
 				}
 				
 				// Debounce the configuration application
-				timeoutId = window.setTimeout(async () => {
-					try {
-						await this.applyCurrentConfiguration();
+				timeoutId = window.setTimeout(() => {
+					void this.applyCurrentConfiguration().then(() => {
 						new Notice('Custom themes updated and applied to config.ts');
-					} catch (error) {
+					}).catch((error: unknown) => {
 						new Notice(`Failed to apply custom themes: ${error instanceof Error ? error.message : String(error)}`);
-					}
+					});
 				}, 1000); // 1 second debounce
 			});
 		}
@@ -290,7 +317,7 @@ export class StyleTab extends TabRenderer {
 						}
 					}
 					await this.plugin.saveData(settings);
-					await (this.plugin as any).loadSettings();
+					await (this.plugin as AstroModularPlugin).loadSettings();
 					
 					// Re-render to show/hide custom theme options
 					this.render(container);
@@ -312,10 +339,10 @@ export class StyleTab extends TabRenderer {
 
 			// Extract from Obsidian button
 			new Setting(customThemeSection)
-				.setName('Extract from Obsidian Theme')
+				.setName('Extract from Obsidian theme')
 				.setDesc('Extract colors from your currently active Obsidian theme')
 				.addButton(button => {
-					button.setButtonText('Extract Colors');
+					button.setButtonText('Extract colors');
 					button.setCta();
 					button.onClick(async () => {
 						try {
@@ -325,7 +352,7 @@ export class StyleTab extends TabRenderer {
 							settings.themeColors.extractedColors = extractedColors;
 							settings.themeColors.lastExtracted = new Date().toISOString();
 							await this.plugin.saveData(settings);
-							await (this.plugin as any).loadSettings();
+							await (this.plugin as AstroModularPlugin).loadSettings();
 							
 							// Re-render to show extracted colors
 							this.render(container);
@@ -340,10 +367,11 @@ export class StyleTab extends TabRenderer {
 			// Show last extracted timestamp
 			if (settings.themeColors.lastExtracted) {
 				const lastExtracted = new Date(settings.themeColors.lastExtracted).toLocaleString();
-				customThemeSection.createEl('p', { 
+				const timestampEl = customThemeSection.createEl('p', { 
 					text: `Last extracted: ${lastExtracted}`,
 					cls: 'theme-extraction-timestamp'
-				}).style.color = 'var(--text-muted)';
+				});
+				timestampEl.setCssProps({ color: 'var(--text-muted)' });
 			}
 
 			// Color mode selector (Simple vs Advanced)
@@ -357,7 +385,7 @@ export class StyleTab extends TabRenderer {
 					dropdown.onChange(async (value) => {
 						settings.themeColors.mode = value as 'simple' | 'advanced';
 						await this.plugin.saveData(settings);
-						await (this.plugin as any).loadSettings();
+						await (this.plugin as AstroModularPlugin).loadSettings();
 						this.render(container);
 					});
 				});
@@ -378,10 +406,10 @@ export class StyleTab extends TabRenderer {
 
 			// Save to custom theme file
 			new Setting(customThemeSection)
-				.setName('Save to Custom Theme File')
+				.setName('Save to custom theme file')
 				.setDesc('Generate a custom theme file from your extracted colors')
 				.addButton(button => {
-					button.setButtonText('Save Theme File');
+					button.setButtonText('Save theme file');
 					button.setCta();
 					button.onClick(async () => {
 						try {
@@ -406,7 +434,7 @@ export class StyleTab extends TabRenderer {
 							
 							// Apply theme and customThemeFile changes to config.ts
 							try {
-								const success = await (this.plugin as any).configManager.updateIndividualFeatures(settings);
+								const success = await (this.plugin as AstroModularPlugin).configManager.updateIndividualFeatures(settings);
 								if (success) {
 									new Notice(`${themeFileName}.ts saved successfully! Use the main theme dropdown to switch to "custom" if you want to use this theme.`);
 								} else {
@@ -424,11 +452,15 @@ export class StyleTab extends TabRenderer {
 
 		// Typography section
 		const typographySection = container.createDiv('settings-section');
-		typographySection.createEl('h3', { text: 'Typography' });
+		
+		// Typography heading
+		new Setting(typographySection)
+			.setHeading()
+			.setName('Typography');
 
 		// Heading font dropdown
 		new Setting(typographySection)
-			.setName('Heading Font')
+			.setName('Heading font')
 			.setDesc('Font for headings and titles')
 			.addDropdown(dropdown => {
 				FONT_OPTIONS.forEach(font => {
@@ -439,11 +471,11 @@ export class StyleTab extends TabRenderer {
 				settings.typography.headingFont = value;
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				
 				// Apply only heading font change to config.ts (not all settings)
 				try {
-					const success = await (this.plugin as any).configManager.updateFontOnly('heading', value);
+					const success = await (this.plugin as AstroModularPlugin).configManager.updateFontOnly('heading', value);
 					if (success) {
 						new Notice('Heading font updated and applied to config.ts');
 					} else {
@@ -457,7 +489,7 @@ export class StyleTab extends TabRenderer {
 
 		// Prose font dropdown
 		new Setting(typographySection)
-			.setName('Prose Font')
+			.setName('Prose font')
 			.setDesc('Font for body text and content')
 			.addDropdown(dropdown => {
 				FONT_OPTIONS.forEach(font => {
@@ -468,11 +500,11 @@ export class StyleTab extends TabRenderer {
 				settings.typography.proseFont = value;
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				
 				// Apply only prose font change to config.ts (not all settings)
 				try {
-					const success = await (this.plugin as any).configManager.updateFontOnly('prose', value);
+					const success = await (this.plugin as AstroModularPlugin).configManager.updateFontOnly('prose', value);
 					if (success) {
 						new Notice('Prose font updated and applied to config.ts');
 					} else {
@@ -486,7 +518,7 @@ export class StyleTab extends TabRenderer {
 
 		// Mono font dropdown
 		new Setting(typographySection)
-			.setName('Monospace Font')
+			.setName('Monospace font')
 			.setDesc('Font for code blocks and technical content')
 			.addDropdown(dropdown => {
 				FONT_OPTIONS.forEach(font => {
@@ -497,11 +529,11 @@ export class StyleTab extends TabRenderer {
 				settings.typography.monoFont = value;
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				
 				// Apply only monospace font change to config.ts (not all settings)
 				try {
-					const success = await (this.plugin as any).configManager.updateFontOnly('mono', value);
+					const success = await (this.plugin as AstroModularPlugin).configManager.updateFontOnly('mono', value);
 					if (success) {
 						new Notice('Monospace font updated and applied to config.ts');
 					} else {
@@ -515,17 +547,21 @@ export class StyleTab extends TabRenderer {
 
 		// Font source dropdown
 		new Setting(typographySection)
-			.setName('Font Source')
+			.setName('Font source')
 			.setDesc('How fonts are loaded')
 			.addDropdown(dropdown => {
+				// False positive: "Google Fonts" is a proper noun (product name) and should be capitalized
+				// eslint-disable-next-line obsidianmd/ui/sentence-case
 				dropdown.addOption('local', 'Local (Google Fonts)');
+				// False positive: "CDN" is an acronym and should be capitalized
+				// eslint-disable-next-line obsidianmd/ui/sentence-case
 				dropdown.addOption('cdn', 'CDN (Custom)');
 				dropdown.setValue(settings.typography.fontSource);
 				dropdown.onChange(async (value) => {
-				settings.typography.fontSource = value as any;
+				settings.typography.fontSource = value as 'local' | 'cdn';
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				
 				// Re-render to show/hide custom inputs
 				this.render(container);
@@ -542,7 +578,7 @@ export class StyleTab extends TabRenderer {
 
 		// Font display dropdown
 		new Setting(typographySection)
-			.setName('Font Display')
+			.setName('Font display')
 			.setDesc('Font display strategy')
 			.addDropdown(dropdown => {
 				dropdown.addOption('swap', 'Swap (recommended)');
@@ -553,7 +589,7 @@ export class StyleTab extends TabRenderer {
 				settings.typography.fontDisplay = value as 'swap' | 'fallback' | 'optional';
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				
 				// Apply changes immediately to config.ts
 				try {
@@ -642,41 +678,47 @@ export class StyleTab extends TabRenderer {
 	/**
 	 * Render color preview
 	 */
-	private renderColorPreview(container: HTMLElement, colors: any): void {
+	private renderColorPreview(container: HTMLElement, colors: { primary: ColorScale; highlight: ColorScale }): void {
 		const previewSection = container.createDiv('color-preview-section');
-		previewSection.createEl('h4', { text: 'Color Preview' });
+		previewSection.createEl('h4', { text: 'Color preview' });
 		
 		const previewContainer = previewSection.createDiv('color-preview-container');
-		previewContainer.style.display = 'flex';
-		previewContainer.style.gap = '10px';
-		previewContainer.style.marginTop = '10px';
+		previewContainer.setCssProps({
+			display: 'flex',
+			gap: '10px',
+			marginTop: '10px'
+		});
 
 		// Show primary colors (50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950)
-		const primaryShades = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
+		const primaryShades: Array<keyof ColorScale> = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
 		primaryShades.forEach(shade => {
-			const colorValue = colors.primary[shade as keyof typeof colors.primary];
+			const colorValue = colors.primary[shade];
 			if (colorValue) {
 				const colorBox = previewContainer.createDiv('color-box');
-				colorBox.style.width = '20px';
-				colorBox.style.height = '20px';
-				colorBox.style.backgroundColor = colorValue;
-				colorBox.style.border = '1px solid var(--background-modifier-border)';
-				colorBox.style.borderRadius = '3px';
+				colorBox.setCssProps({
+					width: '20px',
+					height: '20px',
+					backgroundColor: colorValue,
+					border: '1px solid var(--background-modifier-border)',
+					borderRadius: '3px'
+				});
 				colorBox.title = `Primary ${shade}: ${colorValue}`;
 			}
 		});
 
 		// Show highlight colors (50, 100, 200, 300, 400, 500, 600, 700, 800, 900)
-		const highlightShades = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900];
+		const highlightShades: Array<keyof ColorScale> = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900];
 		highlightShades.forEach(shade => {
-			const colorValue = colors.highlight[shade as keyof typeof colors.highlight];
+			const colorValue = colors.highlight[shade];
 			if (colorValue) {
 				const colorBox = previewContainer.createDiv('color-box');
-				colorBox.style.width = '20px';
-				colorBox.style.height = '20px';
-				colorBox.style.backgroundColor = colorValue;
-				colorBox.style.border = '1px solid var(--background-modifier-border)';
-				colorBox.style.borderRadius = '3px';
+				colorBox.setCssProps({
+					width: '20px',
+					height: '20px',
+					backgroundColor: colorValue,
+					border: '1px solid var(--background-modifier-border)',
+					borderRadius: '3px'
+				});
 				colorBox.title = `Highlight ${shade}: ${colorValue}`;
 			}
 		});
@@ -685,10 +727,10 @@ export class StyleTab extends TabRenderer {
 	/**
 	 * Render simple color editor (accent + background)
 	 */
-	private renderSimpleColorEditor(container: HTMLElement, settings: any): void {
+	private renderSimpleColorEditor(container: HTMLElement, settings: AstroModularSettings): void {
 		const simpleSection = container.createDiv('simple-color-inputs');
-		simpleSection.style.marginBottom = '20px'; // Add spacing below the simple editor
-		simpleSection.createEl('h4', { text: 'Simple Color Editor' });
+		simpleSection.setCssProps({ marginBottom: '20px' }); // Add spacing below the simple editor
+		simpleSection.createEl('h4', { text: 'Simple color editor' });
 
 		// Always initialize simple colors from extracted colors to ensure they're current
 		const accentColor = settings.themeColors.extractedColors?.highlight?.[500] || '#5865f2';
@@ -701,13 +743,13 @@ export class StyleTab extends TabRenderer {
 
 		// Accent color
 		const accentDiv = simpleSection.createDiv('simple-color-input');
-		accentDiv.createEl('label', { text: 'Accent Color:' });
+		accentDiv.createEl('label', { text: 'Accent color:' });
 		
 		const accentTextInput = accentDiv.createEl('input', { 
 			type: 'text', 
 			value: settings.themeColors.simpleColors.accent 
 		});
-		accentTextInput.style.fontFamily = 'var(--font-monospace)';
+		accentTextInput.setCssProps({ fontFamily: 'var(--font-monospace)' });
 		
 		const accentColorPicker = accentDiv.createEl('input', { type: 'color' });
 		accentColorPicker.value = settings.themeColors.simpleColors.accent;
@@ -729,13 +771,13 @@ export class StyleTab extends TabRenderer {
 
 		// Background color
 		const backgroundDiv = simpleSection.createDiv('simple-color-input');
-		backgroundDiv.createEl('label', { text: 'Background Color:' });
+		backgroundDiv.createEl('label', { text: 'Background color:' });
 		
 		const backgroundTextInput = backgroundDiv.createEl('input', { 
 			type: 'text', 
 			value: settings.themeColors.simpleColors.background 
 		});
-		backgroundTextInput.style.fontFamily = 'var(--font-monospace)';
+		backgroundTextInput.setCssProps({ fontFamily: 'var(--font-monospace)' });
 		
 		const backgroundColorPicker = backgroundDiv.createEl('input', { type: 'color' });
 		backgroundColorPicker.value = settings.themeColors.simpleColors.background;
@@ -759,46 +801,56 @@ export class StyleTab extends TabRenderer {
 	/**
 	 * Render advanced color editor (individual shades)
 	 */
-	private renderAdvancedColorEditor(container: HTMLElement, settings: any): void {
+	private renderAdvancedColorEditor(container: HTMLElement, settings: AstroModularSettings): void {
 		const advancedSection = container.createDiv('advanced-mode-section');
-		advancedSection.createEl('h4', { text: 'Advanced Color Editor' });
+		advancedSection.createEl('h4', { text: 'Advanced color editor' });
 
 		// Primary colors
 		const primarySection = advancedSection.createDiv('color-scale-editor');
-		primarySection.createEl('h5', { text: 'Primary Colors' });
+		primarySection.createEl('h5', { text: 'Primary colors' });
 		
-		const primaryShades = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
+		const primaryShades: Array<keyof ColorScale> = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
 		primaryShades.forEach(shade => {
 			const colorValue = settings.themeColors.extractedColors?.primary?.[shade];
 			if (colorValue) {
 				const settingItem = primarySection.createDiv('setting-item');
-				settingItem.style.display = 'flex';
-				settingItem.style.alignItems = 'center';
-				settingItem.style.gap = '10px';
-				settingItem.style.marginBottom = '8px';
+				settingItem.setCssProps({
+					display: 'flex',
+					alignItems: 'center',
+					gap: '10px',
+					marginBottom: '8px'
+				});
 				
 				const label = settingItem.createDiv('setting-item-name');
 				label.textContent = `${shade}:`;
-				label.style.minWidth = '40px';
-				label.style.fontSize = '12px';
-				label.style.color = 'var(--text-muted)';
+				label.setCssProps({
+					minWidth: '40px',
+					fontSize: '12px',
+					color: 'var(--text-muted)'
+				});
 				
 				const control = settingItem.createDiv('setting-item-control');
-				control.style.display = 'flex';
-				control.style.gap = '8px';
-				control.style.alignItems = 'center';
+				control.setCssProps({
+					display: 'flex',
+					gap: '8px',
+					alignItems: 'center'
+				});
 				
 				const textInput = control.createEl('input', { type: 'text', value: colorValue });
-				textInput.style.width = '100px';
-				textInput.style.fontFamily = 'var(--font-monospace)';
-				textInput.style.fontSize = '12px';
+				textInput.setCssProps({
+					width: '100px',
+					fontFamily: 'var(--font-monospace)',
+					fontSize: '12px'
+				});
 				
 				const colorPicker = control.createEl('input', { type: 'color', value: colorValue });
 				colorPicker.className = 'color-picker';
 				
 				textInput.oninput = async () => {
 					if (ThemeColorExtractor.isValidHexColor(textInput.value)) {
-						settings.themeColors.extractedColors.primary[shade] = textInput.value;
+						if (settings.themeColors.extractedColors?.primary) {
+							settings.themeColors.extractedColors.primary[shade] = textInput.value;
+						}
 						colorPicker.value = textInput.value;
 						await this.plugin.saveData(settings);
 					}
@@ -814,40 +866,50 @@ export class StyleTab extends TabRenderer {
 
 		// Highlight colors
 		const highlightSection = advancedSection.createDiv('color-scale-editor');
-		highlightSection.createEl('h5', { text: 'Highlight Colors' });
+		highlightSection.createEl('h5', { text: 'Highlight colors' });
 		
-		const highlightShades = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900];
+		const highlightShades: Array<keyof ColorScale> = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900];
 		highlightShades.forEach(shade => {
 			const colorValue = settings.themeColors.extractedColors?.highlight?.[shade];
 			if (colorValue) {
 				const settingItem = highlightSection.createDiv('setting-item');
-				settingItem.style.display = 'flex';
-				settingItem.style.alignItems = 'center';
-				settingItem.style.gap = '10px';
-				settingItem.style.marginBottom = '8px';
+				settingItem.setCssProps({
+					display: 'flex',
+					alignItems: 'center',
+					gap: '10px',
+					marginBottom: '8px'
+				});
 				
 				const label = settingItem.createDiv('setting-item-name');
 				label.textContent = `${shade}:`;
-				label.style.minWidth = '40px';
-				label.style.fontSize = '12px';
-				label.style.color = 'var(--text-muted)';
+				label.setCssProps({
+					minWidth: '40px',
+					fontSize: '12px',
+					color: 'var(--text-muted)'
+				});
 				
 				const control = settingItem.createDiv('setting-item-control');
-				control.style.display = 'flex';
-				control.style.gap = '8px';
-				control.style.alignItems = 'center';
+				control.setCssProps({
+					display: 'flex',
+					gap: '8px',
+					alignItems: 'center'
+				});
 				
 				const textInput = control.createEl('input', { type: 'text', value: colorValue });
-				textInput.style.width = '100px';
-				textInput.style.fontFamily = 'var(--font-monospace)';
-				textInput.style.fontSize = '12px';
+				textInput.setCssProps({
+					width: '100px',
+					fontFamily: 'var(--font-monospace)',
+					fontSize: '12px'
+				});
 				
 				const colorPicker = control.createEl('input', { type: 'color', value: colorValue });
 				colorPicker.className = 'color-picker';
 				
 				textInput.oninput = async () => {
 					if (ThemeColorExtractor.isValidHexColor(textInput.value)) {
-						settings.themeColors.extractedColors.highlight[shade] = textInput.value;
+						if (settings.themeColors.extractedColors?.highlight) {
+							settings.themeColors.extractedColors.highlight[shade] = textInput.value;
+						}
 						colorPicker.value = textInput.value;
 						await this.plugin.saveData(settings);
 					}

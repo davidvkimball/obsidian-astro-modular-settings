@@ -1,5 +1,5 @@
 import { App, Modal, Plugin } from 'obsidian';
-import { WizardStateManager } from './WizardState';
+import { WizardStateManager, WizardState } from './WizardState';
 
 export abstract class BaseWizardStep {
 	protected app: App;
@@ -33,7 +33,7 @@ export abstract class BaseWizardStep {
 		// The modal will re-render with the new step
 	}
 
-	protected updateState(updates: any): void {
+	protected updateState(updates: Partial<WizardState>): void {
 		this.stateManager.updateState(updates);
 	}
 

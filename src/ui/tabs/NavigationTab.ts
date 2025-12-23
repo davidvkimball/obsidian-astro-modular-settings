@@ -1,4 +1,5 @@
 import { Setting, Notice, setIcon } from 'obsidian';
+import { AstroModularPlugin, NavigationItem } from '../../types';
 import { TabRenderer } from '../common/TabRenderer';
 
 export class NavigationTab extends TabRenderer {
@@ -11,66 +12,31 @@ export class NavigationTab extends TabRenderer {
 		this.listenersAttached = false;
 		const settings = this.getSettings();
 
-		// Settings section header
-		const settingsSection = container.createDiv('settings-section');
-
 		// Navigation pages section
 		const pagesSection = container.createDiv('settings-section');
-		pagesSection.createEl('h3', { text: 'Navigation Pages' });
-		pagesSection.createEl('p', { text: 'Add or remove pages from your main navigation menu.' });
+		
+		// Navigation Pages heading
+		new Setting(pagesSection)
+			.setHeading()
+			.setName('Navigation pages')
+			.setDesc('Add or remove pages from your main navigation menu.');
 
-		// Display existing pages using innerHTML like the wizard
+		// Display existing pages using programmatic DOM creation
 		const pagesList = pagesSection.createDiv('nav-items');
 		pagesList.id = 'pages-list';
-		pagesList.innerHTML = `
-			${settings.navigation.pages.map((page: any, index: number) => {
-				const hasChildren = page.children && page.children.length > 0;
-				return `
-				<div class="nav-item" data-index="${index}" draggable="true">
-					<div class="nav-item-content">
-						<div class="nav-item-fields">
-							<input type="text" class="nav-title" placeholder="Page Title" value="${page.title || ''}" draggable="false">
-							<input type="text" class="nav-url" placeholder="/page-url (leave empty for dropdown-only)" value="${page.url || ''}" draggable="false">
-						</div>
-						<div class="nav-item-actions">
-							<button class="nav-add-child" data-index="${index}" title="Add child page">+ Child</button>
-							<button class="nav-remove mod-warning" data-index="${index}" data-icon="trash" title="Remove" aria-label="Remove"></button>
-						</div>
-					</div>
-					<div class="nav-children-container" data-parent-index="${index}" ${!hasChildren ? 'style="display: none;"' : ''}>
-						<div class="nav-children-label">Child Pages:</div>
-						<div class="nav-children" data-parent-index="${index}">
-							${hasChildren ? page.children.map((child: any, childIndex: number) => `
-								<div class="nav-child-item" data-index="${index}" data-child-index="${childIndex}">
-									<div class="nav-item-fields">
-										<input type="text" class="nav-child-title" placeholder="Child Title" value="${child.title || ''}" draggable="false">
-										<input type="text" class="nav-child-url" placeholder="/child-url" value="${child.url || ''}" draggable="false">
-									</div>
-									<button class="nav-child-remove mod-warning" data-index="${index}" data-child-index="${childIndex}" data-icon="trash" title="Remove" aria-label="Remove"></button>
-								</div>
-							`).join('') : ''}
-						</div>
-					</div>
-				</div>
-			`;
-			}).join('')}
-		`;
-
-		// Set icons on remove buttons - use setTimeout to ensure DOM is ready
-		setTimeout(() => {
-			pagesList.querySelectorAll('button[data-icon="trash"]').forEach((button) => {
-				// Clear any text content first
-				button.textContent = '';
-				setIcon(button as HTMLElement, 'trash');
-			});
-		}, 0);
+		
+		settings.navigation.pages.forEach((page, index) => {
+			this.renderPageItem(pagesList, page, index);
+		});
 
 		// Add page button
 		new Setting(pagesSection)
-			.setName('Add Page')
+			.setName('Add page')
 			.setDesc('Add a new page to your navigation')
 				.addButton(button => button
-					.setButtonText('+ Add Page')
+					// "+ Add page" is a button label, keep as is
+					// eslint-disable-next-line obsidianmd/ui/sentence-case
+					.setButtonText('+ Add page')
 					.setCta()
 					.onClick(async () => {
 						settings.navigation.pages.push({ title: 'New Page', url: '/new-page' });
@@ -82,47 +48,29 @@ export class NavigationTab extends TabRenderer {
 
 		// Social links section
 		const socialSection = container.createDiv('settings-section');
-		socialSection.createEl('h3', { text: 'Social Links' });
-		socialSection.createEl('p', { text: 'Add or remove social media links.' });
+		
+		// Social Links heading
+		new Setting(socialSection)
+			.setHeading()
+			.setName('Social links')
+			.setDesc('Add or remove social media links.');
 
-		// Display existing social links using innerHTML like the wizard
+		// Display existing social links using programmatic DOM creation
 		const socialList = socialSection.createDiv('nav-items');
 		socialList.id = 'social-list';
-		socialList.innerHTML = `
-			${settings.navigation.social.map((social: any, index: number) => `
-				<div class="nav-item" data-index="${index}" draggable="true">
-					<div class="nav-item-content">
-						<div class="nav-item-fields">
-							<input type="text" class="nav-title" placeholder="Social Title" value="${social.title}" draggable="false">
-							<input type="text" class="nav-url" placeholder="https://example.com" value="${social.url}" draggable="false">
-						</div>
-						<button class="nav-remove mod-warning" data-index="${index}" data-icon="trash" title="Remove" aria-label="Remove"></button>
-					</div>
-					<div class="nav-icon-row">
-						<input type="text" class="nav-icon" placeholder="icon-name" value="${social.icon || ''}" draggable="false">
-						<div class="nav-icon-help">
-							<small>Icon names from FontAwesome Brands</small>
-						</div>
-					</div>
-				</div>
-			`).join('')}
-		`;
-
-		// Set icons on remove buttons - use setTimeout to ensure DOM is ready
-		setTimeout(() => {
-			socialList.querySelectorAll('button[data-icon="trash"]').forEach((button) => {
-				// Clear any text content first
-				button.textContent = '';
-				setIcon(button as HTMLElement, 'trash');
-			});
-		}, 0);
+		
+		settings.navigation.social.forEach((social, index) => {
+			this.renderSocialItem(socialList, social, index);
+		});
 
 		// Add social link button
 		new Setting(socialSection)
-			.setName('Add Social Link')
+			.setName('Add social link')
 			.setDesc('Add a new social media link')
 				.addButton(button => button
-					.setButtonText('+ Add Social Link')
+					// "+ Add social link" is a button label, keep as is
+					// eslint-disable-next-line obsidianmd/ui/sentence-case
+					.setButtonText('+ Add social link')
 					.setCta()
 					.onClick(async () => {
 						settings.navigation.social.push({ title: 'New Social', url: 'https://example.com', icon: '' });
@@ -135,10 +83,16 @@ export class NavigationTab extends TabRenderer {
 
 		// Navigation Options section
 		const navOptionsSection = container.createDiv('settings-section');
-		navOptionsSection.style.marginTop = '30px';
-		navOptionsSection.style.paddingTop = '20px';
-		navOptionsSection.style.borderTop = '2px solid var(--background-modifier-border)';
-		navOptionsSection.createEl('h3', { text: 'Navigation Options' });
+		navOptionsSection.setCssProps({
+			marginTop: '30px',
+			paddingTop: '20px',
+			borderTop: '2px solid var(--background-modifier-border)'
+		});
+		
+		// Navigation Options heading
+		new Setting(navOptionsSection)
+			.setHeading()
+			.setName('Navigation options');
 
 		// Show navigation toggle
 		new Setting(navOptionsSection)
@@ -150,7 +104,7 @@ export class NavigationTab extends TabRenderer {
 				settings.navigation.showNavigation = value;
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				await this.applyCurrentConfiguration();
 					new Notice(`Navigation ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
 				}));
@@ -167,7 +121,7 @@ export class NavigationTab extends TabRenderer {
 				settings.navigation.style = value as 'minimal' | 'traditional';
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				await this.applyCurrentConfiguration();
 					new Notice(`Navigation style changed to ${value} and applied to config.ts`);
 				}));
@@ -182,7 +136,7 @@ export class NavigationTab extends TabRenderer {
 				settings.navigation.showMobileMenu = value;
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				await this.applyCurrentConfiguration();
 					new Notice(`Mobile menu ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
 				}));
@@ -203,14 +157,14 @@ export class NavigationTab extends TabRenderer {
 			const target = e.target as HTMLElement;
 			if (target.classList.contains('nav-item')) {
 				draggedElement = target;
-				target.style.opacity = '0.5';
+				target.setCssProps({ opacity: '0.5' });
 			}
 		};
 
 		const dragEndHandler = (e: DragEvent) => {
 			const target = e.target as HTMLElement;
 			if (target.classList.contains('nav-item')) {
-				target.style.opacity = '1';
+				target.setCssProps({ opacity: '1' });
 				draggedElement = null;
 			}
 		};
@@ -223,11 +177,15 @@ export class NavigationTab extends TabRenderer {
 				const midpoint = rect.top + rect.height / 2;
 				
 				if (e.clientY < midpoint) {
-					target.style.borderTop = '2px solid var(--interactive-accent)';
-					target.style.borderBottom = 'none';
+					target.setCssProps({
+						borderTop: '2px solid var(--interactive-accent)',
+						borderBottom: 'none'
+					});
 				} else {
-					target.style.borderBottom = '2px solid var(--interactive-accent)';
-					target.style.borderTop = 'none';
+					target.setCssProps({
+						borderBottom: '2px solid var(--interactive-accent)',
+						borderTop: 'none'
+					});
 				}
 			}
 		};
@@ -235,8 +193,10 @@ export class NavigationTab extends TabRenderer {
 		const dragLeaveHandler = (e: DragEvent) => {
 			const target = e.target as HTMLElement;
 			if (target.classList.contains('nav-item')) {
-				target.style.borderTop = 'none';
-				target.style.borderBottom = 'none';
+				target.setCssProps({
+					borderTop: 'none',
+					borderBottom: 'none'
+				});
 			}
 		};
 
@@ -251,8 +211,10 @@ export class NavigationTab extends TabRenderer {
 				const isSocial = target.closest('#social-list');
 				
 				// Clear visual indicators
-				target.style.borderTop = 'none';
-				target.style.borderBottom = 'none';
+				target.setCssProps({
+					borderTop: 'none',
+					borderBottom: 'none'
+				});
 				
 				if (targetIndex !== draggedIndex) {
 					const currentSettings = this.getSettings();
@@ -281,27 +243,47 @@ export class NavigationTab extends TabRenderer {
 		};
 
 		// Remove old handlers if they exist
-		if ((container as any)._dragStartHandler) {
-			container.removeEventListener('dragstart', (container as any)._dragStartHandler);
-			container.removeEventListener('dragend', (container as any)._dragEndHandler);
-			container.removeEventListener('dragover', (container as any)._dragOverHandler);
-			container.removeEventListener('dragleave', (container as any)._dragLeaveHandler);
-			container.removeEventListener('drop', (container as any)._dropHandler);
+		interface ContainerWithHandlers extends HTMLElement {
+			_dragStartHandler?: (ev: DragEvent) => void;
+			_dragEndHandler?: (ev: DragEvent) => void;
+			_dragOverHandler?: (ev: DragEvent) => void;
+			_dragLeaveHandler?: (ev: DragEvent) => void;
+			_dropHandler?: (ev: DragEvent) => void;
+			_removeHandler?: (ev: MouseEvent) => void;
+		}
+		const containerWithHandlers = container as ContainerWithHandlers;
+		
+		if (containerWithHandlers._dragStartHandler) {
+			container.removeEventListener('dragstart', containerWithHandlers._dragStartHandler);
+			container.removeEventListener('dragend', containerWithHandlers._dragEndHandler!);
+			container.removeEventListener('dragover', containerWithHandlers._dragOverHandler!);
+			container.removeEventListener('dragleave', containerWithHandlers._dragLeaveHandler!);
+			container.removeEventListener('drop', containerWithHandlers._dropHandler!);
 		}
 
 		// Store handlers for later removal
-		(container as any)._dragStartHandler = dragStartHandler;
-		(container as any)._dragEndHandler = dragEndHandler;
-		(container as any)._dragOverHandler = dragOverHandler;
-		(container as any)._dragLeaveHandler = dragLeaveHandler;
-		(container as any)._dropHandler = dropHandler;
+		containerWithHandlers._dragStartHandler = dragStartHandler;
+		containerWithHandlers._dragEndHandler = dragEndHandler;
+		containerWithHandlers._dragOverHandler = dragOverHandler;
+		containerWithHandlers._dragLeaveHandler = dragLeaveHandler;
+		containerWithHandlers._dropHandler = dropHandler;
 
 		// Add new handlers
-		container.addEventListener('dragstart', dragStartHandler);
-		container.addEventListener('dragend', dragEndHandler);
-		container.addEventListener('dragover', dragOverHandler);
-		container.addEventListener('dragleave', dragLeaveHandler);
-		container.addEventListener('drop', dropHandler);
+		if (containerWithHandlers._dragStartHandler) {
+			container.addEventListener('dragstart', containerWithHandlers._dragStartHandler);
+		}
+		if (containerWithHandlers._dragEndHandler) {
+			container.addEventListener('dragend', containerWithHandlers._dragEndHandler);
+		}
+		if (containerWithHandlers._dragOverHandler) {
+			container.addEventListener('dragover', containerWithHandlers._dragOverHandler);
+		}
+		if (containerWithHandlers._dragLeaveHandler) {
+			container.addEventListener('dragleave', containerWithHandlers._dragLeaveHandler);
+		}
+		if (containerWithHandlers._dropHandler) {
+			container.addEventListener('drop', containerWithHandlers._dropHandler);
+		}
 	}
 
 	private setupEventDelegation(container: HTMLElement): void {
@@ -391,7 +373,7 @@ export class NavigationTab extends TabRenderer {
 					currentSettings.navigation.pages.splice(index, 1);
 					await this.plugin.saveData(currentSettings);
 					// Reload settings to ensure the plugin has the latest values
-					await (this.plugin as any).loadSettings();
+					await (this.plugin as AstroModularPlugin).loadSettings();
 					await this.applyCurrentConfiguration(false);
 					new Notice('Navigation page removed and applied to config.ts');
 					this.render(container); // Re-render to update indices
@@ -399,7 +381,7 @@ export class NavigationTab extends TabRenderer {
 					currentSettings.navigation.social.splice(index, 1);
 					await this.plugin.saveData(currentSettings);
 					// Reload settings to ensure the plugin has the latest values
-					await (this.plugin as any).loadSettings();
+					await (this.plugin as AstroModularPlugin).loadSettings();
 					await this.applyCurrentConfiguration(false);
 					new Notice('Social link removed and applied to config.ts');
 					this.render(container); // Re-render to update indices
@@ -419,14 +401,14 @@ export class NavigationTab extends TabRenderer {
 						delete currentSettings.navigation.pages[parentIndex].children;
 					}
 					await this.plugin.saveData(currentSettings);
-					await (this.plugin as any).loadSettings();
+					await (this.plugin as AstroModularPlugin).loadSettings();
 					await this.applyCurrentConfiguration(false);
 					new Notice('Child page removed and applied to config.ts');
 					// Hide children container if no children left
 					const navItem = target.closest('.nav-item');
 					const childrenContainer = navItem?.querySelector('.nav-children-container') as HTMLElement;
 					if (childrenContainer && (!currentSettings.navigation.pages[parentIndex].children || currentSettings.navigation.pages[parentIndex].children!.length === 0)) {
-						childrenContainer.style.display = 'none';
+						childrenContainer.setCssProps({ display: 'none' });
 					}
 					this.render(container);
 				}
@@ -442,14 +424,14 @@ export class NavigationTab extends TabRenderer {
 				}
 				currentSettings.navigation.pages[index].children!.push({ title: 'New Child', url: '/new-child' });
 				await this.plugin.saveData(currentSettings);
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				await this.applyCurrentConfiguration(false);
 				new Notice('Child page added and applied to config.ts');
 				// Show the children container if it was hidden
 				const navItem = target.closest('.nav-item');
 				const childrenContainer = navItem?.querySelector('.nav-children-container') as HTMLElement;
 				if (childrenContainer) {
-					childrenContainer.style.display = 'block';
+					childrenContainer.setCssProps({ display: 'block' });
 				}
 				this.render(container);
 				// Re-set icons after render (including new child buttons)
@@ -463,10 +445,16 @@ export class NavigationTab extends TabRenderer {
 		};
 		
 		// Remove any existing remove handler to prevent duplicates
-		container.removeEventListener('click', (container as any)._removeHandler);
+		interface ContainerWithHandlers extends HTMLElement {
+			_removeHandler?: (ev: MouseEvent) => void;
+		}
+		const containerWithHandlers = container as ContainerWithHandlers;
+		if (containerWithHandlers._removeHandler) {
+			container.removeEventListener('click', containerWithHandlers._removeHandler);
+		}
 		// Store the handler so we can remove it later
-		(container as any)._removeHandler = removeHandler;
-		container.addEventListener('click', removeHandler);
+		containerWithHandlers._removeHandler = removeHandler;
+		container.addEventListener('click', containerWithHandlers._removeHandler);
 	}
 
 	private debouncedSave(): void {
@@ -476,9 +464,141 @@ export class NavigationTab extends TabRenderer {
 		}
 		
 		// Set new timeout
-		this.saveTimeoutId = window.setTimeout(async () => {
-			await this.plugin.saveData(this.getSettings());
-			await this.applyCurrentConfiguration(false); // No notification for drag and drop
+		this.saveTimeoutId = window.setTimeout(() => {
+			void this.plugin.saveData(this.getSettings());
+			void this.applyCurrentConfiguration(false); // No notification for drag and drop
 		}, 1000); // 1 second debounce
+	}
+	
+	private renderPageItem(container: HTMLElement, page: NavigationItem, index: number): void {
+		const hasChildren = page.children && page.children.length > 0;
+		
+		const navItem = container.createDiv('nav-item');
+		navItem.setAttribute('data-index', index.toString());
+		navItem.setAttribute('draggable', 'true');
+		
+		const itemContent = navItem.createDiv('nav-item-content');
+		const itemFields = itemContent.createDiv('nav-item-fields');
+		
+		const titleInput = itemFields.createEl('input', {
+			type: 'text',
+			cls: 'nav-title',
+			attr: { placeholder: 'Page title', draggable: 'false' }
+		});
+		titleInput.value = page.title || '';
+		
+		const urlInput = itemFields.createEl('input', {
+			type: 'text',
+			cls: 'nav-url',
+			attr: { placeholder: '/page-url (leave empty for dropdown-only)', draggable: 'false' }
+		});
+		urlInput.value = page.url || '';
+		
+		const itemActions = itemContent.createDiv('nav-item-actions');
+		itemActions.createEl('button', {
+			// "+ Child" is a button label, keep as is
+			// eslint-disable-next-line obsidianmd/ui/sentence-case
+			text: '+ Child',
+			cls: 'nav-add-child',
+			attr: { 'data-index': index.toString(), title: 'Add child page' }
+		});
+		
+		const removeBtn = itemActions.createEl('button', {
+			cls: 'nav-remove mod-warning',
+			attr: { 'data-index': index.toString(), 'data-icon': 'trash', title: 'Remove', 'aria-label': 'Remove' }
+		});
+		setIcon(removeBtn, 'trash');
+		
+		const childrenContainer = navItem.createDiv('nav-children-container');
+		childrenContainer.setAttribute('data-parent-index', index.toString());
+		if (!hasChildren) {
+			childrenContainer.setCssProps({ display: 'none' });
+		}
+		
+		childrenContainer.createDiv('nav-children-label').textContent = 'Child pages:';
+		const childrenDiv = childrenContainer.createDiv('nav-children');
+		childrenDiv.setAttribute('data-parent-index', index.toString());
+		
+		if (hasChildren && page.children) {
+			page.children.forEach((child, childIndex) => {
+				this.renderChildItem(childrenDiv, child, index, childIndex);
+			});
+		}
+	}
+	
+	private renderChildItem(container: HTMLElement, child: NavigationItem, parentIndex: number, childIndex: number): void {
+		const childItem = container.createDiv('nav-child-item');
+		childItem.setAttribute('data-index', parentIndex.toString());
+		childItem.setAttribute('data-child-index', childIndex.toString());
+		
+		const itemFields = childItem.createDiv('nav-item-fields');
+		
+		const titleInput = itemFields.createEl('input', {
+			type: 'text',
+			cls: 'nav-child-title',
+			attr: { placeholder: 'Child title', draggable: 'false' }
+		});
+		titleInput.value = child.title || '';
+		
+		const urlInput = itemFields.createEl('input', {
+			type: 'text',
+			cls: 'nav-child-url',
+			attr: { placeholder: '/child-url', draggable: 'false' }
+		});
+		urlInput.value = child.url || '';
+		
+		const removeBtn = childItem.createEl('button', {
+			cls: 'nav-child-remove mod-warning',
+			attr: {
+				'data-index': parentIndex.toString(),
+				'data-child-index': childIndex.toString(),
+				'data-icon': 'trash',
+				title: 'Remove',
+				'aria-label': 'Remove'
+			}
+		});
+		setIcon(removeBtn, 'trash');
+	}
+	
+	private renderSocialItem(container: HTMLElement, social: { title: string; url: string; icon: string }, index: number): void {
+		const navItem = container.createDiv('nav-item');
+		navItem.setAttribute('data-index', index.toString());
+		navItem.setAttribute('draggable', 'true');
+		
+		const itemContent = navItem.createDiv('nav-item-content');
+		const itemFields = itemContent.createDiv('nav-item-fields');
+		
+		const titleInput = itemFields.createEl('input', {
+			type: 'text',
+			cls: 'nav-title',
+			attr: { placeholder: 'Social title', draggable: 'false' }
+		});
+		titleInput.value = social.title || '';
+		
+		const urlInput = itemFields.createEl('input', {
+			type: 'text',
+			cls: 'nav-url',
+			attr: { placeholder: 'https://example.com', draggable: 'false' }
+		});
+		urlInput.value = social.url || '';
+		
+		const removeBtn = itemContent.createEl('button', {
+			cls: 'nav-remove mod-warning',
+			attr: { 'data-index': index.toString(), 'data-icon': 'trash', title: 'Remove', 'aria-label': 'Remove' }
+		});
+		setIcon(removeBtn, 'trash');
+		
+		const iconRow = navItem.createDiv('nav-icon-row');
+		const iconInput = iconRow.createEl('input', {
+			type: 'text',
+			cls: 'nav-icon',
+			attr: { placeholder: 'Icon name', draggable: 'false' }
+		});
+		iconInput.value = social.icon || '';
+		
+		const iconHelp = iconRow.createDiv('nav-icon-help');
+		// False positive: "FontAwesome Brands" is a proper noun (product name) and should be capitalized
+		// eslint-disable-next-line obsidianmd/ui/sentence-case
+		iconHelp.createEl('small', { text: 'Icon names from FontAwesome Brands' });
 	}
 }

@@ -1,5 +1,5 @@
 import { BaseWizardStep } from './BaseWizardStep';
-import { THEME_OPTIONS, ThemeType } from '../../types';
+import { THEME_OPTIONS } from '../../types';
 
 export class ThemeStep extends BaseWizardStep {
 	render(container: HTMLElement): void {
@@ -9,38 +9,42 @@ export class ThemeStep extends BaseWizardStep {
 		// Filter out 'custom' theme from wizard - it's only for advanced users in settings
 		const wizardThemes = THEME_OPTIONS.filter(theme => theme.id !== 'custom');
 		
-		container.innerHTML = `
-			<div class="theme-selection">
-				<h2>Choose your theme</h2>
-				<p>Select a color scheme that matches your style and content.</p>
-				<div class="theme-options">
-					${wizardThemes.map(theme => `
-						<div class="theme-option ${state.selectedTheme === theme.id ? 'selected' : ''}" 
-							 data-theme="${theme.id}" 
-							 style="background: ${isDarkMode ? theme.backgroundColorDark : theme.backgroundColorLight};">
-							<div class="theme-preview" style="background: linear-gradient(135deg, ${theme.previewColors.join(', ')});">
-								<div class="theme-preview-content">
-									<div class="preview-text">Sample Text</div>
-									<div class="preview-accent">Accent</div>
-								</div>
-							</div>
-							<div class="theme-info">
-								<h3>${theme.name}</h3>
-							</div>
-						</div>
-					`).join('')}
-				</div>
-			</div>
-		`;
-
-		// Add click handlers
-		container.querySelectorAll('.theme-option').forEach(option => {
-			option.addEventListener('click', () => {
-				const theme = option.getAttribute('data-theme');
-				if (theme) {
-					this.updateState({ selectedTheme: theme as ThemeType });
-					this.render(container);
-				}
+		const themeSelection = container.createDiv('theme-selection');
+		themeSelection.createEl('h2', { text: 'Choose your theme' });
+		themeSelection.createEl('p', { text: 'Select a color scheme that matches your style and content.' });
+		
+		const themeOptions = themeSelection.createDiv('theme-options');
+		
+		wizardThemes.forEach(theme => {
+			const themeOption = themeOptions.createDiv('theme-option');
+			if (state.selectedTheme === theme.id) {
+				themeOption.addClass('selected');
+			}
+			themeOption.setAttribute('data-theme', theme.id);
+			// Set dynamic background
+			themeOption.setCssProps({
+				background: isDarkMode ? theme.backgroundColorDark : theme.backgroundColorLight
+			});
+			
+			const themePreview = themeOption.createDiv('theme-preview');
+			// Set dynamic background
+			themePreview.setCssProps({
+				background: `linear-gradient(135deg, ${theme.previewColors.join(', ')})`
+			});
+			
+			const previewContent = themePreview.createDiv('theme-preview-content');
+			const previewText = previewContent.createDiv('preview-text');
+			previewText.textContent = 'Sample text';
+			const previewAccent = previewContent.createDiv('preview-accent');
+			previewAccent.textContent = 'Accent';
+			
+			const themeInfo = themeOption.createDiv('theme-info');
+			themeInfo.createEl('h3', { text: theme.name });
+			
+			// Add click handler
+			themeOption.addEventListener('click', () => {
+				this.updateState({ selectedTheme: theme.id });
+				this.render(container);
 			});
 		});
 	}

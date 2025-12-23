@@ -1,6 +1,4 @@
 import { App, Plugin, PluginSettingTab } from 'obsidian';
-import { SetupWizardModal } from './SetupWizardModal';
-import { PresetWarningModal } from './PresetWarningModal';
 import { GeneralTab } from './tabs/GeneralTab';
 import { SiteInfoTab } from './tabs/SiteInfoTab';
 import { NavigationTab } from './tabs/NavigationTab';
@@ -78,23 +76,18 @@ export class AstroModularSettingsTab extends PluginSettingTab {
 			});
 			
 			
-			button.addEventListener('click', async () => {
+			button.addEventListener('click', () => {
 				// Remove active class from all buttons
 				tabNav.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
 				// Add active class to clicked button
 				button.classList.add('active');
 				// Render tab content immediately
 				tabContent.empty();
-				await tab.renderer.render(tabContent);
+				void tab.renderer.render(tabContent);
 			});
 		});
 
-		// Render the first tab by default
-		const renderResult = tabs[0].renderer.render(tabContent) as void | Promise<void>;
-		if (renderResult && typeof (renderResult as any).then === 'function') {
-			(renderResult as Promise<void>).catch((err: any) => {
-				console.error('Error rendering initial tab:', err);
-			});
-		}
+		// Render the first tab by default (errors are handled by renderer)
+		void tabs[0].renderer.render(tabContent);
 	}
 }

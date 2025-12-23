@@ -1,24 +1,26 @@
 import { Setting, Notice } from 'obsidian';
 import { TabRenderer } from '../common/TabRenderer';
+import { AstroModularPlugin, AstroModularSettings, ProfilePictureSettings } from '../../types';
 
 export class FeaturesTab extends TabRenderer {
 	render(container: HTMLElement): void {
 		container.empty();
 		const settings = this.getSettings();
 
-		// Settings section header
-		const settingsSection = container.createDiv('settings-section');
-
 		// ═══════════════════════════════════════════════════════════════════
 		// GLOBAL OPTIONS
 		// ═══════════════════════════════════════════════════════════════════
 		const globalSection = container.createDiv('settings-section');
-		globalSection.style.marginTop = '20px';
-		globalSection.createEl('h3', { text: 'Global Options' });
+		globalSection.setCssProps({ marginTop: '20px' });
+		
+		// Global Options heading
+		new Setting(globalSection)
+			.setHeading()
+			.setName('Global options');
 
 		// Enable Projects
 		new Setting(globalSection)
-			.setName('Enable Projects')
+			.setName('Enable projects')
 			.setDesc('Enable projects as a unique content type for showcasing work and portfolios')
 			.addToggle(toggle => toggle
 				.setValue(settings.optionalContentTypes?.projects ?? true)
@@ -29,14 +31,14 @@ export class FeaturesTab extends TabRenderer {
 					settings.optionalContentTypes.projects = value;
 					await this.plugin.saveData(settings);
 					// Reload settings to ensure the plugin has the latest values
-					await (this.plugin as any).loadSettings();
+					await (this.plugin as AstroModularPlugin).loadSettings();
 						await this.applyCurrentConfiguration();
 						new Notice(`Projects ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
 				}));
 
 		// Enable Docs
 		new Setting(globalSection)
-			.setName('Enable Docs')
+			.setName('Enable docs')
 			.setDesc('Enable docs as a unique content type for documentation and knowledge base')
 			.addToggle(toggle => toggle
 				.setValue(settings.optionalContentTypes?.docs ?? true)
@@ -47,7 +49,7 @@ export class FeaturesTab extends TabRenderer {
 					settings.optionalContentTypes.docs = value;
 					await this.plugin.saveData(settings);
 					// Reload settings to ensure the plugin has the latest values
-					await (this.plugin as any).loadSettings();
+					await (this.plugin as AstroModularPlugin).loadSettings();
 						await this.applyCurrentConfiguration();
 						new Notice(`Docs ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
 				}));
@@ -65,25 +67,31 @@ export class FeaturesTab extends TabRenderer {
 					settings.tableOfContents.enabled = value;
 					await this.plugin.saveData(settings);
 					// Reload settings to ensure the plugin has the latest values
-					await (this.plugin as any).loadSettings();
+					await (this.plugin as AstroModularPlugin).loadSettings();
 					
 					// Show/hide ToC depth option
 					const tocDepth = globalSection.querySelector('.toc-depth-option') as HTMLElement;
 					if (tocDepth) {
-						tocDepth.style.display = value ? 'block' : 'none';
+						tocDepth.setCssProps({ display: value ? 'block' : 'none' });
 					}
 					
 					await this.applyCurrentConfiguration();
 					new Notice(`Table of contents ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
+					void this.plugin.saveData(settings);
+					void this.applyCurrentConfiguration();
 				}));
 
 		// ToC depth container
 		const tocDepthContainer = globalSection.createDiv('toc-depth-option');
-		tocDepthContainer.style.display = (settings.tableOfContents?.enabled ?? true) ? 'block' : 'none';
-		tocDepthContainer.style.paddingLeft = '20px';
+		tocDepthContainer.setCssProps({
+			display: (settings.tableOfContents?.enabled ?? true) ? 'block' : 'none',
+			paddingLeft: '20px'
+		});
 
 		new Setting(tocDepthContainer)
 			.setName('Table of contents depth')
+			// False positive: "ToC" is an acronym and should remain capitalized
+			// eslint-disable-next-line obsidianmd/ui/sentence-case
 			.setDesc('Maximum heading depth to include in ToC (2=H2, 3=H3, 4=H4, 5=H5, 6=H6)')
 			.addText(text => text
 				.setPlaceholder('4')
@@ -96,9 +104,9 @@ export class FeaturesTab extends TabRenderer {
 					}
 					settings.tableOfContents.depth = clampedNum;
 					text.setValue(String(clampedNum)); // Update display if clamped
-					await this.plugin.saveData(settings);
+					void this.plugin.saveData(settings);
 					// Reload settings to ensure the plugin has the latest values
-					await (this.plugin as any).loadSettings();
+					await (this.plugin as AstroModularPlugin).loadSettings();
 					await this.applyCurrentConfiguration();
 					new Notice(`Table of contents depth set to ${clampedNum} and applied to config.ts`);
 				}));
@@ -116,12 +124,12 @@ export class FeaturesTab extends TabRenderer {
 					settings.footer.enabled = value;
 					await this.plugin.saveData(settings);
 					// Reload settings to ensure the plugin has the latest values
-					await (this.plugin as any).loadSettings();
+					await (this.plugin as AstroModularPlugin).loadSettings();
 					
 					// Show/hide footer options
 					const footerOptions = globalSection.querySelector('.footer-options') as HTMLElement;
 					if (footerOptions) {
-						footerOptions.style.display = value ? 'block' : 'none';
+						footerOptions.setCssProps({ display: value ? 'block' : 'none' });
 					}
 					
 					await this.applyCurrentConfiguration();
@@ -130,8 +138,10 @@ export class FeaturesTab extends TabRenderer {
 
 		// Footer options container
 		const footerOptions = globalSection.createDiv('footer-options');
-		footerOptions.style.display = (settings.footer?.enabled ?? true) ? 'block' : 'none';
-		footerOptions.style.paddingLeft = '20px';
+		footerOptions.setCssProps({
+			display: (settings.footer?.enabled ?? true) ? 'block' : 'none',
+			paddingLeft: '20px'
+		});
 
 		// Footer content
 		new Setting(footerOptions)
@@ -145,10 +155,10 @@ export class FeaturesTab extends TabRenderer {
 						settings.footer = { enabled: true, content: '', showSocialIconsInFooter: true };
 					}
 					settings.footer.content = value;
-					await this.plugin.saveData(settings);
+					void this.plugin.saveData(settings);
 					// Reload settings to ensure the plugin has the latest values
-					await (this.plugin as any).loadSettings();
-					await this.applyCurrentConfiguration();
+					await (this.plugin as AstroModularPlugin).loadSettings();
+					void this.applyCurrentConfiguration();
 				}));
 
 		// Show social icons in footer
@@ -164,7 +174,7 @@ export class FeaturesTab extends TabRenderer {
 					settings.footer.showSocialIconsInFooter = value;
 					await this.plugin.saveData(settings);
 					// Reload settings to ensure the plugin has the latest values
-					await (this.plugin as any).loadSettings();
+					await (this.plugin as AstroModularPlugin).loadSettings();
 					await this.applyCurrentConfiguration();
 					new Notice(`Social icons in footer ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
 				}));
@@ -179,7 +189,7 @@ export class FeaturesTab extends TabRenderer {
 					settings.features.hideScrollBar = value;
 					await this.plugin.saveData(settings);
 					// Reload settings to ensure the plugin has the latest values
-					await (this.plugin as any).loadSettings();
+					await (this.plugin as AstroModularPlugin).loadSettings();
 					await this.applyCurrentConfiguration();
 					new Notice(`Hide scroll bar ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
 				}));
@@ -194,7 +204,7 @@ export class FeaturesTab extends TabRenderer {
 					settings.features.scrollToTop = value;
 					await this.plugin.saveData(settings);
 					// Reload settings to ensure the plugin has the latest values
-					await (this.plugin as any).loadSettings();
+					await (this.plugin as AstroModularPlugin).loadSettings();
 					await this.applyCurrentConfiguration();
 					new Notice(`Scroll to top ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
 				}));
@@ -204,16 +214,16 @@ export class FeaturesTab extends TabRenderer {
 			.setName('Feature button')
 			.setDesc('Choose which feature button appears in the header')
 			.addDropdown(dropdown => dropdown
-				.addOption('mode', 'Dark/Light Mode Toggle')
-				.addOption('graph', 'View Graph')
-				.addOption('theme', 'Change Theme')
+				.addOption('mode', 'Dark/light mode toggle')
+				.addOption('graph', 'View graph')
+				.addOption('theme', 'Change theme')
 				.addOption('none', 'None')
 				.setValue(settings.features?.featureButton || 'mode')
 				.onChange(async (value) => {
 					settings.features.featureButton = value as 'mode' | 'graph' | 'theme' | 'none';
 					await this.plugin.saveData(settings);
 					// Reload settings to ensure the plugin has the latest values
-					await (this.plugin as any).loadSettings();
+					await (this.plugin as AstroModularPlugin).loadSettings();
 					await this.applyCurrentConfiguration();
 						new Notice(`Feature button updated to "${value}" and applied to config.ts`);
 				}));
@@ -222,14 +232,20 @@ export class FeaturesTab extends TabRenderer {
 		// COMMAND PALETTE
 		// ═══════════════════════════════════════════════════════════════════
 		const commandPaletteSection = container.createDiv('settings-section');
-		commandPaletteSection.style.marginTop = '30px';
-		commandPaletteSection.style.paddingTop = '20px';
-		commandPaletteSection.style.borderTop = '2px solid var(--background-modifier-border)';
-		commandPaletteSection.createEl('h3', { text: 'Command Palette' });
+		commandPaletteSection.setCssProps({
+			marginTop: '30px',
+			paddingTop: '20px',
+			borderTop: '2px solid var(--background-modifier-border)'
+		});
+		
+		// Command Palette heading
+		new Setting(commandPaletteSection)
+			.setHeading()
+			.setName('Command palette');
 
 		// Enable Command Palette
 		new Setting(commandPaletteSection)
-			.setName('Enable Command Palette')
+			.setName('Enable command palette')
 			.setDesc('Add a command palette to your site')
 			.addToggle(toggle => toggle
 				.setValue(settings.commandPalette?.enabled ?? true)
@@ -246,24 +262,26 @@ export class FeaturesTab extends TabRenderer {
 					}
 					settings.commandPalette.enabled = value;
 					settings.features.commandPalette = value;
-					await this.plugin.saveData(settings);
+					void this.plugin.saveData(settings);
 					// Reload settings to ensure the plugin has the latest values
-					await (this.plugin as any).loadSettings();
+					await (this.plugin as AstroModularPlugin).loadSettings();
 					
 					// Show/hide command palette options
 					const cpOptions = commandPaletteSection.querySelector('.command-palette-options') as HTMLElement;
 					if (cpOptions) {
-						cpOptions.style.display = value ? 'block' : 'none';
+						cpOptions.setCssProps({ display: value ? 'block' : 'none' });
 					}
 					
 					await this.applyCurrentConfiguration();
-					new Notice(`Command Palette ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
+					new Notice(`Command palette ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
 				}));
 
 		// Command Palette options container
 		const cpOptions = commandPaletteSection.createDiv('command-palette-options');
-		cpOptions.style.display = (settings.commandPalette?.enabled ?? true) ? 'block' : 'none';
-		cpOptions.style.paddingLeft = '20px';
+		cpOptions.setCssProps({
+			display: (settings.commandPalette?.enabled ?? true) ? 'block' : 'none',
+			paddingLeft: '20px'
+		});
 
 		// Shortcut
 		this.createTextSetting(
@@ -295,7 +313,7 @@ export class FeaturesTab extends TabRenderer {
 
 		// Search toggles
 		const searchSection = cpOptions.createDiv();
-		searchSection.createEl('h4', { text: 'Search Content Types' });
+		searchSection.createEl('h4', { text: 'Search content types' });
 
 		new Setting(searchSection)
 			.setName('Search posts')
@@ -312,7 +330,7 @@ export class FeaturesTab extends TabRenderer {
 					settings.commandPalette.search.posts = value;
 					await this.plugin.saveData(settings);
 					// Reload settings to ensure the plugin has the latest values
-					await (this.plugin as any).loadSettings();
+					await (this.plugin as AstroModularPlugin).loadSettings();
 					await this.applyCurrentConfiguration();
 				}));
 
@@ -328,7 +346,7 @@ export class FeaturesTab extends TabRenderer {
 				settings.commandPalette.search.pages = value;
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				await this.applyCurrentConfiguration();
 				}));
 
@@ -344,7 +362,7 @@ export class FeaturesTab extends TabRenderer {
 				settings.commandPalette.search.projects = value;
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				await this.applyCurrentConfiguration();
 				}));
 
@@ -360,14 +378,14 @@ export class FeaturesTab extends TabRenderer {
 				settings.commandPalette.search.docs = value;
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				await this.applyCurrentConfiguration();
-				}));
+			}));
 
 		// Sections toggles
 		const sectionsSection = cpOptions.createDiv();
-		sectionsSection.style.marginTop = '15px';
-		sectionsSection.createEl('h4', { text: 'Command Palette Sections' });
+		sectionsSection.setCssProps({ marginTop: '15px' });
+		sectionsSection.createEl('h4', { text: 'Command palette sections' });
 
 		new Setting(sectionsSection)
 			.setName('Show quick actions section')
@@ -384,7 +402,7 @@ export class FeaturesTab extends TabRenderer {
 					// Show/hide quick actions options
 					const qaOptions = sectionsSection.querySelector('.quick-actions-options') as HTMLElement;
 					if (qaOptions) {
-						qaOptions.style.display = value ? 'block' : 'none';
+						qaOptions.setCssProps({ display: value ? 'block' : 'none' });
 					}
 					
 					await this.applyCurrentConfiguration();
@@ -392,9 +410,11 @@ export class FeaturesTab extends TabRenderer {
 
 		// Quick Actions options container
 		const qaOptions = sectionsSection.createDiv('quick-actions-options');
-		qaOptions.style.display = (settings.commandPalette?.sections?.quickActions ?? true) ? 'block' : 'none';
-		qaOptions.style.paddingLeft = '20px';
-		qaOptions.style.marginTop = '10px';
+		qaOptions.setCssProps({
+			display: (settings.commandPalette?.sections?.quickActions ?? true) ? 'block' : 'none',
+			paddingLeft: '20px',
+			marginTop: '10px'
+		});
 
 		new Setting(qaOptions)
 			.setName('Toggle dark/light mode')
@@ -409,7 +429,7 @@ export class FeaturesTab extends TabRenderer {
 				settings.features.quickActions.toggleMode = value;
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				await this.applyCurrentConfiguration();
 				}));
 
@@ -426,7 +446,7 @@ export class FeaturesTab extends TabRenderer {
 				settings.features.quickActions.graphView = value;
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				await this.applyCurrentConfiguration();
 				}));
 
@@ -443,7 +463,7 @@ export class FeaturesTab extends TabRenderer {
 				settings.features.quickActions.changeTheme = value;
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				await this.applyCurrentConfiguration();
 				}));
 
@@ -459,7 +479,7 @@ export class FeaturesTab extends TabRenderer {
 				settings.commandPalette.sections.pages = value;
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				await this.applyCurrentConfiguration();
 				}));
 
@@ -475,7 +495,7 @@ export class FeaturesTab extends TabRenderer {
 				settings.commandPalette.sections.social = value;
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				await this.applyCurrentConfiguration();
 				}));
 
@@ -483,10 +503,16 @@ export class FeaturesTab extends TabRenderer {
 		// HOME OPTIONS
 		// ═══════════════════════════════════════════════════════════════════
 		const homeOptionsSection = container.createDiv('settings-section');
-		homeOptionsSection.style.marginTop = '30px';
-		homeOptionsSection.style.paddingTop = '20px';
-		homeOptionsSection.style.borderTop = '2px solid var(--background-modifier-border)';
-		homeOptionsSection.createEl('h3', { text: 'Home Options' });
+		homeOptionsSection.setCssProps({
+			marginTop: '30px',
+			paddingTop: '20px',
+			borderTop: '2px solid var(--background-modifier-border)'
+		});
+		
+		// Home Options heading
+		new Setting(homeOptionsSection)
+			.setHeading()
+			.setName('Home options');
 
 		// Featured Post
 		new Setting(homeOptionsSection)
@@ -510,13 +536,13 @@ export class FeaturesTab extends TabRenderer {
 				settings.homeOptions.featuredPost.enabled = value;
 					await this.plugin.saveData(settings);
 					// Reload settings to ensure the plugin has the latest values
-					await (this.plugin as any).loadSettings();
+					await (this.plugin as AstroModularPlugin).loadSettings();
 					
 				// Show/hide featured post options
-				const fpOptions = homeOptionsSection.querySelector('.featured-post-options') as HTMLElement;
-				if (fpOptions) {
-					fpOptions.style.display = value ? 'block' : 'none';
-				}
+					const fpOptions = homeOptionsSection.querySelector('.featured-post-options') as HTMLElement;
+					if (fpOptions) {
+						fpOptions.setCssProps({ display: value ? 'block' : 'none' });
+					}
 				
 							await this.applyCurrentConfiguration();
 					new Notice(`Featured post ${value ? 'enabled' : 'disabled'} and applied to config.ts`);
@@ -524,8 +550,10 @@ export class FeaturesTab extends TabRenderer {
 
 		// Featured Post options container
 		const fpOptions = homeOptionsSection.createDiv('featured-post-options');
-		fpOptions.style.display = (settings.homeOptions?.featuredPost?.enabled ?? true) ? 'block' : 'none';
-		fpOptions.style.paddingLeft = '20px';
+		fpOptions.setCssProps({
+			display: (settings.homeOptions?.featuredPost?.enabled ?? true) ? 'block' : 'none',
+			paddingLeft: '20px'
+		});
 
 		new Setting(fpOptions)
 			.setName('Featured post type')
@@ -544,7 +572,7 @@ export class FeaturesTab extends TabRenderer {
 					// Show/hide slug field
 					const fpSlug = fpOptions.querySelector('.featured-post-slug') as HTMLElement;
 					if (fpSlug) {
-						fpSlug.style.display = value === 'featured' ? 'block' : 'none';
+						fpSlug.setCssProps({ display: value === 'featured' ? 'block' : 'none' });
 					}
 					
 					await this.applyCurrentConfiguration();
@@ -552,12 +580,16 @@ export class FeaturesTab extends TabRenderer {
 
 		// Featured post slug (only shown when type is 'featured')
 		const fpSlug = fpOptions.createDiv('featured-post-slug');
-		fpSlug.style.display = (settings.homeOptions?.featuredPost?.type === 'featured') ? 'block' : 'none';
+		fpSlug.setCssProps({
+			display: (settings.homeOptions?.featuredPost?.type === 'featured') ? 'block' : 'none'
+		});
 
 		new Setting(fpSlug)
 			.setName('Featured post slug')
 			.setDesc('Slug of the post to feature (e.g., "getting-started" for /posts/getting-started)')
 			.addText(text => text
+				// False positive: "getting-started" is a placeholder example, not UI text
+				// eslint-disable-next-line obsidianmd/ui/sentence-case
 				.setPlaceholder('getting-started')
 				.setValue(settings.homeOptions?.featuredPost?.slug || 'getting-started')
 				.onChange(async (value) => {
@@ -567,7 +599,7 @@ export class FeaturesTab extends TabRenderer {
 					settings.homeOptions.featuredPost.slug = value;
 					await this.plugin.saveData(settings);
 					// Reload settings to ensure the plugin has the latest values
-					await (this.plugin as any).loadSettings();
+					await (this.plugin as AstroModularPlugin).loadSettings();
 					await this.applyCurrentConfiguration();
 				}));
 
@@ -584,21 +616,23 @@ export class FeaturesTab extends TabRenderer {
 				settings.homeOptions.recentPosts.enabled = value;
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				
 				// Show/hide recent posts count
-				const rpCount = homeOptionsSection.querySelector('.recent-posts-count') as HTMLElement;
-				if (rpCount) {
-					rpCount.style.display = value ? 'block' : 'none';
-				}
+					const rpCount = homeOptionsSection.querySelector('.recent-posts-count') as HTMLElement;
+					if (rpCount) {
+						rpCount.setCssProps({ display: value ? 'block' : 'none' });
+					}
 				
 				await this.applyCurrentConfiguration();
 				}));
 
 		// Recent Posts count container
 		const rpCount = homeOptionsSection.createDiv('recent-posts-count');
-		rpCount.style.display = (settings.homeOptions?.recentPosts?.enabled ?? true) ? 'block' : 'none';
-		rpCount.style.paddingLeft = '20px';
+		rpCount.setCssProps({
+			display: (settings.homeOptions?.recentPosts?.enabled ?? true) ? 'block' : 'none',
+			paddingLeft: '20px'
+		});
 
 		new Setting(rpCount)
 			.setName('Recent posts count')
@@ -614,7 +648,7 @@ export class FeaturesTab extends TabRenderer {
 				settings.homeOptions.recentPosts.count = num;
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				await this.applyCurrentConfiguration();
 				}));
 
@@ -634,7 +668,7 @@ export class FeaturesTab extends TabRenderer {
 					// Show/hide projects count
 					const pCount = homeOptionsSection.querySelector('.projects-count') as HTMLElement;
 					if (pCount) {
-						pCount.style.display = value ? 'block' : 'none';
+						pCount.setCssProps({ display: value ? 'block' : 'none' });
 					}
 					
 					await this.applyCurrentConfiguration();
@@ -642,8 +676,10 @@ export class FeaturesTab extends TabRenderer {
 
 		// Projects count container
 		const pCount = homeOptionsSection.createDiv('projects-count');
-		pCount.style.display = (settings.homeOptions?.projects?.enabled ?? true) ? 'block' : 'none';
-		pCount.style.paddingLeft = '20px';
+		pCount.setCssProps({
+			display: (settings.homeOptions?.projects?.enabled ?? true) ? 'block' : 'none',
+			paddingLeft: '20px'
+		});
 
 		new Setting(pCount)
 			.setName('Projects count')
@@ -677,7 +713,7 @@ export class FeaturesTab extends TabRenderer {
 					// Show/hide docs count
 					const dCount = homeOptionsSection.querySelector('.docs-count') as HTMLElement;
 					if (dCount) {
-						dCount.style.display = value ? 'block' : 'none';
+						dCount.setCssProps({ display: value ? 'block' : 'none' });
 					}
 					
 					await this.applyCurrentConfiguration();
@@ -685,8 +721,10 @@ export class FeaturesTab extends TabRenderer {
 
 		// Docs count container
 		const dCount = homeOptionsSection.createDiv('docs-count');
-		dCount.style.display = (settings.homeOptions?.docs?.enabled ?? true) ? 'block' : 'none';
-		dCount.style.paddingLeft = '20px';
+		dCount.setCssProps({
+			display: (settings.homeOptions?.docs?.enabled ?? true) ? 'block' : 'none',
+			paddingLeft: '20px'
+		});
 
 		new Setting(dCount)
 			.setName('Docs count')
@@ -726,10 +764,16 @@ export class FeaturesTab extends TabRenderer {
 		// POST OPTIONS
 		// ═══════════════════════════════════════════════════════════════════
 		const postOptionsSection = container.createDiv('settings-section');
-		postOptionsSection.style.marginTop = '30px';
-		postOptionsSection.style.paddingTop = '20px';
-		postOptionsSection.style.borderTop = '2px solid var(--background-modifier-border)';
-		postOptionsSection.createEl('h3', { text: 'Post Options' });
+		postOptionsSection.setCssProps({
+			marginTop: '30px',
+			paddingTop: '20px',
+			borderTop: '2px solid var(--background-modifier-border)'
+		});
+		
+		// Post Options heading
+		new Setting(postOptionsSection)
+			.setHeading()
+			.setName('Post options');
 
 		// Posts per page
 		new Setting(postOptionsSection)
@@ -774,7 +818,7 @@ export class FeaturesTab extends TabRenderer {
 				settings.features.readingTime = value;
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				await this.applyCurrentConfiguration();
 				}));
 
@@ -791,7 +835,7 @@ export class FeaturesTab extends TabRenderer {
 				settings.postOptions.wordCount = value;
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				await this.applyCurrentConfiguration();
 				}));
 
@@ -809,7 +853,7 @@ export class FeaturesTab extends TabRenderer {
 				settings.postOptions.tags = value;
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				await this.applyCurrentConfiguration();
 				}));
 
@@ -827,12 +871,12 @@ export class FeaturesTab extends TabRenderer {
 				settings.features.linkedMentions = value;
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				
 				// Show/hide linked mentions compact option
 				const lmCompact = postOptionsSection.querySelector('.linked-mentions-compact') as HTMLElement;
 				if (lmCompact) {
-					lmCompact.style.display = value ? 'block' : 'none';
+					lmCompact.setCssProps({ display: value ? 'block' : 'none' });
 				}
 				
 				await this.applyCurrentConfiguration();
@@ -840,8 +884,10 @@ export class FeaturesTab extends TabRenderer {
 
 		// Linked Mentions Compact container
 		const lmCompact = postOptionsSection.createDiv('linked-mentions-compact');
-		lmCompact.style.display = (settings.postOptions?.linkedMentions?.enabled ?? true) ? 'block' : 'none';
-		lmCompact.style.paddingLeft = '20px';
+		lmCompact.setCssProps({
+			display: (settings.postOptions?.linkedMentions?.enabled ?? true) ? 'block' : 'none',
+			paddingLeft: '20px'
+		});
 
 		new Setting(lmCompact)
 			.setName('Compact view')
@@ -872,12 +918,12 @@ export class FeaturesTab extends TabRenderer {
 				settings.features.graphView = value;
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				
 				// Show/hide graph view options
 				const gvOptions = postOptionsSection.querySelector('.graph-view-options') as HTMLElement;
 				if (gvOptions) {
-					gvOptions.style.display = value ? 'block' : 'none';
+					gvOptions.setCssProps({ display: value ? 'block' : 'none' });
 				}
 				
 				await this.applyCurrentConfiguration();
@@ -885,8 +931,10 @@ export class FeaturesTab extends TabRenderer {
 
 		// Graph View options container
 		const gvOptions = postOptionsSection.createDiv('graph-view-options');
-		gvOptions.style.display = (settings.postOptions?.graphView?.enabled ?? true) ? 'block' : 'none';
-		gvOptions.style.paddingLeft = '20px';
+		gvOptions.setCssProps({
+			display: (settings.postOptions?.graphView?.enabled ?? true) ? 'block' : 'none',
+			paddingLeft: '20px'
+		});
 
 		new Setting(gvOptions)
 			.setName('Show in sidebar')
@@ -946,7 +994,7 @@ export class FeaturesTab extends TabRenderer {
 				settings.features.postNavigation = value;
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				await this.applyCurrentConfiguration();
 				}));
 
@@ -959,18 +1007,18 @@ export class FeaturesTab extends TabRenderer {
 				.addOption('featured', 'Featured')
 				.addOption('home', 'Home')
 				.addOption('posts', 'Posts')
-				.addOption('featured-and-posts', 'Featured and Posts')
+				.addOption('featured-and-posts', 'Featured and posts')
 				.addOption('none', 'None')
 				.setValue(settings.postOptions?.showPostCardCoverImages || 'featured-and-posts')
 				.onChange(async (value) => {
 					if (!settings.postOptions) {
 						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
 					}
-				settings.postOptions.showPostCardCoverImages = value as any;
-				settings.features.showPostCardCoverImages = value as any;
+				settings.postOptions.showPostCardCoverImages = value as 'all' | 'featured' | 'home' | 'posts' | 'featured-and-posts' | 'none';
+				settings.features.showPostCardCoverImages = value as 'all' | 'featured' | 'home' | 'posts' | 'featured-and-posts' | 'none';
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				await this.applyCurrentConfiguration();
 				}));
 
@@ -982,6 +1030,8 @@ export class FeaturesTab extends TabRenderer {
 				.addOption('16:9', '16:9')
 				.addOption('4:3', '4:3')
 				.addOption('3:2', '3:2')
+				// False positive: "Open Graph" is a proper noun (OG format standard)
+				// eslint-disable-next-line obsidianmd/ui/sentence-case
 				.addOption('og', 'Open Graph')
 				.addOption('square', 'Square')
 				.addOption('golden', 'Golden')
@@ -991,16 +1041,16 @@ export class FeaturesTab extends TabRenderer {
 					if (!settings.postOptions) {
 						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
 					}
-				settings.postOptions.postCardAspectRatio = value as any;
-				settings.features.postCardAspectRatio = value as any;
+				settings.postOptions.postCardAspectRatio = value as 'og' | '16:9' | '4:3' | '3:2' | 'square' | 'golden' | 'custom';
+				settings.features.postCardAspectRatio = value as 'og' | '16:9' | '4:3' | '3:2' | 'square' | 'golden' | 'custom';
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				
 				// Show/hide custom aspect ratio field
 				const customAR = postOptionsSection.querySelector('.custom-aspect-ratio') as HTMLElement;
 				if (customAR) {
-					customAR.style.display = value === 'custom' ? 'block' : 'none';
+					customAR.setCssProps({ display: value === 'custom' ? 'block' : 'none' });
 				}
 				
 				await this.applyCurrentConfiguration();
@@ -1008,8 +1058,10 @@ export class FeaturesTab extends TabRenderer {
 
 		// Custom aspect ratio container
 		const customAR = postOptionsSection.createDiv('custom-aspect-ratio');
-		customAR.style.display = (settings.postOptions?.postCardAspectRatio === 'custom') ? 'block' : 'none';
-		customAR.style.paddingLeft = '20px';
+		customAR.setCssProps({
+			display: (settings.postOptions?.postCardAspectRatio === 'custom') ? 'block' : 'none',
+			paddingLeft: '20px'
+		});
 
 		this.createTextSetting(
 			customAR,
@@ -1026,7 +1078,7 @@ export class FeaturesTab extends TabRenderer {
 			1000,
 			async () => {
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				await this.applyCurrentConfiguration();
 			}
 		);
@@ -1035,10 +1087,16 @@ export class FeaturesTab extends TabRenderer {
 		// OPTIONAL FEATURES
 		// ═══════════════════════════════════════════════════════════════════
 		const optionalFeaturesSection = container.createDiv('settings-section');
-		optionalFeaturesSection.style.marginTop = '30px';
-		optionalFeaturesSection.style.paddingTop = '20px';
-		optionalFeaturesSection.style.borderTop = '2px solid var(--background-modifier-border)';
-		optionalFeaturesSection.createEl('h3', { text: 'Optional Features' });
+		optionalFeaturesSection.setCssProps({
+			marginTop: '30px',
+			paddingTop: '20px',
+			borderTop: '2px solid var(--background-modifier-border)'
+		});
+		
+		// Optional Features heading
+		new Setting(optionalFeaturesSection)
+			.setHeading()
+			.setName('Optional features');
 
 		// Profile Picture (keep existing implementation)
 		this.renderProfilePictureSetting(optionalFeaturesSection, settings);
@@ -1047,9 +1105,9 @@ export class FeaturesTab extends TabRenderer {
 		this.renderCommentsSetting(optionalFeaturesSection, settings);
 	}
 
-	private renderProfilePictureSetting(container: HTMLElement, settings: any): void {
+	private renderProfilePictureSetting(container: HTMLElement, settings: AstroModularSettings): void {
 		const isEnabled = settings.features?.profilePicture || settings.optionalFeatures?.profilePicture?.enabled;
-		const profileSettings = settings.optionalFeatures?.profilePicture || {
+		const profileSettings: ProfilePictureSettings = settings.optionalFeatures?.profilePicture || {
 			enabled: false,
 			image: '/profile.jpg',
 			alt: 'Profile picture',
@@ -1060,7 +1118,7 @@ export class FeaturesTab extends TabRenderer {
 		};
 
 		// Main toggle
-		const profileSetting = new Setting(container)
+		new Setting(container)
 			.setName('Profile picture')
 			.setDesc('Show profile picture in header or footer')
 			.addToggle(toggle => toggle
@@ -1073,12 +1131,12 @@ export class FeaturesTab extends TabRenderer {
 					settings.optionalFeatures.profilePicture.enabled = value;
 					await this.plugin.saveData(settings);
 					// Reload settings to ensure the plugin has the latest values
-					await (this.plugin as any).loadSettings();
+					await (this.plugin as AstroModularPlugin).loadSettings();
 					
 					// Show/hide the detailed options
 					const optionsDiv = container.querySelector('.profile-picture-options') as HTMLElement;
 					if (optionsDiv) {
-						optionsDiv.style.display = value ? 'block' : 'none';
+						optionsDiv.setCssProps({ display: value ? 'block' : 'none' });
 					}
 					
 					// Apply changes immediately to config.ts
@@ -1092,16 +1150,20 @@ export class FeaturesTab extends TabRenderer {
 
 		// Detailed options container
 		const optionsContainer = container.createDiv('profile-picture-options');
-		optionsContainer.style.display = isEnabled ? 'block' : 'none';
-		optionsContainer.style.marginTop = '10px';
-		optionsContainer.style.paddingLeft = '20px';
+		optionsContainer.setCssProps({
+			display: isEnabled ? 'block' : 'none',
+			marginTop: '10px',
+			paddingLeft: '20px'
+		});
 
 		// Create two-column grid for options
 		const optionsGrid = optionsContainer.createDiv('options-grid');
-		optionsGrid.style.display = 'grid';
-		optionsGrid.style.gridTemplateColumns = '1fr 1fr';
-		optionsGrid.style.gap = '10px';
-		optionsGrid.style.marginTop = '10px';
+		optionsGrid.setCssProps({
+			display: 'grid',
+			gridTemplateColumns: '1fr 1fr',
+			gap: '10px',
+			marginTop: '10px'
+		});
 
 		// Image path setting
 		this.createTextSetting(
@@ -1115,7 +1177,7 @@ export class FeaturesTab extends TabRenderer {
 			1000,
 			async () => {
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				await this.applyCurrentConfiguration();
 			},
 			'/profile.jpg'
@@ -1133,7 +1195,7 @@ export class FeaturesTab extends TabRenderer {
 			1000,
 			async () => {
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				await this.applyCurrentConfiguration();
 			},
 			'Profile picture'
@@ -1152,7 +1214,7 @@ export class FeaturesTab extends TabRenderer {
 					profileSettings.size = value as 'sm' | 'md' | 'lg';
 					await this.plugin.saveData(settings);
 					// Reload settings to ensure the plugin has the latest values
-					await (this.plugin as any).loadSettings();
+					await (this.plugin as AstroModularPlugin).loadSettings();
 					await this.applyCurrentConfiguration();
 				}));
 
@@ -1168,7 +1230,7 @@ export class FeaturesTab extends TabRenderer {
 			1000,
 			async () => {
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				await this.applyCurrentConfiguration();
 			},
 			'/about'
@@ -1186,7 +1248,7 @@ export class FeaturesTab extends TabRenderer {
 					profileSettings.placement = value as 'footer' | 'header';
 					await this.plugin.saveData(settings);
 					// Reload settings to ensure the plugin has the latest values
-					await (this.plugin as any).loadSettings();
+					await (this.plugin as AstroModularPlugin).loadSettings();
 					await this.applyCurrentConfiguration();
 				}));
 
@@ -1203,12 +1265,12 @@ export class FeaturesTab extends TabRenderer {
 					profileSettings.style = value as 'circle' | 'square' | 'none';
 					await this.plugin.saveData(settings);
 					// Reload settings to ensure the plugin has the latest values
-					await (this.plugin as any).loadSettings();
+					await (this.plugin as AstroModularPlugin).loadSettings();
 					await this.applyCurrentConfiguration();
 				}));
 	}
 
-	private renderCommentsSetting(container: HTMLElement, settings: any): void {
+	private renderCommentsSetting(container: HTMLElement, settings: AstroModularSettings): void {
 		// Use optionalFeatures.comments.enabled as the primary source, fallback to others
 		const isEnabled = settings.optionalFeatures?.comments?.enabled ?? settings.features?.comments ?? settings.postOptions?.comments?.enabled ?? false;
 		const commentsSettings = settings.postOptions?.comments || settings.optionalFeatures?.comments || {
@@ -1230,8 +1292,10 @@ export class FeaturesTab extends TabRenderer {
 		};
 
 		// Main toggle
-		const commentsSetting = new Setting(container)
+		new Setting(container)
 			.setName('Post comments')
+			// False positive: "Giscus" is a proper noun (product name) and should be capitalized
+			// eslint-disable-next-line obsidianmd/ui/sentence-case
 			.setDesc('Enable Giscus comment system for posts')
 			.addToggle(toggle => toggle
 				.setValue(isEnabled)
@@ -1254,12 +1318,12 @@ export class FeaturesTab extends TabRenderer {
 					settings.optionalFeatures.comments.enabled = value;
 					await this.plugin.saveData(settings);
 					// Reload settings to ensure the plugin has the latest values
-					await (this.plugin as any).loadSettings();
+					await (this.plugin as AstroModularPlugin).loadSettings();
 					
 					// Show/hide the detailed options
 					const optionsDiv = container.querySelector('.comments-options') as HTMLElement;
 					if (optionsDiv) {
-						optionsDiv.style.display = value ? 'block' : 'none';
+						optionsDiv.setCssProps({ display: value ? 'block' : 'none' });
 					}
 					
 					// Apply changes immediately to config.ts
@@ -1273,41 +1337,65 @@ export class FeaturesTab extends TabRenderer {
 
 		// Options container
 		const optionsContainer = container.createDiv('comments-options');
-		optionsContainer.style.display = isEnabled ? 'block' : 'none';
-		optionsContainer.style.marginTop = '10px';
-		optionsContainer.style.paddingLeft = '20px';
+		optionsContainer.setCssProps({
+			display: isEnabled ? 'block' : 'none',
+			marginTop: '10px'
+		});
+		optionsContainer.setCssProps({ paddingLeft: '20px' });
 
 		// Instructions
 		const instructionsDiv = optionsContainer.createDiv('comments-instructions');
-		instructionsDiv.style.marginBottom = '15px';
-		instructionsDiv.style.padding = '10px';
-		instructionsDiv.style.background = 'var(--background-modifier-border)';
-		instructionsDiv.style.borderRadius = '4px';
-		instructionsDiv.style.borderLeft = '3px solid var(--interactive-accent)';
+		instructionsDiv.setCssProps({
+			marginBottom: '15px',
+			padding: '10px',
+			background: 'var(--background-modifier-border)'
+		});
+		instructionsDiv.setCssProps({
+			borderRadius: '4px',
+			borderLeft: '3px solid var(--interactive-accent)'
+		});
 		
 		const instructionsText = instructionsDiv.createEl('p');
-		instructionsText.style.margin = '0';
-		instructionsText.style.fontSize = '13px';
-		instructionsText.style.color = 'var(--text-muted)';
-		instructionsText.style.whiteSpace = 'pre-line';
+		instructionsText.setCssProps({
+			margin: '0',
+			fontSize: '13px',
+			color: 'var(--text-muted)',
+			whiteSpace: 'pre-line'
+		});
 		
 		// Create the text with proper link placement
-		instructionsText.innerHTML = '1. Go to <a href="https://giscus.app/" target="_blank" rel="noopener noreferrer" style="color: var(--interactive-accent); text-decoration: none;">giscus.app</a> and configure your comments\n2. Copy the generated script\n3. Paste it below';
+		instructionsText.appendText('1. Go to ');
+		const giscusLink = instructionsText.createEl('a', {
+			href: 'https://giscus.app/',
+			// False positive: "giscus.app" is a domain name, not UI text
+			// eslint-disable-next-line obsidianmd/ui/sentence-case
+			text: 'giscus.app',
+			attr: {
+				target: '_blank',
+				rel: 'noopener noreferrer'
+			}
+		});
+		giscusLink.setCssProps({
+			color: 'var(--interactive-accent)',
+			textDecoration: 'none'
+		});
+		instructionsText.appendText(' and configure your comments\n2. Copy the generated script\n3. Paste it below');
 		
 		// Add hover effects to the link
-		const giscusLink = instructionsText.querySelector('a');
-		if (giscusLink) {
-			giscusLink.addEventListener('mouseenter', () => {
-				giscusLink.style.textDecoration = 'underline';
-			});
-			giscusLink.addEventListener('mouseleave', () => {
-				giscusLink.style.textDecoration = 'none';
-			});
-		}
+		giscusLink.addEventListener('mouseenter', () => {
+			giscusLink.setCssProps({ textDecoration: 'underline' });
+		});
+		giscusLink.addEventListener('mouseleave', () => {
+			giscusLink.setCssProps({ textDecoration: 'none' });
+		});
 
 		// Script textarea
 		const scriptSetting = new Setting(optionsContainer)
+			// False positive: "Giscus" is a proper noun (product name) and should be capitalized
+			// eslint-disable-next-line obsidianmd/ui/sentence-case
 			.setName('Giscus Script')
+			// False positive: "Giscus" is a proper noun (product name) and should be capitalized
+			// eslint-disable-next-line obsidianmd/ui/sentence-case
 			.setDesc('Paste your Giscus script here (the plugin will automatically parse all settings)');
 		
 		const textarea = scriptSetting.controlEl.createEl('textarea', {
@@ -1332,23 +1420,27 @@ export class FeaturesTab extends TabRenderer {
 			}
 		});
 		
-		textarea.style.width = '100%';
-		textarea.style.fontFamily = 'var(--font-monospace)';
-		textarea.style.fontSize = '12px';
-		textarea.style.padding = '8px';
-		textarea.style.border = '1px solid var(--background-modifier-border)';
-		textarea.style.borderRadius = '4px';
-		textarea.style.background = 'var(--background-primary)';
-		textarea.style.color = 'var(--text-normal)';
-		textarea.style.resize = 'none';
+		textarea.setCssProps({
+			width: '100%',
+			fontFamily: 'var(--font-monospace)',
+			fontSize: '12px',
+			padding: '8px',
+			border: '1px solid var(--background-modifier-border)',
+			borderRadius: '4px',
+			background: 'var(--background-primary)',
+			color: 'var(--text-normal)',
+			resize: 'none'
+		});
 		
 		// Set current value from the actual saved settings
 		textarea.value = settings.optionalFeatures?.comments?.rawScript || settings.postOptions?.comments?.rawScript || '';
 		
 		// Validation and parsing
 		const validationDiv = optionsContainer.createDiv('script-validation');
-		validationDiv.style.marginTop = '8px';
-		validationDiv.style.fontSize = '12px';
+		validationDiv.setCssProps({
+			marginTop: '8px',
+			fontSize: '12px'
+		});
 		
 		// Debounce timeout ID
 		let debounceTimeoutId: number | null = null;
@@ -1357,7 +1449,7 @@ export class FeaturesTab extends TabRenderer {
 			const scriptContent = textarea.value.trim();
 			
 			if (!scriptContent) {
-				validationDiv.innerHTML = '';
+				validationDiv.empty();
 				// Get the current enabled state from the actual settings (not the local variable)
 				const currentEnabled = settings.optionalFeatures?.comments?.enabled ?? settings.features?.comments ?? settings.postOptions?.comments?.enabled ?? false;
 				
@@ -1393,13 +1485,34 @@ export class FeaturesTab extends TabRenderer {
 				
 				// Ensure features.comments is in sync
 				if (!settings.features) {
-					settings.features = {} as any;
+					settings.features = {
+						commandPalette: false,
+						readingTime: false,
+						linkedMentions: false,
+						linkedMentionsCompact: false,
+						comments: false,
+						graphView: false,
+						postNavigation: false,
+						hideScrollBar: false,
+						scrollToTop: false,
+						featureButton: 'none',
+						showSocialIconsInFooter: false,
+						showPostCardCoverImages: 'none',
+						postCardAspectRatio: 'og',
+						profilePicture: false,
+						quickActions: {
+							enabled: false,
+							toggleMode: false,
+							graphView: false,
+							changeTheme: false
+						}
+					};
 				}
 				settings.features.comments = currentEnabled;
 				
 				await this.plugin.saveData(settings);
 				// Reload settings to ensure the plugin has the latest values
-				await (this.plugin as any).loadSettings();
+				await (this.plugin as AstroModularPlugin).loadSettings();
 				if (showNotification) {
 					await this.applyCurrentConfiguration();
 					new Notice('Giscus script cleared and applied to config.ts');
@@ -1412,7 +1525,11 @@ export class FeaturesTab extends TabRenderer {
 			const validation = GiscusScriptParser.validateScript(scriptContent);
 			
 			if (validation.valid) {
-				validationDiv.innerHTML = '<span style="color: var(--text-success)">✓ Valid Giscus script detected</span>';
+				validationDiv.empty();
+				// False positive: "Giscus" is a proper noun (product name) and should be capitalized
+				// eslint-disable-next-line obsidianmd/ui/sentence-case
+				const successSpan = validationDiv.createEl('span', { text: '✓ Valid Giscus script detected' });
+				successSpan.setCssProps({ color: 'var(--text-success)' });
 				
 				// Parse and update all settings
 				const parsed = GiscusScriptParser.parseScript(scriptContent);
@@ -1452,14 +1569,35 @@ export class FeaturesTab extends TabRenderer {
 					// Ensure features.comments is in sync so modifyConfigFromFeatures can apply the parsed values
 					// This is required because modifyConfigFromFeatures checks both settings.features.comments AND settings.optionalFeatures.comments
 					if (!settings.features) {
-						settings.features = {} as any;
+						settings.features = {
+							commandPalette: false,
+							readingTime: false,
+							linkedMentions: false,
+							linkedMentionsCompact: false,
+							comments: false,
+							graphView: false,
+							postNavigation: false,
+							hideScrollBar: false,
+							scrollToTop: false,
+							featureButton: 'none',
+							showSocialIconsInFooter: false,
+							showPostCardCoverImages: 'none',
+							postCardAspectRatio: 'og',
+							profilePicture: false,
+							quickActions: {
+								enabled: false,
+								toggleMode: false,
+								graphView: false,
+								changeTheme: false
+							}
+						};
 					}
 					settings.features.comments = currentEnabled;
 					
 					// Save settings immediately
 					await this.plugin.saveData(settings);
 					// Reload settings to ensure the plugin has the latest values
-					await (this.plugin as any).loadSettings();
+					await (this.plugin as AstroModularPlugin).loadSettings();
 					
 					// Apply configuration if notification is requested (debounced or on blur)
 					if (showNotification) {
@@ -1475,7 +1613,9 @@ export class FeaturesTab extends TabRenderer {
 					}
 				}
 			} else {
-				validationDiv.innerHTML = `<span style="color: var(--text-error)">✗ ${validation.error}</span>`;
+				validationDiv.empty();
+				const errorSpan = validationDiv.createEl('span', { text: `✗ ${validation.error}` });
+				errorSpan.setCssProps({ color: 'var(--text-error)' });
 			}
 		};
 		
@@ -1487,26 +1627,26 @@ export class FeaturesTab extends TabRenderer {
 			}
 			
 			// Update validation immediately (for UI feedback)
-			updateValidation(false);
+			void updateValidation(false);
 			
 			// Debounce the configuration application and notification
-			debounceTimeoutId = window.setTimeout(async () => {
-				await updateValidation(true);
+			debounceTimeoutId = window.setTimeout(() => {
+				void updateValidation(true);
 			}, 1000); // 1 second debounce
 		});
 		
 		// Apply immediately on blur (when user leaves the field)
-		textarea.addEventListener('blur', async () => {
+		textarea.addEventListener('blur', () => {
 			// Clear any pending timeout
 			if (debounceTimeoutId) {
 				clearTimeout(debounceTimeoutId);
 				debounceTimeoutId = null;
 			}
 			// Apply immediately when leaving the field
-			await updateValidation(true);
+			void updateValidation(true);
 		});
 		
 		// Initial validation (no notification on load)
-		updateValidation(false);
+		void updateValidation(false);
 	}
 }

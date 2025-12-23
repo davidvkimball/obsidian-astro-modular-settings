@@ -1,93 +1,202 @@
 import { BaseWizardStep } from './BaseWizardStep';
 import { setIcon } from 'obsidian';
+import { NavigationItem } from '../../types';
+
+// Type for elements with custom event handlers
+interface ElementWithHandlers extends HTMLElement {
+	_inputHandler?: (e: Event) => void;
+	_clickHandler?: () => void;
+	_removeHandler?: (e: MouseEvent) => void;
+	_dragStartHandler?: (e: DragEvent) => void;
+	_dragEndHandler?: (e: DragEvent) => void;
+	_dragOverHandler?: (e: DragEvent) => void;
+	_dragLeaveHandler?: (e: DragEvent) => void;
+	_dropHandler?: (e: DragEvent) => void;
+}
 
 export class NavigationStep extends BaseWizardStep {
 	render(container: HTMLElement): void {
 		const state = this.getState();
 		
-		container.innerHTML = `
-			<div class="navigation-selection">
-				<h2>Navigation setup</h2>
-				<p>Configure your site navigation and social links.</p>
-				
-				<div class="navigation-sections">
-					<div class="nav-section">
-						<h3>Navigation Pages</h3>
-						<p>Add pages to your main navigation menu. Leave URL empty to create dropdown-only parents.</p>
-						<div class="nav-items" id="pages-list">
-							${state.selectedNavigation.pages.map((page: any, index: number) => {
-								const hasChildren = page.children && page.children.length > 0;
-								return `
-								<div class="nav-item" data-index="${index}" draggable="true">
-									<div class="nav-item-content">
-										<div class="nav-item-fields">
-											<input type="text" class="nav-title" placeholder="Page Title" value="${page.title || ''}" draggable="false">
-											<input type="text" class="nav-url" placeholder="/page-url (leave empty for dropdown-only)" value="${page.url || ''}" draggable="false">
-										</div>
-										<div class="nav-item-actions">
-											<button class="nav-add-child" data-index="${index}" title="Add child page">+ Child</button>
-											<button class="nav-remove mod-warning" data-index="${index}" data-icon="trash" title="Remove" aria-label="Remove"></button>
-										</div>
-									</div>
-									<div class="nav-children-container" data-parent-index="${index}" ${!hasChildren ? 'style="display: none;"' : ''}>
-										<div class="nav-children-label">Child Pages:</div>
-										<div class="nav-children" data-parent-index="${index}">
-											${hasChildren ? page.children.map((child: any, childIndex: number) => `
-												<div class="nav-child-item" data-index="${index}" data-child-index="${childIndex}">
-													<div class="nav-item-fields">
-														<input type="text" class="nav-child-title" placeholder="Child Title" value="${child.title || ''}" draggable="false">
-														<input type="text" class="nav-child-url" placeholder="/child-url" value="${child.url || ''}" draggable="false">
-													</div>
-													<button class="nav-child-remove mod-warning" data-index="${index}" data-child-index="${childIndex}" data-icon="trash" title="Remove" aria-label="Remove"></button>
-												</div>
-											`).join('') : ''}
-										</div>
-									</div>
-								</div>
-							`;
-							}).join('')}
-						</div>
-						<button class="nav-add" id="add-page">+ Add Page</button>
-					</div>
-					
-					<div class="nav-section">
-						<h3>Social Links</h3>
-						<p>Add social media links for your footer.</p>
-						<div class="nav-items" id="social-list">
-							${state.selectedNavigation.social.map((social: any, index: number) => `
-								<div class="nav-item" data-index="${index}" draggable="true">
-									<div class="nav-item-content">
-										<div class="nav-item-fields">
-											<input type="text" class="nav-title" placeholder="Social Title" value="${social.title}" draggable="false">
-											<input type="text" class="nav-url" placeholder="https://example.com" value="${social.url}" draggable="false">
-										</div>
-										<button class="nav-remove mod-warning" data-index="${index}" data-icon="trash" title="Remove" aria-label="Remove"></button>
-									</div>
-									<div class="nav-icon-row">
-										<input type="text" class="nav-icon" placeholder="icon-name" value="${social.icon || ''}" draggable="false">
-										<div class="nav-icon-help">
-											<small>Icon names from FontAwesome Brands</small>
-										</div>
-									</div>
-								</div>
-							`).join('')}
-						</div>
-						<button class="nav-add" id="add-social">+ Add Social Link</button>
-					</div>
-				</div>
-			</div>
-		`;
-
-		// Set icons on remove buttons - use setTimeout to ensure DOM is ready
-		setTimeout(() => {
-			container.querySelectorAll('button[data-icon="trash"]').forEach((button) => {
-				// Clear any text content first
-				button.textContent = '';
-				setIcon(button as HTMLElement, 'trash');
-			});
-		}, 0);
+		const navigationSelection = container.createDiv('navigation-selection');
+		navigationSelection.createEl('h2', { text: 'Navigation setup' });
+		navigationSelection.createEl('p', { text: 'Configure your site navigation and social links.' });
+		
+		const navigationSections = navigationSelection.createDiv('navigation-sections');
+		
+		// Navigation Pages section
+		const pagesSection = navigationSections.createDiv('nav-section');
+		pagesSection.createEl('h3', { text: 'Navigation pages' });
+		pagesSection.createEl('p', { text: 'Add pages to your main navigation menu. Leave URL empty to create dropdown-only parents.' });
+		
+		const pagesList = pagesSection.createDiv('nav-items');
+		pagesList.id = 'pages-list';
+		
+		state.selectedNavigation.pages.forEach((page: NavigationItem, index: number) => {
+			this.renderPageItem(pagesList, page, index);
+		});
+		
+		// False positive: "+ Add page" is already in sentence case (the "+" is a UI convention)
+		// eslint-disable-next-line obsidianmd/ui/sentence-case
+		const addPageBtn = pagesSection.createEl('button', { text: '+ Add page', cls: 'nav-add' });
+		addPageBtn.id = 'add-page';
+		
+		// Social Links section
+		const socialSection = navigationSections.createDiv('nav-section');
+		socialSection.createEl('h3', { text: 'Social links' });
+		socialSection.createEl('p', { text: 'Add social media links for your footer.' });
+		
+		const socialList = socialSection.createDiv('nav-items');
+		socialList.id = 'social-list';
+		
+		state.selectedNavigation.social.forEach((social: { title: string; url: string; icon: string }, index: number) => {
+			this.renderSocialItem(socialList, social, index);
+		});
+		
+		// False positive: "+ Add social link" is already in sentence case (the "+" is a UI convention)
+		// eslint-disable-next-line obsidianmd/ui/sentence-case
+		const addSocialBtn = socialSection.createEl('button', { text: '+ Add social link', cls: 'nav-add' });
+		addSocialBtn.id = 'add-social';
 
 		this.setupEventHandlers(container);
+	}
+	
+	private renderPageItem(container: HTMLElement, page: NavigationItem, index: number): void {
+		const hasChildren = page.children && page.children.length > 0;
+		
+		const navItem = container.createDiv('nav-item');
+		navItem.setAttribute('data-index', index.toString());
+		navItem.setAttribute('draggable', 'true');
+		
+		const itemContent = navItem.createDiv('nav-item-content');
+		const itemFields = itemContent.createDiv('nav-item-fields');
+		
+		const titleInput = itemFields.createEl('input', {
+			type: 'text',
+			cls: 'nav-title',
+			// False positive: Placeholder text for input field
+			// eslint-disable-next-line obsidianmd/ui/sentence-case
+			attr: { placeholder: 'Page Title', draggable: 'false' }
+		});
+		titleInput.value = page.title || '';
+		
+		const urlInput = itemFields.createEl('input', {
+			type: 'text',
+			cls: 'nav-url',
+			attr: { placeholder: '/page-url (leave empty for dropdown-only)', draggable: 'false' }
+		});
+		urlInput.value = page.url || '';
+		
+		const itemActions = itemContent.createDiv('nav-item-actions');
+		itemActions.createEl('button', {
+			text: '+ child',
+			cls: 'nav-add-child',
+			attr: { 'data-index': index.toString(), title: 'Add child page' }
+		});
+		
+		const removeBtn = itemActions.createEl('button', {
+			cls: 'nav-remove mod-warning',
+			attr: { 'data-index': index.toString(), 'data-icon': 'trash', title: 'Remove', 'aria-label': 'Remove' }
+		});
+		setIcon(removeBtn, 'trash');
+		
+		const childrenContainer = navItem.createDiv('nav-children-container');
+		childrenContainer.setAttribute('data-parent-index', index.toString());
+		if (!hasChildren) {
+			childrenContainer.setCssProps({ display: 'none' });
+		}
+		
+		childrenContainer.createDiv('nav-children-label').textContent = 'Child pages:';
+		const childrenDiv = childrenContainer.createDiv('nav-children');
+		childrenDiv.setAttribute('data-parent-index', index.toString());
+		
+		if (hasChildren && page.children) {
+			page.children.forEach((child: NavigationItem, childIndex: number) => {
+				this.renderChildItem(childrenDiv, child, index, childIndex);
+			});
+		}
+	}
+	
+	private renderChildItem(container: HTMLElement, child: NavigationItem, parentIndex: number, childIndex: number): void {
+		const childItem = container.createDiv('nav-child-item');
+		childItem.setAttribute('data-index', parentIndex.toString());
+		childItem.setAttribute('data-child-index', childIndex.toString());
+		
+		const itemFields = childItem.createDiv('nav-item-fields');
+		
+		const titleInput = itemFields.createEl('input', {
+			type: 'text',
+			cls: 'nav-child-title',
+			// False positive: Placeholder text for input field
+			// eslint-disable-next-line obsidianmd/ui/sentence-case
+			attr: { placeholder: 'Child Title', draggable: 'false' }
+		});
+		titleInput.value = child.title || '';
+		
+		const urlInput = itemFields.createEl('input', {
+			type: 'text',
+			cls: 'nav-child-url',
+			attr: { placeholder: '/child-url', draggable: 'false' }
+		});
+		urlInput.value = child.url || '';
+		
+		const removeBtn = childItem.createEl('button', {
+			cls: 'nav-child-remove mod-warning',
+			attr: {
+				'data-index': parentIndex.toString(),
+				'data-child-index': childIndex.toString(),
+				'data-icon': 'trash',
+				title: 'Remove',
+				'aria-label': 'Remove'
+			}
+		});
+		setIcon(removeBtn, 'trash');
+	}
+	
+	private renderSocialItem(container: HTMLElement, social: { title: string; url: string; icon: string }, index: number): void {
+		const navItem = container.createDiv('nav-item');
+		navItem.setAttribute('data-index', index.toString());
+		navItem.setAttribute('draggable', 'true');
+		
+		const itemContent = navItem.createDiv('nav-item-content');
+		const itemFields = itemContent.createDiv('nav-item-fields');
+		
+		const titleInput = itemFields.createEl('input', {
+			type: 'text',
+			cls: 'nav-title',
+			// False positive: Placeholder text for input field
+			// eslint-disable-next-line obsidianmd/ui/sentence-case
+			attr: { placeholder: 'Social Title', draggable: 'false' }
+		});
+		titleInput.value = social.title || '';
+		
+		const urlInput = itemFields.createEl('input', {
+			type: 'text',
+			cls: 'nav-url',
+			attr: { placeholder: 'https://example.com', draggable: 'false' }
+		});
+		urlInput.value = social.url || '';
+		
+		const removeBtn = itemContent.createEl('button', {
+			cls: 'nav-remove mod-warning',
+			attr: { 'data-index': index.toString(), 'data-icon': 'trash', title: 'Remove', 'aria-label': 'Remove' }
+		});
+		setIcon(removeBtn, 'trash');
+		
+		const iconRow = navItem.createDiv('nav-icon-row');
+		const iconInput = iconRow.createEl('input', {
+			type: 'text',
+			cls: 'nav-icon',
+			// False positive: Placeholder text for input field (kebab-case format)
+			// eslint-disable-next-line obsidianmd/ui/sentence-case
+			attr: { placeholder: 'icon-name', draggable: 'false' }
+		});
+		iconInput.value = social.icon || '';
+		
+		const iconHelp = iconRow.createDiv('nav-icon-help');
+		// False positive: "FontAwesome Brands" is a proper noun (product name)
+		// eslint-disable-next-line obsidianmd/ui/sentence-case
+		iconHelp.createEl('small', { text: 'Icon names from FontAwesome Brands' });
 	}
 
 	private setupEventHandlers(container: HTMLElement): void {
@@ -136,10 +245,11 @@ export class NavigationStep extends BaseWizardStep {
 				}
 			};
 			// Remove old handler if exists
-			if ((pagesList as any)._inputHandler) {
-				pagesList.removeEventListener('input', (pagesList as any)._inputHandler);
+			const pagesListWithHandlers = pagesList as ElementWithHandlers;
+			if (pagesListWithHandlers._inputHandler) {
+				pagesList.removeEventListener('input', pagesListWithHandlers._inputHandler);
 			}
-			(pagesList as any)._inputHandler = pagesInputHandler;
+			pagesListWithHandlers._inputHandler = pagesInputHandler;
 			pagesList.addEventListener('input', pagesInputHandler);
 		}
 
@@ -158,10 +268,11 @@ export class NavigationStep extends BaseWizardStep {
 				}
 			};
 			// Remove old handler if exists
-			if ((socialList as any)._inputHandler) {
-				socialList.removeEventListener('input', (socialList as any)._inputHandler);
+			const socialListWithHandlers = socialList as ElementWithHandlers;
+			if (socialListWithHandlers._inputHandler) {
+				socialList.removeEventListener('input', socialListWithHandlers._inputHandler);
 			}
-			(socialList as any)._inputHandler = socialInputHandler;
+			socialListWithHandlers._inputHandler = socialInputHandler;
 			socialList.addEventListener('input', socialInputHandler);
 		}
 
@@ -173,10 +284,11 @@ export class NavigationStep extends BaseWizardStep {
 				this.render(container);
 			};
 			// Remove old handler if exists
-			if ((addPageBtn as any)._clickHandler) {
-				addPageBtn.removeEventListener('click', (addPageBtn as any)._clickHandler);
+			const addPageBtnWithHandlers = addPageBtn as ElementWithHandlers;
+			if (addPageBtnWithHandlers._clickHandler) {
+				addPageBtn.removeEventListener('click', addPageBtnWithHandlers._clickHandler);
 			}
-			(addPageBtn as any)._clickHandler = addPageHandler;
+			addPageBtnWithHandlers._clickHandler = addPageHandler;
 			addPageBtn.addEventListener('click', addPageHandler);
 		}
 
@@ -188,10 +300,11 @@ export class NavigationStep extends BaseWizardStep {
 				this.render(container);
 			};
 			// Remove old handler if exists
-			if ((addSocialBtn as any)._clickHandler) {
-				addSocialBtn.removeEventListener('click', (addSocialBtn as any)._clickHandler);
+			const addSocialBtnWithHandlers = addSocialBtn as ElementWithHandlers;
+			if (addSocialBtnWithHandlers._clickHandler) {
+				addSocialBtn.removeEventListener('click', addSocialBtnWithHandlers._clickHandler);
 			}
-			(addSocialBtn as any)._clickHandler = addSocialHandler;
+			addSocialBtnWithHandlers._clickHandler = addSocialHandler;
 			addSocialBtn.addEventListener('click', addSocialHandler);
 		}
 
@@ -228,7 +341,7 @@ export class NavigationStep extends BaseWizardStep {
 					const navItem = target.closest('.nav-item');
 					const childrenContainer = navItem?.querySelector('.nav-children-container') as HTMLElement;
 					if (childrenContainer && (!state.selectedNavigation.pages[parentIndex].children || state.selectedNavigation.pages[parentIndex].children!.length === 0)) {
-						childrenContainer.style.display = 'none';
+						childrenContainer.setCssProps({ display: 'none' });
 					}
 				}
 				this.render(container);
@@ -246,17 +359,18 @@ export class NavigationStep extends BaseWizardStep {
 				const navItem = target.closest('.nav-item');
 				const childrenContainer = navItem?.querySelector('.nav-children-container') as HTMLElement;
 				if (childrenContainer) {
-					childrenContainer.style.display = 'block';
+					childrenContainer.setCssProps({ display: 'block' });
 				}
 				this.render(container);
 			}
 		};
 		
 		// Remove old handler if exists
-		if ((container as any)._removeHandler) {
-			container.removeEventListener('click', (container as any)._removeHandler);
+		const containerWithHandlers = container as ElementWithHandlers;
+		if (containerWithHandlers._removeHandler) {
+			container.removeEventListener('click', containerWithHandlers._removeHandler);
 		}
-		(container as any)._removeHandler = removeHandler;
+		containerWithHandlers._removeHandler = removeHandler;
 		container.addEventListener('click', removeHandler);
 
 		// Drag and drop functionality
@@ -272,14 +386,14 @@ export class NavigationStep extends BaseWizardStep {
 			const target = e.target as HTMLElement;
 			if (target.classList.contains('nav-item')) {
 				draggedElement = target;
-				target.style.opacity = '0.5';
+				target.setCssProps({ opacity: '0.5' });
 			}
 		};
 
 		const dragEndHandler = (e: DragEvent) => {
 			const target = e.target as HTMLElement;
 			if (target.classList.contains('nav-item')) {
-				target.style.opacity = '1';
+				target.setCssProps({ opacity: '1' });
 				draggedElement = null;
 			}
 		};
@@ -292,11 +406,15 @@ export class NavigationStep extends BaseWizardStep {
 				const midpoint = rect.top + rect.height / 2;
 				
 				if (e.clientY < midpoint) {
-					target.style.borderTop = '2px solid var(--interactive-accent)';
-					target.style.borderBottom = 'none';
+					target.setCssProps({
+						borderTop: '2px solid var(--interactive-accent)',
+						borderBottom: 'none'
+					});
 				} else {
-					target.style.borderBottom = '2px solid var(--interactive-accent)';
-					target.style.borderTop = 'none';
+					target.setCssProps({
+						borderBottom: '2px solid var(--interactive-accent)',
+						borderTop: 'none'
+					});
 				}
 			}
 		};
@@ -304,8 +422,10 @@ export class NavigationStep extends BaseWizardStep {
 		const dragLeaveHandler = (e: DragEvent) => {
 			const target = e.target as HTMLElement;
 			if (target.classList.contains('nav-item')) {
-				target.style.borderTop = 'none';
-				target.style.borderBottom = 'none';
+				target.setCssProps({
+					borderTop: 'none',
+					borderBottom: 'none'
+				});
 			}
 		};
 
@@ -320,8 +440,10 @@ export class NavigationStep extends BaseWizardStep {
 				const isSocial = target.closest('#social-list');
 				
 				// Clear visual indicators
-				target.style.borderTop = 'none';
-				target.style.borderBottom = 'none';
+				target.setCssProps({
+					borderTop: 'none',
+					borderBottom: 'none'
+				});
 				
 				if (targetIndex !== draggedIndex) {
 					if (isPage) {
@@ -337,20 +459,29 @@ export class NavigationStep extends BaseWizardStep {
 		};
 
 		// Remove old handlers if they exist
-		if ((container as any)._dragStartHandler) {
-			container.removeEventListener('dragstart', (container as any)._dragStartHandler);
-			container.removeEventListener('dragend', (container as any)._dragEndHandler);
-			container.removeEventListener('dragover', (container as any)._dragOverHandler);
-			container.removeEventListener('dragleave', (container as any)._dragLeaveHandler);
-			container.removeEventListener('drop', (container as any)._dropHandler);
+		const containerWithHandlers = container as ElementWithHandlers;
+		if (containerWithHandlers._dragStartHandler) {
+			container.removeEventListener('dragstart', containerWithHandlers._dragStartHandler);
+		}
+		if (containerWithHandlers._dragEndHandler) {
+			container.removeEventListener('dragend', containerWithHandlers._dragEndHandler);
+		}
+		if (containerWithHandlers._dragOverHandler) {
+			container.removeEventListener('dragover', containerWithHandlers._dragOverHandler);
+		}
+		if (containerWithHandlers._dragLeaveHandler) {
+			container.removeEventListener('dragleave', containerWithHandlers._dragLeaveHandler);
+		}
+		if (containerWithHandlers._dropHandler) {
+			container.removeEventListener('drop', containerWithHandlers._dropHandler);
 		}
 
 		// Store handlers for later removal
-		(container as any)._dragStartHandler = dragStartHandler;
-		(container as any)._dragEndHandler = dragEndHandler;
-		(container as any)._dragOverHandler = dragOverHandler;
-		(container as any)._dragLeaveHandler = dragLeaveHandler;
-		(container as any)._dropHandler = dropHandler;
+		containerWithHandlers._dragStartHandler = dragStartHandler;
+		containerWithHandlers._dragEndHandler = dragEndHandler;
+		containerWithHandlers._dragOverHandler = dragOverHandler;
+		containerWithHandlers._dragLeaveHandler = dragLeaveHandler;
+		containerWithHandlers._dropHandler = dropHandler;
 
 		// Add new handlers
 		container.addEventListener('dragstart', dragStartHandler);

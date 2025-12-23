@@ -1,19 +1,18 @@
 import { BaseWizardStep } from './BaseWizardStep';
 import { Setting, ToggleComponent, TextComponent, DropdownComponent } from 'obsidian';
+import { WizardState } from './WizardState';
+import { ProfilePictureSettings, CommentsSettings } from '../../types';
 
 export class OptionalFeaturesStep extends BaseWizardStep {
 	render(container: HTMLElement): void {
 		const state = this.getState();
 		
-		container.innerHTML = `
-			<div class="features-selection">
-				<h2>Optional features</h2>
-				<p>Enable or disable specific features for your site.</p>
-			</div>
-		`;
+		const featuresSelection = container.createDiv('features-selection');
+		featuresSelection.createEl('h2', { text: 'Optional features' });
+		featuresSelection.createEl('p', { text: 'Enable or disable specific features for your site.' });
 
 		// Create the features list container
-		const featuresList = container.querySelector('.features-selection')!.createDiv('features-list');
+		const featuresList = featuresSelection.createDiv('features-list');
 		
 		// Render profile picture feature using native components
 		this.renderProfilePictureFeatureNative(featuresList, state);
@@ -22,7 +21,7 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 		this.renderCommentsFeatureNative(featuresList, state);
 	}
 
-	private renderProfilePictureFeatureNative(container: HTMLElement, state: any): void {
+	private renderProfilePictureFeatureNative(container: HTMLElement, state: WizardState): void {
 		const isEnabled = state.selectedOptionalFeatures?.profilePicture?.enabled || false;
 		const profileSettings = state.selectedOptionalFeatures?.profilePicture || {
 			enabled: false, image: '/profile.jpg', alt: 'Profile picture', size: 'md',
@@ -47,27 +46,35 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 					});
 					// Show/hide options
 					const optionsDiv = container.querySelector('.profile-picture-options') as HTMLElement;
-					if (optionsDiv) optionsDiv.style.display = value ? 'block' : 'none';
+					if (optionsDiv) optionsDiv.setCssProps({ display: value ? 'block' : 'none' });
 				}));
 
 		// Options container
 		const optionsContainer = container.createDiv('profile-picture-options');
-		optionsContainer.style.display = isEnabled ? 'block' : 'none';
+		optionsContainer.setCssProps({ display: isEnabled ? 'block' : 'none' });
 		optionsContainer.className = 'profile-picture-options';
 
 		// Helper function to create settings
-		const createSetting = (name: string, desc: string, type: 'text' | 'dropdown', options?: Array<{value: string, label: string}>) => {
+		const createSetting = (name: keyof ProfilePictureSettings, desc: string, type: 'text' | 'dropdown', options?: Array<{value: string, label: string}>) => {
 			const setting = new Setting(optionsContainer).setName(name).setDesc(desc);
 			if (type === 'text') {
 				setting.addText((text: TextComponent) => text
-					.setValue(profileSettings[name] || '')
+					.setValue(String(profileSettings[name] ?? ''))
 					.setPlaceholder(options?.[0]?.value || '')
-					.onChange((value: string) => this.updateProfileSetting(name, value, state)));
+					.onChange((value: string) => {
+						void this.updateProfileSetting(name, value, state);
+					})); 
 			} else {
 				setting.addDropdown((dropdown: DropdownComponent) => {
-					options?.forEach(opt => dropdown.addOption(opt.value, opt.label));
-					dropdown.setValue(profileSettings[name])
-						.onChange((value: string) => this.updateProfileSetting(name, value, state));
+					if (options) {
+						for (const opt of options) {
+							dropdown.addOption(opt.value, opt.label);
+						}
+					}
+					dropdown.setValue(String(profileSettings[name] ?? ''))
+						.onChange((value: string) => {
+							void this.updateProfileSetting(name, value, state);
+						});
 				});
 			}
 		};
@@ -87,7 +94,7 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 		]);
 	}
 
-	private updateProfileSetting(key: string, value: any, state: any): void {
+	private updateProfileSetting(key: keyof ProfilePictureSettings, value: string, state: WizardState): void {
 		// Get fresh state to avoid stale closure issues
 		const currentState = this.getState();
 		this.updateState({
@@ -98,7 +105,7 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 		});
 	}
 
-	private renderCommentsFeatureNative(container: HTMLElement, state: any): void {
+	private renderCommentsFeatureNative(container: HTMLElement, state: WizardState): void {
 		const isEnabled = state.selectedOptionalFeatures?.comments?.enabled || false;
 		const commentsSettings = state.selectedOptionalFeatures?.comments || {
 			enabled: false, provider: 'giscus', rawScript: '',
@@ -108,15 +115,13 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 			inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy'
 		};
 
-		// Store reference to toggle for later updates
-		let commentsToggle: ToggleComponent;
 
 		// Main toggle
 		new Setting(container)
 			.setName('Comments')
+			// eslint-disable-next-line obsidianmd/ui/sentence-case -- "Giscus" is a proper noun
 			.setDesc('Enable Giscus comment system for posts')
 			.addToggle((toggle: ToggleComponent) => {
-				commentsToggle = toggle;
 				toggle.setValue(isEnabled)
 					.onChange((value: boolean) => {
 						// Get fresh state to avoid stale closure issues
@@ -129,46 +134,62 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 							}
 						});
 						const optionsDiv = container.querySelector('.comments-options') as HTMLElement;
-						if (optionsDiv) optionsDiv.style.display = value ? 'block' : 'none';
+						if (optionsDiv) optionsDiv.setCssProps({ display: value ? 'block' : 'none' });
 					});
 			});
 
 		// Options container
 		const optionsContainer = container.createDiv('comments-options');
-		optionsContainer.style.display = isEnabled ? 'block' : 'none';
+		optionsContainer.setCssProps({ display: isEnabled ? 'block' : 'none' });
 		optionsContainer.className = 'comments-options';
 
 		// Instructions
 		const instructionsDiv = optionsContainer.createDiv('comments-instructions');
-		instructionsDiv.style.marginBottom = '15px';
-		instructionsDiv.style.padding = '10px';
-		instructionsDiv.style.background = 'var(--background-modifier-border)';
-		instructionsDiv.style.borderRadius = '4px';
-		instructionsDiv.style.borderLeft = '3px solid var(--interactive-accent)';
+		instructionsDiv.setCssProps({
+			marginBottom: '15px',
+			padding: '10px',
+			background: 'var(--background-modifier-border)',
+			borderRadius: '4px',
+			borderLeft: '3px solid var(--interactive-accent)'
+		});
 		
 		const instructionsText = instructionsDiv.createEl('p');
-		instructionsText.style.margin = '0';
-		instructionsText.style.fontSize = '13px';
-		instructionsText.style.color = 'var(--text-muted)';
-		instructionsText.style.whiteSpace = 'pre-line';
+		instructionsText.setCssProps({
+			margin: '0',
+			fontSize: '13px',
+			color: 'var(--text-muted)',
+			whiteSpace: 'pre-line'
+		});
 		
 		// Create the text with proper link placement
-		instructionsText.innerHTML = '1. Go to <a href="https://giscus.app/" target="_blank" rel="noopener noreferrer" style="color: var(--interactive-accent); text-decoration: none;">giscus.app</a> and configure your comments\n2. Copy the generated script\n3. Paste it below';
+		instructionsText.appendText('1. Go to ');
+		const giscusLink = instructionsText.createEl('a', {
+			href: 'https://giscus.app/',
+			// eslint-disable-next-line obsidianmd/ui/sentence-case -- URL should remain lowercase
+			text: 'giscus.app',
+			attr: {
+				target: '_blank',
+				rel: 'noopener noreferrer'
+			}
+		});
+		giscusLink.setCssProps({
+			color: 'var(--interactive-accent)',
+			textDecoration: 'none'
+		});
+		instructionsText.appendText(' and configure your comments\n2. Copy the generated script\n3. Paste it below');
 		
 		// Add hover effects to the link
-		const giscusLink = instructionsText.querySelector('a');
-		if (giscusLink) {
-			giscusLink.addEventListener('mouseenter', () => {
-				giscusLink.style.textDecoration = 'underline';
-			});
-			giscusLink.addEventListener('mouseleave', () => {
-				giscusLink.style.textDecoration = 'none';
-			});
-		}
+		giscusLink.addEventListener('mouseenter', () => {
+			giscusLink.setCssProps({ textDecoration: 'underline' });
+		});
+		giscusLink.addEventListener('mouseleave', () => {
+			giscusLink.setCssProps({ textDecoration: 'none' });
+		});
 
 		// Script textarea
 		const scriptSetting = new Setting(optionsContainer)
-			.setName('Giscus Script')
+			.setName('Giscus script')
+			// eslint-disable-next-line obsidianmd/ui/sentence-case -- "Giscus" is a proper noun
 			.setDesc('Paste your Giscus script here (the plugin will automatically parse all settings)');
 		
 		const textarea = scriptSetting.controlEl.createEl('textarea', {
@@ -193,29 +214,33 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 			}
 		});
 		
-		textarea.style.width = '100%';
-		textarea.style.fontFamily = 'var(--font-monospace)';
-		textarea.style.fontSize = '12px';
-		textarea.style.padding = '8px';
-		textarea.style.border = '1px solid var(--background-modifier-border)';
-		textarea.style.borderRadius = '4px';
-		textarea.style.background = 'var(--background-primary)';
-		textarea.style.color = 'var(--text-normal)';
-		textarea.style.resize = 'none';
+		textarea.setCssProps({
+			width: '100%',
+			fontFamily: 'var(--font-monospace)',
+			fontSize: '12px',
+			padding: '8px',
+			border: '1px solid var(--background-modifier-border)',
+			borderRadius: '4px',
+			background: 'var(--background-primary)',
+			color: 'var(--text-normal)',
+			resize: 'none'
+		});
 		
 		// Set current value
 		textarea.value = commentsSettings.rawScript || '';
 		
 		// Validation and parsing
 		const validationDiv = optionsContainer.createDiv('script-validation');
-		validationDiv.style.marginTop = '8px';
-		validationDiv.style.fontSize = '12px';
+		validationDiv.setCssProps({
+			marginTop: '8px',
+			fontSize: '12px'
+		});
 		
 		const updateValidation = async () => {
 			const scriptContent = textarea.value.trim();
 			
 			if (!scriptContent) {
-				validationDiv.innerHTML = '';
+				validationDiv.empty();
 				// Clear all comment settings when script is deleted, but preserve enabled state
 				const currentState = this.getState();
 				const currentEnabled = currentState.selectedOptionalFeatures?.comments?.enabled ?? false;
@@ -249,7 +274,11 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 			const validation = GiscusScriptParser.validateScript(scriptContent);
 			
 			if (validation.valid) {
-				validationDiv.innerHTML = '<span style="color: var(--text-success)">✓ Valid Giscus script detected</span>';
+				validationDiv.empty();
+				// False positive: "Giscus" is a proper noun (service name)
+				// eslint-disable-next-line obsidianmd/ui/sentence-case
+				const successSpan = validationDiv.createEl('span', { text: '✓ Valid Giscus script detected' });
+				successSpan.setCssProps({ color: 'var(--text-success)' });
 				
 				// Parse and update script settings without forcing comments to be enabled
 				const parsed = GiscusScriptParser.parseScript(scriptContent);
@@ -286,17 +315,21 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 					// The toggle should reflect the current state, not be forced to true
 				}
 			} else {
-				validationDiv.innerHTML = `<span style="color: var(--text-error)">✗ ${validation.error}</span>`;
+				validationDiv.empty();
+				const errorSpan = validationDiv.createEl('span', { text: `✗ ${validation.error}` });
+				errorSpan.setCssProps({ color: 'var(--text-error)' });
 			}
 		};
 		
-		textarea.addEventListener('input', updateValidation);
+		textarea.addEventListener('input', () => {
+			void updateValidation();
+		});
 		
 		// Initial validation
-		updateValidation();
+		void updateValidation();
 	}
 
-	private updateCommentSetting(key: string, value: any, state: any): void {
+	private updateCommentSetting(key: keyof CommentsSettings, value: string, state: WizardState): void {
 		// Get fresh state to avoid stale closure issues
 		const currentState = this.getState();
 		this.updateState({
