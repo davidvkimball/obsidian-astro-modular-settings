@@ -691,7 +691,7 @@ Most plugins use `new Setting(containerEl)` directly, which doesn't have this re
 1. Check which line the error is on (column number matters)
 2. If it's the `addSetting` callback, ensure it uses block body `{ }`
 3. If it's the `onChange` callback, ensure it's properly async or uses `void`
-4. Run `npm run lint` after each change to verify
+4. Run `pnpm lint` after each change to verify
 5. Never suppress errors without understanding the root cause
 
 ---
@@ -824,7 +824,7 @@ Most IDEs and ESLint can auto-remove unused imports:
 
 ```bash
 # Run ESLint with --fix flag
-npm run lint:fix
+pnpm lint:fix
 ```
 
 Or configure your IDE to remove unused imports on save.
@@ -854,7 +854,7 @@ Or configure your IDE to remove unused imports on save.
 ### Installation
 
 ```bash
-npm install -D eslint eslint-plugin-obsidianmd
+pnpm add -D eslint eslint-plugin-obsidianmd
 ```
 
 ### Configuration
@@ -896,10 +896,10 @@ After setting up ESLint (see [environment.md](environment.md)), run:
 
 ```bash
 # Check for issues
-npm run lint
+pnpm lint
 
 # Auto-fix issues where possible
-npm run lint:fix
+pnpm lint:fix
 
 # Check specific file
 npx eslint src/main.ts
