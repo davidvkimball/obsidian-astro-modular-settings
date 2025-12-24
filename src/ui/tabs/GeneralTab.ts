@@ -1,4 +1,3 @@
-import { Setting } from 'obsidian';
 import { TabRenderer } from '../common/TabRenderer';
 import { SetupWizardModal } from '../SetupWizardModal';
 import { TEMPLATE_OPTIONS, THEME_OPTIONS, AstroModularPlugin, AstroModularSettings } from '../../types';
@@ -11,44 +10,68 @@ export class GeneralTab extends TabRenderer {
 		// Always use the plugin's current settings
 		const settings = this.getSettings();
 
-		// Current configuration display (moved to top)
-		const configDisplay = container.createDiv('config-display');
-		const configInfo = configDisplay.createDiv('config-info');
+		// Current configuration as a settings group
+		const configGroup = createSettingsGroup(container, 'Current configuration');
 		
-		// Current Configuration heading
-		new Setting(configInfo)
-			.setHeading()
-			.setName('Current configuration');
-		
-		const templateItem = configInfo.createDiv('config-item');
-		templateItem.createEl('strong', { text: 'Template: ' });
-		templateItem.createSpan({ text: TEMPLATE_OPTIONS.find(t => t.id === settings.currentTemplate)?.name || 'Unknown' });
-		
-		const themeItem = configInfo.createDiv('config-item');
-		themeItem.createEl('strong', { text: 'Theme: ' });
-		themeItem.createSpan({ text: THEME_OPTIONS.find(t => t.id === settings.currentTheme)?.name || 'Unknown' });
-		
-		const orgItem = configInfo.createDiv('config-item');
-		orgItem.createEl('strong', { text: 'Organization: ' });
-		orgItem.createSpan({ text: settings.contentOrganization === 'file-based' ? 'File-based' : 'Folder-based' });
-		
-		const deploymentItem = configInfo.createDiv('config-item');
-		deploymentItem.createEl('strong', { text: 'Deployment: ' });
-		deploymentItem.createSpan({ text: this.formatDeploymentName(settings.deployment.platform) });
-		
-		const siteTitleItem = configInfo.createDiv('config-item');
-		siteTitleItem.createEl('strong', { text: 'Site title: ' });
-		siteTitleItem.createSpan({ text: settings.siteInfo.title });
-		
-		const siteUrlItem = configInfo.createDiv('config-item');
-		siteUrlItem.createEl('strong', { text: 'Site URL: ' }); // URL is an acronym, keep uppercase
-		siteUrlItem.createSpan({ text: settings.siteInfo.site });
+		// Create config items display in the original format
+		configGroup.addSetting((setting) => {
+			// Hide default UI elements
+			const nameEl = setting.settingEl.querySelector('.setting-item-name');
+			const descEl = setting.settingEl.querySelector('.setting-item-description');
+			const controlEl = setting.settingEl.querySelector('.setting-item-control');
+			if (nameEl) (nameEl as HTMLElement).setCssProps({ display: 'none' });
+			if (descEl) (descEl as HTMLElement).setCssProps({ display: 'none' });
+			if (controlEl) (controlEl as HTMLElement).setCssProps({ display: 'none' });
+			setting.settingEl.setCssProps({
+				borderTop: 'none',
+				paddingTop: '0',
+				paddingBottom: '0',
+				display: 'block'
+			});
+			
+			// Create config items container - full width, left aligned
+			const configItems = setting.settingEl.createDiv('config-items');
+			configItems.setCssProps({
+				width: '100%',
+				marginBottom: '0'
+			});
+			
+			// Template
+			const templateItem = configItems.createDiv('config-item');
+			templateItem.createEl('strong', { text: 'Template: ' });
+			templateItem.createSpan({ text: TEMPLATE_OPTIONS.find(t => t.id === settings.currentTemplate)?.name || 'Unknown' });
+			
+			// Theme
+			const themeItem = configItems.createDiv('config-item');
+			themeItem.createEl('strong', { text: 'Theme: ' });
+			themeItem.createSpan({ text: THEME_OPTIONS.find(t => t.id === settings.currentTheme)?.name || 'Unknown' });
+			
+			// Organization
+			const orgItem = configItems.createDiv('config-item');
+			orgItem.createEl('strong', { text: 'Organization: ' });
+			orgItem.createSpan({ text: settings.contentOrganization === 'file-based' ? 'File-based' : 'Folder-based' });
+			
+			// Deployment
+			const deploymentItem = configItems.createDiv('config-item');
+			deploymentItem.createEl('strong', { text: 'Deployment: ' });
+			deploymentItem.createSpan({ text: this.formatDeploymentName(settings.deployment.platform) });
+			
+			// Site title
+			const siteTitleItem = configItems.createDiv('config-item');
+			siteTitleItem.createEl('strong', { text: 'Site title: ' });
+			siteTitleItem.createSpan({ text: settings.siteInfo.title });
+			
+			// Site URL
+			const siteUrlItem = configItems.createDiv('config-item');
+			siteUrlItem.createEl('strong', { text: 'Site URL: ' }); // URL is an acronym, keep uppercase
+			siteUrlItem.createSpan({ text: settings.siteInfo.site });
+		});
 
-		// Group three settings with no heading
-		const generalGroup = createSettingsGroup(container);
+		// Wizard settings group
+		const wizardGroup = createSettingsGroup(container, 'Wizard');
 		
 		// Run setup wizard button
-		generalGroup.addSetting((setting) => {
+		wizardGroup.addSetting((setting) => {
 			setting
 				.setName('Setup wizard')
 				.setDesc('Run the setup wizard to reconfigure your theme')
@@ -68,8 +91,8 @@ export class GeneralTab extends TabRenderer {
 					}));
 		});
 
-		// Run wizard on startup (moved to bottom)
-		generalGroup.addSetting((setting) => {
+		// Run wizard on startup
+		wizardGroup.addSetting((setting) => {
 			setting
 				.setName('Run wizard on startup')
 				.setDesc('Show the setup wizard when Obsidian starts (if not disabled)')
@@ -82,7 +105,7 @@ export class GeneralTab extends TabRenderer {
 		});
 
 		// Remove ribbon icon toggle
-		generalGroup.addSetting((setting) => {
+		wizardGroup.addSetting((setting) => {
 			setting
 				.setName('Remove ribbon icon')
 				.setDesc('Remove the wizard icon from the left ribbon')

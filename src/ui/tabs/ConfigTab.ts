@@ -150,6 +150,10 @@ export class ConfigTab extends TabRenderer {
 						}
 					});
 				});
+			// Add bottom margin to last setting in group without heading to create space before next heading
+			setting.settingEl.setCssProps({
+				marginBottom: 'var(--size-4-6)'
+			});
 		});
 
 		// Plugin configuration section
@@ -158,7 +162,7 @@ export class ConfigTab extends TabRenderer {
 			.setHeading()
 			.setName('Plugin configuration');
 		pluginConfigHeading.settingEl.setCssProps({
-			marginTop: 'var(--size-4-6)',
+			marginTop: '0',
 			marginBottom: 'var(--size-4-2)'
 		});
 		

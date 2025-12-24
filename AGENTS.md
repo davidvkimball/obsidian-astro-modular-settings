@@ -63,6 +63,7 @@ Applicability: Plugin
   - Later groups: WITH headings (use `createSettingsGroup(containerEl, 'Group Name')`)
   - All settings must use `group.addSetting()` - never create divs directly on `containerEl` outside groups
   - Conditional visibility: Apply to `setting.settingEl`, not separate containers
+  - **CRITICAL SPACING RULE**: When a settings group has NO heading, the LAST setting in that group MUST have bottom margin to create space before the next heading. Use `setting.settingEl.setCssProps({ marginBottom: 'var(--size-4-6)' })` on the last setting. This compensates for the lack of natural spacing that headings provide.
 
 ### Project-Specific References
 

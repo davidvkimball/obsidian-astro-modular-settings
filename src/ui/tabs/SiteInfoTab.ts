@@ -1,4 +1,4 @@
-import { Notice, Modal, setIcon } from 'obsidian';
+import { Notice, Modal, setIcon, Setting } from 'obsidian';
 import { TabRenderer } from '../common/TabRenderer';
 import { AstroModularPlugin, ObsidianVaultAdapter } from '../../types';
 import { createSettingsGroup } from '../../utils/settings-compat';
@@ -123,7 +123,7 @@ export class SiteInfoTab extends TabRenderer {
 				});
 		});
 
-		// Language
+		// Language - last setting in group without heading, add bottom margin
 		siteInfoGroup.addSetting((setting) => {
 			setting
 				.setName('Language code')
@@ -149,26 +149,25 @@ export class SiteInfoTab extends TabRenderer {
 						}
 					});
 				});
+			// Add bottom margin to last setting in group without heading to create space before next heading
+			setting.settingEl.setCssProps({
+				marginBottom: 'var(--size-4-6)'
+			});
 		});
 
-		// Assets & Metadata section - create header with floating button
+		// Assets & Metadata section - create header with floating button using Setting pattern
 		const assetsSection = container.createDiv('assets-section');
-		const assetsHeader = assetsSection.createDiv('assets-header');
-		assetsHeader.setCssProps({
-			display: 'flex',
-			alignItems: 'center',
-			justifyContent: 'space-between',
-			marginBottom: '20px'
+		const assetsHeaderSetting = new Setting(assetsSection)
+			.setHeading()
+			.setName('Assets & metadata');
+		assetsHeaderSetting.settingEl.setCssProps({
+			marginTop: 'var(--size-4-6)',
+			marginBottom: 'var(--size-4-2)',
+			position: 'relative'
 		});
 		
-		const assetsTitle = assetsHeader.createEl('h3', { text: 'Assets & metadata' });
-		assetsTitle.setCssProps({
-			margin: '0',
-			fontSize: 'var(--font-ui-medium)',
-			fontWeight: 'var(--font-bold)'
-		});
-		
-		const sharedFolderButton = assetsHeader.createEl('button', {
+		// Add folder button to the heading's control area
+		const sharedFolderButton = assetsHeaderSetting.controlEl.createEl('button', {
 			cls: 'clickable-icon',
 			attr: { 'aria-label': 'Open public folder' }
 		});
@@ -179,7 +178,11 @@ export class SiteInfoTab extends TabRenderer {
 			color: 'var(--text-normal)',
 			display: 'flex',
 			alignItems: 'center',
-			justifyContent: 'center'
+			justifyContent: 'center',
+			position: 'absolute',
+			right: '0',
+			top: '50%',
+			transform: 'translateY(-50%)'
 		});
 		
 		setIcon(sharedFolderButton, 'folder');

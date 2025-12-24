@@ -794,7 +794,6 @@ body[data-astro-modular-ribbon-removed="true"] .menu-item .menu-item-icon:has(.l
 	background: var(--background-secondary);
 	padding: 20px;
 	border-radius: 8px;
-	border: 1px solid var(--background-modifier-border);
 	margin: 20px 0;
 }
 
@@ -823,6 +822,18 @@ body[data-astro-modular-ribbon-removed="true"] .menu-item .menu-item-icon:has(.l
 	margin-bottom: 0;
 }
 
+/* Config items container - ensure left alignment */
+.astro-modular-settings .config-items {
+	width: 100%;
+	display: block;
+}
+
+.astro-modular-settings .setting-item:has(.config-items) {
+	display: block !important;
+	flex-direction: column !important;
+	align-items: flex-start !important;
+}
+
 /* Form elements in settings - Match Shell Commands exactly */
 .astro-modular-settings .setting-item {
 	margin-bottom: 16px;
@@ -830,6 +841,22 @@ body[data-astro-modular-ribbon-removed="true"] .menu-item .menu-item-icon:has(.l
 
 .astro-modular-settings .setting-item:last-child {
 	margin-bottom: 0;
+}
+
+/* Ensure last setting in group without heading has proper spacing before next heading */
+.astro-modular-settings .setting-group:not(:has(.setting-item-heading)) .setting-items > .setting-item:last-child {
+	margin-bottom: var(--size-4-6) !important;
+}
+
+/* Direct spacing when heading follows a group without heading (sibling selector) */
+.astro-modular-settings .setting-group:not(:has(.setting-item-heading)) + .setting-item-heading,
+.astro-modular-settings .setting-group:not(:has(.setting-item-heading)) ~ .setting-item-heading {
+	margin-top: var(--size-4-6) !important;
+}
+
+/* Also handle assets-section case */
+.astro-modular-settings .setting-group:not(:has(.setting-item-heading)) + .assets-section .setting-item-heading {
+	margin-top: var(--size-4-6) !important;
 }
 
 /* Remove top border from first setting item when it comes after an empty settings-section */
@@ -844,6 +871,15 @@ body[data-astro-modular-ribbon-removed="true"] .menu-item .menu-item-icon:has(.l
 	line-height: 1.4;
 }
 
+/* Footer content setting - add spacing between description and textarea */
+.astro-modular-settings .footer-content-setting .setting-item-description {
+	margin-bottom: var(--size-4-3) !important;
+}
+
+.astro-modular-settings .footer-content-setting .setting-item-control {
+	display: block !important;
+}
+
 .astro-modular-settings .setting-item-control {
 	margin: 0;
 }
@@ -852,6 +888,69 @@ body[data-astro-modular-ribbon-removed="true"] .menu-item .menu-item-icon:has(.l
 .astro-modular-settings .setting-item-control select,
 .astro-modular-settings .setting-item-control textarea {
 	margin: 0;
+}
+
+/* Standardize text input widths to match dropdown width (exclude textareas) */
+.astro-modular-settings .setting-item-control input[type="text"] {
+	width: 200px !important;
+}
+
+/* Standardize dropdown widths to match text input width - override all conflicting rules */
+.astro-modular-settings .setting-item-control select,
+.astro-modular-settings .setting-item select,
+.astro-modular-settings select.dropdown {
+	width: 200px !important;
+	min-width: 200px !important;
+	max-width: 200px !important;
+}
+
+/* Override the .setting-group select rule that sets width to 100% */
+.astro-modular-settings .setting-group select {
+	width: 200px !important;
+	min-width: 200px !important;
+	max-width: 200px !important;
+}
+
+/* Fix assets header heading with folder button */
+.astro-modular-settings .assets-section .setting-item-heading {
+	position: relative;
+}
+
+.astro-modular-settings .assets-section .setting-item-heading .setting-item-control {
+	position: relative;
+}
+
+/* Fix theme pills container - allow wrapping */
+.astro-modular-settings .theme-pills-container {
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.astro-modular-settings .theme-pills-wrapper {
+	width: 100%;
+	box-sizing: border-box;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+/* Theme pill styling - restore personality */
+.astro-modular-settings .theme-pill {
+	display: inline-flex;
+	align-items: center;
+	padding: 6px 12px;
+	border-radius: 16px;
+	font-size: 12px;
+	font-weight: 500;
+	gap: 6px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	border: 1px solid;
+}
+
+.astro-modular-settings .theme-pill:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Button spacing in settings */

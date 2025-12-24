@@ -144,6 +144,14 @@ export class FeaturesTab extends TabRenderer {
 				.setName('Footer content')
 				.setDesc('Text to display in footer. Use {author} for site author and {title} for site title');
 			
+			// Apply spacing directly to description element
+			const descEl = setting.settingEl.querySelector('.setting-item-description');
+			if (descEl) {
+				(descEl as HTMLElement).setCssProps({
+					marginBottom: 'var(--size-4-3)'
+				});
+			}
+			
 			// Create textarea manually for full-width, multi-line input
 			const textarea = setting.controlEl.createEl('textarea', {
 				attr: {
@@ -169,7 +177,7 @@ export class FeaturesTab extends TabRenderer {
 			// Position textarea below description (not to the right)
 			setting.controlEl.setCssProps({
 				width: '100%',
-				marginTop: 'var(--size-4-2)'
+				display: 'block'
 			});
 			
 			let timeoutId: number | null = null;
@@ -654,25 +662,38 @@ export class FeaturesTab extends TabRenderer {
 			setting
 				.setName('Featured post type')
 				.setDesc('Show latest post or a specific featured post')
-				.addDropdown(dropdown => dropdown
-					.addOption('latest', 'Latest')
-					.addOption('featured', 'Featured')
-					.setValue(settings.homeOptions?.featuredPost?.type || 'latest')
-					.onChange(async (value) => {
-						if (!settings.homeOptions?.featuredPost) {
-							settings.homeOptions.featuredPost = { enabled: true, type: 'latest', slug: 'getting-started' };
+				.addDropdown(dropdown => {
+					dropdown
+						.addOption('latest', 'Latest')
+						.addOption('featured', 'Featured')
+						.setValue(settings.homeOptions?.featuredPost?.type || 'latest')
+						.onChange(async (value) => {
+							if (!settings.homeOptions?.featuredPost) {
+								settings.homeOptions.featuredPost = { enabled: true, type: 'latest', slug: 'getting-started' };
+							}
+							settings.homeOptions.featuredPost.type = value as 'latest' | 'featured';
+							await this.plugin.saveData(settings);
+							
+							// Update visibility of slug field
+							const fpSlugSetting = container.querySelector('.fp-slug-setting') as HTMLElement;
+							if (fpSlugSetting) {
+								fpSlugSetting.setCssProps({ display: value === 'featured' ? 'block' : 'none' });
+							}
+							
+							await this.applyCurrentConfiguration();
+						});
+					// Apply width directly to select element after it's created
+					setTimeout(() => {
+						const selectEl = setting.controlEl.querySelector('select');
+						if (selectEl) {
+							selectEl.setCssProps({
+								width: '200px',
+								minWidth: '200px',
+								maxWidth: '200px'
+							});
 						}
-						settings.homeOptions.featuredPost.type = value as 'latest' | 'featured';
-						await this.plugin.saveData(settings);
-						
-						// Update visibility of slug field
-						const fpSlugSetting = container.querySelector('.fp-slug-setting') as HTMLElement;
-						if (fpSlugSetting) {
-							fpSlugSetting.setCssProps({ display: value === 'featured' ? 'block' : 'none' });
-						}
-						
-						await this.applyCurrentConfiguration();
-					}));
+					}, 0);
+				});
 		});
 
 		// Featured post slug - with conditional visibility
@@ -918,19 +939,32 @@ export class FeaturesTab extends TabRenderer {
 			setting
 				.setName('Blurb placement')
 				.setDesc('Where to place the blurb text on homepage')
-				.addDropdown(dropdown => dropdown
-					.addOption('above', 'Above')
-					.addOption('below', 'Below')
-					.addOption('none', 'None')
-					.setValue(settings.homeOptions?.blurb?.placement || 'below')
-					.onChange(async (value) => {
-						if (!settings.homeOptions?.blurb) {
-							settings.homeOptions.blurb = { placement: 'below' };
+				.addDropdown(dropdown => {
+					dropdown
+						.addOption('above', 'Above')
+						.addOption('below', 'Below')
+						.addOption('none', 'None')
+						.setValue(settings.homeOptions?.blurb?.placement || 'below')
+						.onChange(async (value) => {
+							if (!settings.homeOptions?.blurb) {
+								settings.homeOptions.blurb = { placement: 'below' };
+							}
+							settings.homeOptions.blurb.placement = value as 'above' | 'below' | 'none';
+							await this.plugin.saveData(settings);
+							await this.applyCurrentConfiguration();
+						});
+					// Apply width directly to select element after it's created
+					setTimeout(() => {
+						const selectEl = setting.controlEl.querySelector('select');
+						if (selectEl) {
+							selectEl.setCssProps({
+								width: '200px',
+								minWidth: '200px',
+								maxWidth: '200px'
+							});
 						}
-						settings.homeOptions.blurb.placement = value as 'above' | 'below' | 'none';
-						await this.plugin.saveData(settings);
-						await this.applyCurrentConfiguration();
-					}));
+					}, 0);
+				});
 		});
 
 		// Post Options group with heading
@@ -1184,24 +1218,37 @@ export class FeaturesTab extends TabRenderer {
 			setting
 				.setName('Show post card cover images')
 				.setDesc('Where to display cover images on post cards')
-				.addDropdown(dropdown => dropdown
-					.addOption('all', 'All')
-					.addOption('featured', 'Featured')
-					.addOption('home', 'Home')
-					.addOption('posts', 'Posts')
-					.addOption('featured-and-posts', 'Featured and posts')
-					.addOption('none', 'None')
-					.setValue(settings.postOptions?.showPostCardCoverImages || 'featured-and-posts')
-					.onChange(async (value) => {
-						if (!settings.postOptions) {
-							settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
+				.addDropdown(dropdown => {
+					dropdown
+						.addOption('all', 'All')
+						.addOption('featured', 'Featured')
+						.addOption('home', 'Home')
+						.addOption('posts', 'Posts')
+						.addOption('featured-and-posts', 'Featured and posts')
+						.addOption('none', 'None')
+						.setValue(settings.postOptions?.showPostCardCoverImages || 'featured-and-posts')
+						.onChange(async (value) => {
+							if (!settings.postOptions) {
+								settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
+							}
+							settings.postOptions.showPostCardCoverImages = value as 'all' | 'featured' | 'home' | 'posts' | 'featured-and-posts' | 'none';
+							settings.features.showPostCardCoverImages = value as 'all' | 'featured' | 'home' | 'posts' | 'featured-and-posts' | 'none';
+							await this.plugin.saveData(settings);
+							await (this.plugin as AstroModularPlugin).loadSettings();
+							await this.applyCurrentConfiguration();
+						});
+					// Apply width directly to select element after it's created
+					setTimeout(() => {
+						const selectEl = setting.controlEl.querySelector('select');
+						if (selectEl) {
+							selectEl.setCssProps({
+								width: '200px',
+								minWidth: '200px',
+								maxWidth: '200px'
+							});
 						}
-						settings.postOptions.showPostCardCoverImages = value as 'all' | 'featured' | 'home' | 'posts' | 'featured-and-posts' | 'none';
-						settings.features.showPostCardCoverImages = value as 'all' | 'featured' | 'home' | 'posts' | 'featured-and-posts' | 'none';
-						await this.plugin.saveData(settings);
-						await (this.plugin as AstroModularPlugin).loadSettings();
-						await this.applyCurrentConfiguration();
-					}));
+					}, 0);
+				});
 		});
 
 		// Post card aspect ratio
@@ -1209,34 +1256,47 @@ export class FeaturesTab extends TabRenderer {
 			setting
 				.setName('Post card aspect ratio')
 				.setDesc('Aspect ratio for post card cover images')
-				.addDropdown(dropdown => dropdown
-					.addOption('16:9', '16:9')
-					.addOption('4:3', '4:3')
-					.addOption('3:2', '3:2')
-					// False positive: "Open Graph" is a proper noun (OG format standard)
-					// eslint-disable-next-line obsidianmd/ui/sentence-case
-					.addOption('og', 'Open Graph')
-					.addOption('square', 'Square')
-					.addOption('golden', 'Golden')
-					.addOption('custom', 'Custom')
-					.setValue(settings.postOptions?.postCardAspectRatio || 'og')
-					.onChange(async (value) => {
-						if (!settings.postOptions) {
-							settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
+				.addDropdown(dropdown => {
+					dropdown
+						.addOption('16:9', '16:9')
+						.addOption('4:3', '4:3')
+						.addOption('3:2', '3:2')
+						// False positive: "Open Graph" is a proper noun (OG format standard)
+						// eslint-disable-next-line obsidianmd/ui/sentence-case
+						.addOption('og', 'Open Graph')
+						.addOption('square', 'Square')
+						.addOption('golden', 'Golden')
+						.addOption('custom', 'Custom')
+						.setValue(settings.postOptions?.postCardAspectRatio || 'og')
+						.onChange(async (value) => {
+							if (!settings.postOptions) {
+								settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
+							}
+							settings.postOptions.postCardAspectRatio = value as 'og' | '16:9' | '4:3' | '3:2' | 'square' | 'golden' | 'custom';
+							settings.features.postCardAspectRatio = value as 'og' | '16:9' | '4:3' | '3:2' | 'square' | 'golden' | 'custom';
+							await this.plugin.saveData(settings);
+							await (this.plugin as AstroModularPlugin).loadSettings();
+							
+							// Update visibility of custom aspect ratio setting
+							const customARSetting = container.querySelector('.custom-ar-setting') as HTMLElement;
+							if (customARSetting) {
+								customARSetting.setCssProps({ display: value === 'custom' ? 'block' : 'none' });
+							}
+							
+							await this.applyCurrentConfiguration();
+						});
+					// Apply width directly to select element after it's created
+					setTimeout(() => {
+						const selectEl = setting.controlEl.querySelector('select');
+						if (selectEl) {
+							selectEl.setCssProps({
+								width: '200px',
+								minWidth: '200px',
+								maxWidth: '200px'
+							});
 						}
-						settings.postOptions.postCardAspectRatio = value as 'og' | '16:9' | '4:3' | '3:2' | 'square' | 'golden' | 'custom';
-						settings.features.postCardAspectRatio = value as 'og' | '16:9' | '4:3' | '3:2' | 'square' | 'golden' | 'custom';
-						await this.plugin.saveData(settings);
-						await (this.plugin as AstroModularPlugin).loadSettings();
-						
-						// Update visibility of custom aspect ratio setting
-						const customARSetting = container.querySelector('.custom-ar-setting') as HTMLElement;
-						if (customARSetting) {
-							customARSetting.setCssProps({ display: value === 'custom' ? 'block' : 'none' });
-						}
-						
-						await this.applyCurrentConfiguration();
-					}));
+					}, 0);
+				});
 		});
 
 		// Custom aspect ratio - with conditional visibility

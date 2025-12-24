@@ -134,16 +134,7 @@ export class StyleTab extends TabRenderer {
 				const isSelected = (settings.availableThemes as string[]).includes(theme.id);
 				
 					const pill = pillsWrapper.createDiv('theme-pill');
-					pill.setCssProps({
-						display: 'inline-flex',
-						alignItems: 'center',
-						padding: '4px 8px',
-						borderRadius: '12px',
-						fontSize: '12px',
-						gap: '6px',
-						cursor: 'pointer',
-						transition: 'all 0.2s ease'
-					});
+					pill.addClass('theme-pill');
 					
 					// Style based on selection state
 					if (isSelected) {
