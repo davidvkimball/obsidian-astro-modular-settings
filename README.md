@@ -64,7 +64,7 @@ posts/
 
 Automatically configures:
 - **Astro Composer**: Creation mode and index file name
-- **Image Inserter**: Frontmatter format for images
+- **Image Manager**: Property link format for images
 - **Obsidian Settings**: Attachment location and subfolder name
 
 ### Config Markers
@@ -76,7 +76,7 @@ The plugin uses comment markers like `// [CONFIG:THEME]` in your `astro.config.t
 - **Plugin not loading**: Ensure enabled in **Settings → Community plugins**, check for `main.js`, `manifest.json`, `styles.css`, reload Obsidian
 - **Wizard not appearing**: Check "Run wizard on startup" setting, run manually via Command Palette
 - **Config not applied**: Verify `astro.config.ts` exists and is valid, check console for errors
-- **Missing plugins**: Install Astro Composer and Image Inserter, use manual instructions in Plugin Settings tab
+- **Missing plugins**: Install Astro Composer and Image Manager, use manual instructions in Plugin Settings tab
 - **Theme not changing**: Ensure Astro dev server is running, restart after config changes
 - **Missing markers**: Verify all `// [CONFIG:KEY]` markers are present, see [CONFIG_MARKERS.md](CONFIG_MARKERS.md)
 

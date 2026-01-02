@@ -129,11 +129,8 @@ export class ConfigTab extends TabRenderer {
 								creationMode: (contentOrg === 'file-based' ? 'file' : 'folder') as 'file' | 'folder',
 								indexFileName: 'index'
 							},
-							imageInserterSettings: {
-								valueFormat: contentOrg === 'file-based' 
-									? '[[attachments/{image-url}]]' 
-									: '[[{image-url}]]',
-								insertFormat: contentOrg === 'file-based' 
+							imageManagerSettings: {
+								customPropertyLinkFormat: contentOrg === 'file-based' 
 									? '[[attachments/{image-url}]]' 
 									: '[[{image-url}]]'
 							}
@@ -144,7 +141,7 @@ export class ConfigTab extends TabRenderer {
 							await (this.plugin as AstroModularPlugin).pluginManager.configurePlugins(config);
 							const attachmentLocation = contentOrg === 'file-based' ? 'subfolder (attachments/)' : 'same folder';
 							const creationMode = contentOrg === 'file-based' ? 'file' : 'folder';
-							new Notice(`Content organization changed to ${value}\n\n• Obsidian: Attachments → ${attachmentLocation}\n• Astro Composer: Creation mode → ${creationMode}\n• Image Inserter: Format updated`, 8000);
+							new Notice(`Content organization changed to ${value}\n\n• Obsidian: Attachments → ${attachmentLocation}\n• Astro Composer: Creation mode → ${creationMode}\n• Image Manager: Format updated`, 8000);
 						} catch (error) {
 							new Notice(`Failed to configure plugins for content organization: ${error instanceof Error ? error.message : String(error)}`);
 						}
@@ -187,16 +184,16 @@ export class ConfigTab extends TabRenderer {
 			const allOutOfSync = hasSyncIssues && plugin.outOfSyncContentTypes && plugin.outOfSyncContentTypes.length === 4;
 			const isPartiallyConfigured = hasSyncIssues && !allOutOfSync && plugin.installed && plugin.enabled;
 			const allMismatched = allOutOfSync && plugin.installed && plugin.enabled;
-			// Check if this is Image Inserter and settings don't match
-			const isImageInserter = plugin.name === 'Image Inserter';
-			const imageInserterMismatch = isImageInserter && plugin.installed && plugin.enabled && plugin.settingsMatch === false;
+			// Check if this is Image Manager and settings don't match
+			const isImageManager = plugin.name === 'Image Manager';
+			const imageManagerMismatch = isImageManager && plugin.installed && plugin.enabled && plugin.settingsMatch === false;
 			
 			// Determine item class and styling
 			let itemClass = 'plugin-item';
 			if (isSettingsCheck) {
 				itemClass += isConfigured ? ' installed' : ' missing';
-			} else if (imageInserterMismatch || allMismatched) {
-				// Image Inserter settings don't match or all content types are out of sync - show as "missing" (red X)
+			} else if (imageManagerMismatch || allMismatched) {
+				// Image Manager settings don't match or all content types are out of sync - show as "missing" (red X)
 				itemClass += ' missing';
 			} else if (isPartiallyConfigured) {
 				itemClass += ' partially-configured';
@@ -210,8 +207,8 @@ export class ConfigTab extends TabRenderer {
 			// Set icon based on status using setIcon
 			if (isSettingsCheck) {
 				setIcon(icon, isConfigured ? 'check' : 'x');
-			} else if (imageInserterMismatch || allMismatched) {
-				// Image Inserter settings don't match or all content types are out of sync - show red X
+			} else if (imageManagerMismatch || allMismatched) {
+				// Image Manager settings don't match or all content types are out of sync - show red X
 				setIcon(icon, 'x');
 			} else if (isPartiallyConfigured) {
 				// Alert triangle icon (neutral warning icon from Lucide)
@@ -231,7 +228,7 @@ export class ConfigTab extends TabRenderer {
 				statusText = 'Not installed';
 			} else if (!plugin.enabled) {
 				statusText = 'Disabled';
-			} else if (imageInserterMismatch || allMismatched) {
+			} else if (imageManagerMismatch || allMismatched) {
 				// Settings don't match
 				statusText = 'Doesn\'t match';
 			} else if (isPartiallyConfigured) {
@@ -284,11 +281,8 @@ export class ConfigTab extends TabRenderer {
 								creationMode: (contentOrg === 'file-based' ? 'file' : 'folder') as 'file' | 'folder',
 								indexFileName: 'index'
 							},
-							imageInserterSettings: {
-								valueFormat: contentOrg === 'file-based' 
-									? '[[attachments/{image-url}]]' 
-									: '[[{image-url}]]',
-								insertFormat: contentOrg === 'file-based' 
+							imageManagerSettings: {
+								customPropertyLinkFormat: contentOrg === 'file-based' 
 									? '[[attachments/{image-url}]]' 
 									: '[[{image-url}]]'
 							}
@@ -301,7 +295,7 @@ export class ConfigTab extends TabRenderer {
 							const attachmentLocation = contentOrg === 'file-based' ? 'subfolder (attachments/)' : 'same folder';
 							const creationMode = contentOrg === 'file-based' ? 'file' : 'folder';
 							
-							new Notice(`Configuration re-applied successfully!\n\n• Obsidian: Attachments → ${attachmentLocation}\n• Astro Composer: Creation mode → ${creationMode}\n• Image Inserter: Format updated for ${contentOrg}`, 8000);
+							new Notice(`Configuration re-applied successfully!\n\n• Obsidian: Attachments → ${attachmentLocation}\n• Astro Composer: Creation mode → ${creationMode}\n• Image Manager: Format updated for ${contentOrg}`, 8000);
 							// Refresh the plugin status display
 							const statusContainerEl = container.querySelector('.plugin-status-container');
 							if (statusContainerEl) {
@@ -337,11 +331,8 @@ export class ConfigTab extends TabRenderer {
 							creationMode: (contentOrg === 'file-based' ? 'file' : 'folder') as 'file' | 'folder',
 							indexFileName: 'index'
 						},
-						imageInserterSettings: {
-							valueFormat: contentOrg === 'file-based' 
-								? '[[attachments/{image-url}]]' 
-								: '[[{image-url}]]',
-							insertFormat: contentOrg === 'file-based' 
+						imageManagerSettings: {
+							customPropertyLinkFormat: contentOrg === 'file-based' 
 								? '[[attachments/{image-url}]]' 
 								: '[[{image-url}]]'
 						}

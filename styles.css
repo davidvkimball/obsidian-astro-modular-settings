@@ -764,8 +764,9 @@ body[data-astro-modular-ribbon-removed="true"] .menu-item .menu-item-icon:has(.l
 }
 
 /* Fix indentation for heading settings - remove padding/margin */
-/* Obsidian uses .setting-item-heading class for headings created with setHeading() */
-.astro-modular-settings .setting-item-heading {
+/* Only apply to headings within .settings-section (Navigation pages and Social links) */
+/* This excludes headings created by createSettingsGroup in other tabs */
+.astro-modular-settings .settings-section .setting-item-heading {
 	margin-left: 0 !important;
 	margin-right: 0 !important;
 	padding-left: 0 !important;
@@ -773,13 +774,13 @@ body[data-astro-modular-ribbon-removed="true"] .menu-item .menu-item-icon:has(.l
 	border: none !important;
 }
 
-.astro-modular-settings .setting-item-heading .setting-item-name {
+.astro-modular-settings .settings-section .setting-item-heading .setting-item-name {
 	margin: 0 !important;
 	padding: 0 !important;
 	font-weight: var(--font-medium);
 }
 
-.astro-modular-settings .setting-item-heading .setting-item-info {
+.astro-modular-settings .settings-section .setting-item-heading .setting-item-info {
 	margin: 0 !important;
 	padding: 0 !important;
 }
@@ -1828,6 +1829,27 @@ body[data-astro-modular-ribbon-removed="true"] .menu-item .menu-item-icon:has(.l
 	.simple-color-input label {
 		min-width: auto;
 	}
+}
+
+/* Group settings compatibility styling for older Obsidian builds (< 1.11.0) */
+/* Base styling for setting-group-heading - drop default border */
+.setting-group-heading h3 {
+	margin: 1.5rem 0 0.75rem;
+	padding-bottom: 0.5rem;
+	font-size: 1rem;
+	font-weight: 600;
+	border-bottom: none !important;
+}
+
+.setting-group-heading:first-child h3 {
+	margin-top: 0;
+}
+
+/* Only reintroduce border-bottom if heading is NOT immediately followed by a setting-item */
+/* This prevents double divider lines in older Obsidian builds where the first .setting-item */
+/* already has a border-top, creating a double line with the heading's border-bottom */
+.setting-group-heading:not(:has(+ .setting-item)) h3 {
+	border-bottom: 1px solid var(--background-modifier-border) !important;
 }
 
 /* Fix checkbox checkmark centering - SCOPED to plugin UI only */

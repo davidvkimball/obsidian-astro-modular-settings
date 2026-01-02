@@ -1,5 +1,5 @@
 import { App, Plugin } from 'obsidian';
-import type { PluginStatus, PluginConfiguration, ObsidianPlugins, ObsidianVaultConfig, ContentOrganizationType, ObsidianSettings, AstroComposerSettings, ImageInserterSettings } from '../types';
+import type { PluginStatus, PluginConfiguration, ObsidianPlugins, ObsidianVaultConfig, ContentOrganizationType, ObsidianSettings, AstroComposerSettings, ImageManagerSettings } from '../types';
 
 interface PluginWithSettings extends Plugin {
 	settings?: Record<string, unknown>;
@@ -18,7 +18,7 @@ export class PluginManager {
 		const plugins = (this.app as unknown as { plugins?: ObsidianPlugins }).plugins;
 		const requiredPlugins = [
 			'astro-composer',
-			'insert-unsplash-image'
+			'image-manager'
 		];
 
 		const status: PluginStatus[] = [];
@@ -45,10 +45,10 @@ export class PluginManager {
 				}
 			}
 			
-			// For Image Inserter, check if settings match content organization
-			let imageInserterSettingsMatch = true;
-			if (pluginId === 'insert-unsplash-image' && plugin && isInstalled && isInEnabledSet) {
-				imageInserterSettingsMatch = this.checkImageInserterSettings(plugin as Plugin, contentOrg);
+			// For Image Manager, check if settings match content organization
+			let imageManagerSettingsMatch = true;
+			if (pluginId === 'image-manager' && plugin && isInstalled && isInEnabledSet) {
+				imageManagerSettingsMatch = this.checkImageManagerSettings(plugin as Plugin, contentOrg);
 			}
 			
 			status.push({
@@ -58,7 +58,7 @@ export class PluginManager {
 				configurable: this.isPluginConfigurable(pluginId),
 				currentSettings: plugin ? await this.getPluginSettings(plugin as Plugin) : undefined,
 				outOfSyncContentTypes: outOfSyncContentTypes,
-				settingsMatch: pluginId === 'insert-unsplash-image' ? imageInserterSettingsMatch : undefined
+				settingsMatch: pluginId === 'image-manager' ? imageManagerSettingsMatch : undefined
 			});
 		}
 
@@ -81,7 +81,7 @@ export class PluginManager {
 	private getPluginDisplayName(pluginId: string): string {
 		const names: Record<string, string> = {
 			'astro-composer': 'Astro Composer',
-			'insert-unsplash-image': 'Image Inserter'
+			'image-manager': 'Image Manager'
 		};
 		return names[pluginId] || pluginId;
 	}
@@ -220,7 +220,7 @@ export class PluginManager {
 		}
 	}
 	
-	private checkImageInserterSettings(plugin: Plugin, contentOrg?: ContentOrganizationType): boolean {
+	private checkImageManagerSettings(plugin: Plugin, contentOrg?: ContentOrganizationType): boolean {
 		const contentOrgValue = contentOrg || this.getContentOrganization?.() || 'file-based';
 		const expectedFormat = contentOrgValue === 'file-based' 
 			? '[[attachments/{image-url}]]' 
@@ -232,14 +232,17 @@ export class PluginManager {
 				return false;
 			}
 			
-			// Check the frontmatter valueFormat
-			const frontmatter = pluginSettings.frontmatter;
-			const actualFormat = frontmatter && typeof frontmatter === 'object' && 'valueFormat' in frontmatter
-				? (frontmatter as { valueFormat?: unknown }).valueFormat
-				: undefined;
+			// Check that propertyLinkFormat is set to 'custom'
+			const propertyLinkFormat = pluginSettings.propertyLinkFormat;
+			if (propertyLinkFormat !== 'custom') {
+				return false;
+			}
+			
+			// Check the customPropertyLinkFormat matches expected format
+			const actualFormat = pluginSettings.customPropertyLinkFormat;
 			return actualFormat === expectedFormat;
 		} catch (error) {
-			console.error('Failed to check Image Inserter settings:', error);
+			console.error('Failed to check Image Manager settings:', error);
 			return false;
 		}
 	}
@@ -247,7 +250,7 @@ export class PluginManager {
 	private isPluginConfigurable(pluginId: string): boolean {
 		const configurablePlugins = [
 			'astro-composer',
-			'insert-unsplash-image'
+			'image-manager'
 		];
 		return configurablePlugins.includes(pluginId);
 	}
@@ -271,8 +274,8 @@ export class PluginManager {
 			await this.configureAstroComposerSettings(config.astroComposerSettings);
 			successCount++;
 			
-			// Configure Image Inserter settings
-			await this.configureImageInserterSettings(config.imageInserterSettings);
+			// Configure Image Manager settings
+			await this.configureImageManagerSettings(config.imageManagerSettings);
 			successCount++;
 			
 			return successCount > 0; // Return true if at least one configuration succeeded
@@ -390,31 +393,29 @@ export class PluginManager {
 		}
 	}
 
-	private async configureImageInserterSettings(settings: ImageInserterSettings): Promise<void> {
+	private async configureImageManagerSettings(settings: ImageManagerSettings): Promise<void> {
 		try {
 			const plugins = (this.app as unknown as { plugins?: ObsidianPlugins }).plugins;
-			const imageInserterPlugin = plugins?.plugins?.['insert-unsplash-image'];
+			const imageManagerPlugin = plugins?.plugins?.['image-manager'];
 			
-			const imageInserterPluginWithSettings = imageInserterPlugin as PluginWithSettings | undefined;
-			if (imageInserterPluginWithSettings && imageInserterPluginWithSettings.settings) {
-				// Update Image Inserter settings
-				// Only update the frontmatter.valueFormat (this is the main setting)
+			const imageManagerPluginWithSettings = imageManagerPlugin as PluginWithSettings | undefined;
+			if (imageManagerPluginWithSettings && imageManagerPluginWithSettings.settings) {
+				// Update Image Manager settings
+				// Set propertyLinkFormat to 'custom' and update customPropertyLinkFormat
 				// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-				const pluginSettings = imageInserterPluginWithSettings.settings as Record<string, unknown>;
-				if (pluginSettings.frontmatter && typeof pluginSettings.frontmatter === 'object' && pluginSettings.frontmatter !== null) {
-					const frontmatter = pluginSettings.frontmatter as Record<string, unknown>;
-					frontmatter.valueFormat = settings.valueFormat;
-				}
+				const pluginSettings = imageManagerPluginWithSettings.settings as Record<string, unknown>;
+				pluginSettings.propertyLinkFormat = 'custom';
+				pluginSettings.customPropertyLinkFormat = settings.customPropertyLinkFormat;
 				
 				// Save the settings
-				const pluginWithSave = imageInserterPlugin as { saveSettings?: () => Promise<void> };
+				const pluginWithSave = imageManagerPlugin as { saveSettings?: () => Promise<void> };
 				const saveSettings = pluginWithSave.saveSettings;
 				if (saveSettings && typeof saveSettings === 'function') {
 					await saveSettings();
 				}
 			}
 		} catch (error) {
-			console.error('Failed to configure Image Inserter:', error);
+			console.error('Failed to configure Image Manager:', error);
 		}
 	}
 
@@ -441,9 +442,10 @@ export class PluginManager {
 			instructions += `4. Set **Index file name** to: "${config.astroComposerSettings.indexFileName}"\n`;
 		}
 		
-		instructions += '## Image Inserter Plugin\n';
-		instructions += `1. Go to **Settings → Community plugins → Image Inserter**\n`;
-		instructions += `2. Set **Frontmatter → Value Format** to: "${config.imageInserterSettings.valueFormat}"\n`;
+		instructions += '## Image Manager Plugin\n';
+		instructions += `1. Go to **Settings → Community plugins → Image Manager**\n`;
+		instructions += `2. Set **Property insertion → Property link format** to: **"Custom format"**\n`;
+		instructions += `3. Set **Property insertion → Custom format template** to: "${config.imageManagerSettings.customPropertyLinkFormat}"\n`;
 		
 		instructions += '**Note**: After making these changes, you should see them reflected in Obsidian\'s settings interface. If the automatic configuration worked, these settings should already be applied.\n';
 		

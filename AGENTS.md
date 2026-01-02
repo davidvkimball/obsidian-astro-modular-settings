@@ -22,7 +22,7 @@ Applicability: Plugin
 - **Status**: Production
 - **Key Features**:
   - Setup wizard with template selection (Standard, Compact, Minimal), theme picker (18+ themes), content organization (file/folder-based)
-  - Automatic plugin configuration (Astro Composer, Image Inserter, Obsidian settings)
+  - Automatic plugin configuration (Astro Composer, Image Manager, Obsidian settings)
   - Tabbed settings interface for quick config changes
   - Config file marker system for safe updates
   - Preset configurations for different use cases
@@ -33,14 +33,14 @@ Applicability: Plugin
   - Uses a **setup wizard modal** for initial configuration (separate from settings tab)
   - Uses a **tabbed settings interface** with custom tab navigation (`TabRenderer` subclasses)
   - Manages external Astro config file (`config.ts`) using comment markers
-  - Integrates with external plugins (Astro Composer, Image Inserter) to configure their settings
+  - Integrates with external plugins (Astro Composer, Image Manager) to configure their settings
 - **Config File Management**: Uses comment markers like `// [CONFIG:THEME]` in `astro.config.ts` for safe updates. **Do not remove these markers**—they're essential.
 - **Content Organization**: Supports two modes:
   - **File-based**: `posts/my-post.md` with `attachments/image.jpg`
   - **Folder-based**: `posts/my-post/index.md` with `image.jpg` in same folder
 - **Plugin Integration**: Automatically configures:
   - Astro Composer: Creation mode and index file name
-  - Image Inserter: Frontmatter format for images
+  - Image Manager: Property link format for images
   - Obsidian Settings: Attachment location and subfolder name
 - **SettingGroup API**: Uses backward-compatible `SettingGroup` implementation via `src/utils/settings-compat.ts` for Obsidian 1.11.0+ support
 
@@ -50,7 +50,7 @@ Applicability: Plugin
 - Maintain compatibility with Obsidian API changes
 - Update config markers if Astro Modular theme structure changes
 - Test with new Obsidian versions
-- Maintain compatibility with external plugins (Astro Composer, Image Inserter)
+- Maintain compatibility with external plugins (Astro Composer, Image Manager)
 
 ### Project-Specific Conventions
 
@@ -69,7 +69,7 @@ Applicability: Plugin
 
 - `.ref/plugins/obsidian-astro-composer/` - Astro Composer plugin (for integration patterns)
 - `.ref/plugins/astro-modular/` - Astro Modular theme (for config structure)
-- `.ref/plugins/obsidian-image-inserter/` - Image Inserter plugin (for integration patterns)
+- `.ref/plugins/obsidian-image-manager/` - Image Manager plugin (for integration patterns)
 - `.ref/obsidian-vault-files/` - Symlink mirror of current plugin folder
 
 ### Overrides (Optional)
@@ -91,7 +91,7 @@ None currently. This project follows the general `.agents` guidance with the fol
 - **`src/ui/wizard/*.ts`**: Wizard step implementations (WelcomeStep, TemplateStep, ThemeStep, etc.)
 - **`src/utils/settings-compat.ts`**: Backward-compatible `SettingGroup` utility for Obsidian 1.11.0+ support
 - **`src/utils/ConfigManager.ts`**: Manages Astro config file updates using marker system
-- **`src/utils/PluginManager.ts`**: Handles integration with external plugins (Astro Composer, Image Inserter)
+- **`src/utils/PluginManager.ts`**: Handles integration with external plugins (Astro Composer, Image Manager)
 - **`src/utils/config/ConfigFileManager.ts`**: File operations for config.ts
 - **`src/utils/config/ConfigMarkerValidator.ts`**: Validates config markers are present
 - **`src/utils/config/ConfigPresetModifier.ts`**: Applies preset configurations
@@ -104,7 +104,7 @@ None currently. This project follows the general `.agents` guidance with the fol
 - **SettingGroup Implementation**: Uses `src/utils/settings-compat.ts` for backward-compatible `SettingGroup` support. The utility checks for Obsidian 1.11.0+ and falls back to manual heading creation for older versions.
 - **Wizard Modal**: The setup wizard is separate from the settings tab. It uses `WizardStateManager` and `BaseWizardStep` subclasses for each step.
 - **Config File Markers**: The plugin uses comment markers in `config.ts` (e.g., `// [CONFIG:THEME]`) to safely update configuration. These markers must be present for the plugin to function.
-- **Plugin Integration**: The plugin automatically configures external plugins (Astro Composer, Image Inserter) based on content organization choice. This requires those plugins to be installed.
+- **Plugin Integration**: The plugin automatically configures external plugins (Astro Composer, Image Manager) based on content organization choice. This requires those plugins to be installed.
 - **Tab Navigation**: The settings tab uses a custom tab navigation system with `TabRenderer` subclasses. Each tab is rendered independently.
 - **Conditional Visibility**: In settings tabs, conditional visibility is handled by applying CSS classes to `setting.settingEl` rather than creating separate containers, to maintain proper `SettingGroup` spacing.
 - **DOM Structure**: All settings must go through `group.addSetting()` to maintain proper spacing. Never create divs directly on `containerEl` outside of `SettingGroup` structure.

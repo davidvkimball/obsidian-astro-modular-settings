@@ -44,13 +44,13 @@ export class PluginConfigStep extends BaseWizardStep {
 		const allOutOfSync = hasSyncIssues && plugin.outOfSyncContentTypes && plugin.outOfSyncContentTypes.length === 4;
 		const isPartiallyConfigured = hasSyncIssues && !allOutOfSync && plugin.installed && plugin.enabled;
 		const allMismatched = allOutOfSync && plugin.installed && plugin.enabled;
-		// Check if this is Image Inserter and settings don't match
-		const isImageInserter = plugin.name === 'Image Inserter';
-		const imageInserterMismatch = isImageInserter && plugin.installed && plugin.enabled && plugin.settingsMatch === false;
+		// Check if this is Image Manager and settings don't match
+		const isImageManager = plugin.name === 'Image Manager';
+		const imageManagerMismatch = isImageManager && plugin.installed && plugin.enabled && plugin.settingsMatch === false;
 		
 		// Determine if plugin is properly configured (not just enabled)
 		const isProperlyConfigured = plugin.installed && plugin.enabled && 
-			!imageInserterMismatch && !allMismatched && !isPartiallyConfigured;
+			!imageManagerMismatch && !allMismatched && !isPartiallyConfigured;
 		
 		// Determine status text
 		let statusText: string;
@@ -60,7 +60,7 @@ export class PluginConfigStep extends BaseWizardStep {
 			statusText = 'Not installed';
 		} else if (!plugin.enabled) {
 			statusText = 'Disabled';
-		} else if (imageInserterMismatch || allMismatched) {
+		} else if (imageManagerMismatch || allMismatched) {
 			statusText = 'Doesn\'t match';
 		} else if (isPartiallyConfigured) {
 			statusText = 'Partially configured';
@@ -75,8 +75,8 @@ export class PluginConfigStep extends BaseWizardStep {
 		let itemClass = 'plugin-item';
 		if (isSettingsCheck) {
 			itemClass += isConfigured ? ' installed' : ' missing';
-		} else if (imageInserterMismatch || allMismatched) {
-			// Image Inserter settings don't match or all content types are out of sync - show as "missing" (red X)
+		} else if (imageManagerMismatch || allMismatched) {
+			// Image Manager settings don't match or all content types are out of sync - show as "missing" (red X)
 			itemClass += ' missing';
 		} else if (isPartiallyConfigured) {
 			itemClass += ' partially-configured';
@@ -90,7 +90,7 @@ export class PluginConfigStep extends BaseWizardStep {
 		// Set icon based on status using setIcon
 		if (isSettingsCheck) {
 			setIcon(iconDiv, isConfigured ? 'check' : 'x');
-		} else if (imageInserterMismatch || allMismatched) {
+		} else if (imageManagerMismatch || allMismatched) {
 			setIcon(iconDiv, 'x');
 		} else if (isPartiallyConfigured) {
 			setIcon(iconDiv, 'alert-triangle');
@@ -134,11 +134,8 @@ export class PluginConfigStep extends BaseWizardStep {
 						creationMode: (contentOrg === 'file-based' ? 'file' : 'folder') as 'file' | 'folder',
 						indexFileName: 'index'
 					},
-					imageInserterSettings: {
-						valueFormat: contentOrg === 'file-based' 
-							? '[[attachments/{image-url}]]' 
-							: '[[{image-url}]]',
-						insertFormat: contentOrg === 'file-based' 
+					imageManagerSettings: {
+						customPropertyLinkFormat: contentOrg === 'file-based' 
 							? '[[attachments/{image-url}]]' 
 							: '[[{image-url}]]'
 					}
@@ -164,7 +161,7 @@ export class PluginConfigStep extends BaseWizardStep {
 					const attachmentLocation = contentOrg === 'file-based' ? 'subfolder (attachments/)' : 'same folder';
 					const creationMode = contentOrg === 'file-based' ? 'file' : 'folder';
 					
-					new Notice(`Plugins configured successfully!\n\n• Obsidian: Attachments → ${attachmentLocation}\n• Astro Composer: Creation mode → ${creationMode}\n• Image Inserter: Format updated for ${contentOrg}`, 8000);
+					new Notice(`Plugins configured successfully!\n\n• Obsidian: Attachments → ${attachmentLocation}\n• Astro Composer: Creation mode → ${creationMode}\n• Image Manager: Format updated for ${contentOrg}`, 8000);
 				} else {
 					// False positive: "automatically" is an adverb in UI text
 					// eslint-disable-next-line obsidianmd/ui/sentence-case
@@ -193,11 +190,8 @@ export class PluginConfigStep extends BaseWizardStep {
 						creationMode: (contentOrg === 'file-based' ? 'file' : 'folder') as 'file' | 'folder',
 						indexFileName: 'index'
 					},
-					imageInserterSettings: {
-						valueFormat: contentOrg === 'file-based' 
-							? '[[attachments/{image-url}]]' 
-							: '[[{image-url}]]',
-						insertFormat: contentOrg === 'file-based' 
+					imageManagerSettings: {
+						customPropertyLinkFormat: contentOrg === 'file-based' 
 							? '[[attachments/{image-url}]]' 
 							: '[[{image-url}]]'
 					}

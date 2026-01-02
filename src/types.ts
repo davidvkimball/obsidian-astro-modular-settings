@@ -265,7 +265,7 @@ export interface DeploymentSettings {
 export interface PluginConfiguration {
 	obsidianSettings: ObsidianSettings;
 	astroComposerSettings: AstroComposerSettings;
-	imageInserterSettings: ImageInserterSettings;
+	imageManagerSettings: ImageManagerSettings;
 }
 
 export interface ObsidianSettings {
@@ -278,9 +278,8 @@ export interface AstroComposerSettings {
 	indexFileName: string;
 }
 
-export interface ImageInserterSettings {
-	valueFormat: string;
-	insertFormat: string;
+export interface ImageManagerSettings {
+	customPropertyLinkFormat: string;
 }
 
 export type TemplateType = 'standard' | 'minimal' | 'compact';
@@ -332,7 +331,7 @@ export interface PluginStatus {
 	configurable: boolean;
 	currentSettings?: Record<string, unknown>;
 	outOfSyncContentTypes?: string[]; // For Astro Composer: list of content types that are out of sync
-	settingsMatch?: boolean; // For Image Inserter: whether settings match content organization
+	settingsMatch?: boolean; // For Image Manager: whether settings match content organization
 }
 
 export interface ConfigFileInfo {
@@ -634,9 +633,8 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 			creationMode: 'file',
 			indexFileName: 'index',
 		},
-		imageInserterSettings: {
-			valueFormat: '[[attachments/{image-url}]]',
-			insertFormat: '[[attachments/{image-url}]]',
+		imageManagerSettings: {
+			customPropertyLinkFormat: '[[attachments/{image-url}]]',
 		},
 	},
 	optionalContentTypes: {

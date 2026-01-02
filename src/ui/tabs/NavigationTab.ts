@@ -313,10 +313,10 @@ export class NavigationTab extends TabRenderer {
 					if (!settings.navigation.pages[parentIndex].children) {
 						settings.navigation.pages[parentIndex].children = [];
 					}
-					if (!settings.navigation.pages[parentIndex].children![childIndex]) {
-						settings.navigation.pages[parentIndex].children![childIndex] = { title: '', url: '' };
+					if (!settings.navigation.pages[parentIndex].children[childIndex]) {
+						settings.navigation.pages[parentIndex].children[childIndex] = { title: '', url: '' };
 					}
-					settings.navigation.pages[parentIndex].children![childIndex].title = target.value;
+					settings.navigation.pages[parentIndex].children[childIndex].title = target.value;
 					this.debouncedSave();
 				} else if (target.classList.contains('nav-child-url')) {
 					const childItem = target.closest('.nav-child-item');
@@ -325,10 +325,10 @@ export class NavigationTab extends TabRenderer {
 					if (!settings.navigation.pages[parentIndex].children) {
 						settings.navigation.pages[parentIndex].children = [];
 					}
-					if (!settings.navigation.pages[parentIndex].children![childIndex]) {
-						settings.navigation.pages[parentIndex].children![childIndex] = { title: '', url: '' };
+					if (!settings.navigation.pages[parentIndex].children[childIndex]) {
+						settings.navigation.pages[parentIndex].children[childIndex] = { title: '', url: '' };
 					}
-					settings.navigation.pages[parentIndex].children![childIndex].url = target.value;
+					settings.navigation.pages[parentIndex].children[childIndex].url = target.value;
 					this.debouncedSave();
 				}
 			});
@@ -389,9 +389,9 @@ export class NavigationTab extends TabRenderer {
 				const currentSettings = this.getSettings();
 				
 				if (currentSettings.navigation.pages[parentIndex].children) {
-					currentSettings.navigation.pages[parentIndex].children!.splice(childIndex, 1);
+					currentSettings.navigation.pages[parentIndex].children.splice(childIndex, 1);
 					// Remove children array if empty
-					if (currentSettings.navigation.pages[parentIndex].children!.length === 0) {
+					if (currentSettings.navigation.pages[parentIndex].children.length === 0) {
 						delete currentSettings.navigation.pages[parentIndex].children;
 					}
 					await this.plugin.saveData(currentSettings);
@@ -400,8 +400,8 @@ export class NavigationTab extends TabRenderer {
 					new Notice('Child page removed and applied to config.ts');
 					// Hide children container if no children left
 					const navItem = target.closest('.nav-item');
-					const childrenContainer = navItem?.querySelector('.nav-children-container') as HTMLElement;
-					if (childrenContainer && (!currentSettings.navigation.pages[parentIndex].children || currentSettings.navigation.pages[parentIndex].children!.length === 0)) {
+					const childrenContainer = navItem?.querySelector('.nav-children-container') as HTMLElement | null;
+					if (childrenContainer && (!currentSettings.navigation.pages[parentIndex].children || currentSettings.navigation.pages[parentIndex].children.length === 0)) {
 						childrenContainer.setCssProps({ display: 'none' });
 					}
 					this.render(container);
@@ -416,7 +416,7 @@ export class NavigationTab extends TabRenderer {
 				if (!currentSettings.navigation.pages[index].children) {
 					currentSettings.navigation.pages[index].children = [];
 				}
-				currentSettings.navigation.pages[index].children!.push({ title: 'New Child', url: '/new-child' });
+				currentSettings.navigation.pages[index].children.push({ title: 'New Child', url: '/new-child' });
 				await this.plugin.saveData(currentSettings);
 				await (this.plugin as AstroModularPlugin).loadSettings();
 				await this.applyCurrentConfiguration(false);

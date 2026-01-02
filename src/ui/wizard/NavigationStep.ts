@@ -227,10 +227,10 @@ export class NavigationStep extends BaseWizardStep {
 					if (!state.selectedNavigation.pages[parentIndex].children) {
 						state.selectedNavigation.pages[parentIndex].children = [];
 					}
-					if (!state.selectedNavigation.pages[parentIndex].children![childIndex]) {
-						state.selectedNavigation.pages[parentIndex].children![childIndex] = { title: '', url: '' };
+					if (!state.selectedNavigation.pages[parentIndex].children[childIndex]) {
+						state.selectedNavigation.pages[parentIndex].children[childIndex] = { title: '', url: '' };
 					}
-					state.selectedNavigation.pages[parentIndex].children![childIndex].title = target.value;
+					state.selectedNavigation.pages[parentIndex].children[childIndex].title = target.value;
 				} else if (target.classList.contains('nav-child-url')) {
 					const childItem = target.closest('.nav-child-item');
 					const parentIndex = parseInt(childItem?.getAttribute('data-index') || '0');
@@ -238,10 +238,10 @@ export class NavigationStep extends BaseWizardStep {
 					if (!state.selectedNavigation.pages[parentIndex].children) {
 						state.selectedNavigation.pages[parentIndex].children = [];
 					}
-					if (!state.selectedNavigation.pages[parentIndex].children![childIndex]) {
-						state.selectedNavigation.pages[parentIndex].children![childIndex] = { title: '', url: '' };
+					if (!state.selectedNavigation.pages[parentIndex].children[childIndex]) {
+						state.selectedNavigation.pages[parentIndex].children[childIndex] = { title: '', url: '' };
 					}
-					state.selectedNavigation.pages[parentIndex].children![childIndex].url = target.value;
+					state.selectedNavigation.pages[parentIndex].children[childIndex].url = target.value;
 				}
 			};
 			// Remove old handler if exists
@@ -333,14 +333,14 @@ export class NavigationStep extends BaseWizardStep {
 				const childIndex = parseInt(target.getAttribute('data-child-index') || '0');
 				
 				if (state.selectedNavigation.pages[parentIndex].children) {
-					state.selectedNavigation.pages[parentIndex].children!.splice(childIndex, 1);
-					if (state.selectedNavigation.pages[parentIndex].children!.length === 0) {
+					state.selectedNavigation.pages[parentIndex].children.splice(childIndex, 1);
+					if (state.selectedNavigation.pages[parentIndex].children.length === 0) {
 						delete state.selectedNavigation.pages[parentIndex].children;
 					}
 					// Hide children container if no children left
 					const navItem = target.closest('.nav-item');
-					const childrenContainer = navItem?.querySelector('.nav-children-container') as HTMLElement;
-					if (childrenContainer && (!state.selectedNavigation.pages[parentIndex].children || state.selectedNavigation.pages[parentIndex].children!.length === 0)) {
+					const childrenContainer = navItem?.querySelector('.nav-children-container') as HTMLElement | null;
+					if (childrenContainer && (!state.selectedNavigation.pages[parentIndex].children || state.selectedNavigation.pages[parentIndex].children.length === 0)) {
 						childrenContainer.setCssProps({ display: 'none' });
 					}
 				}
@@ -354,7 +354,7 @@ export class NavigationStep extends BaseWizardStep {
 				if (!state.selectedNavigation.pages[index].children) {
 					state.selectedNavigation.pages[index].children = [];
 				}
-				state.selectedNavigation.pages[index].children!.push({ title: 'New Child', url: '/new-child' });
+				state.selectedNavigation.pages[index].children.push({ title: 'New Child', url: '/new-child' });
 				// Show the children container if it was hidden
 				const navItem = target.closest('.nav-item');
 				const childrenContainer = navItem?.querySelector('.nav-children-container') as HTMLElement;
