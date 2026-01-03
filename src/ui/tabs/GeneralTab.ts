@@ -11,7 +11,7 @@ export class GeneralTab extends TabRenderer {
 		const settings = this.getSettings();
 
 		// Current configuration as a settings group
-		const configGroup = createSettingsGroup(container, 'Current configuration');
+		const configGroup = createSettingsGroup(container, 'Current configuration', 'astro-modular-settings');
 		
 		// Create config items display in the original format
 		configGroup.addSetting((setting) => {
@@ -68,7 +68,7 @@ export class GeneralTab extends TabRenderer {
 		});
 
 		// Wizard settings group
-		const wizardGroup = createSettingsGroup(container, 'Wizard');
+		const wizardGroup = createSettingsGroup(container, 'Wizard', 'astro-modular-settings');
 		
 		// Run setup wizard button
 		wizardGroup.addSetting((setting) => {

@@ -13,7 +13,7 @@ export class SiteInfoTab extends TabRenderer {
 		const settings = this.getSettings();
 
 		// First group: Group initial settings with no heading
-		const siteInfoGroup = createSettingsGroup(container);
+		const siteInfoGroup = createSettingsGroup(container, undefined, 'astro-modular-settings');
 
 		// Site URL
 		siteInfoGroup.addSetting((setting) => {
@@ -196,7 +196,7 @@ export class SiteInfoTab extends TabRenderer {
 		});
 
 		// Assets & Metadata group without heading (heading is now separate)
-		const assetsGroup = createSettingsGroup(assetsSection);
+		const assetsGroup = createSettingsGroup(assetsSection, undefined, 'astro-modular-settings');
 
 		// Helper function to copy file to public folder
 		const copyImageToPublic = async (sourcePath: string, targetFileName: string): Promise<void> => {

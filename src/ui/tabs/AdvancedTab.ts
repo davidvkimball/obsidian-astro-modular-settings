@@ -9,7 +9,7 @@ export class AdvancedTab extends TabRenderer {
 		const settings = this.getSettings();
 
 		// Group all settings with no heading
-		const advancedGroup = createSettingsGroup(container);
+		const advancedGroup = createSettingsGroup(container, undefined, 'astro-modular-settings');
 
 		// Edit config.ts directly button
 		advancedGroup.addSetting((setting) => {

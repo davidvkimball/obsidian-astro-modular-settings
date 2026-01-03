@@ -13,7 +13,7 @@ export class StyleTab extends TabRenderer {
 		const settings = this.getSettings();
 
 		// Colors group with heading
-		const colorsGroup = createSettingsGroup(container, 'Colors');
+		const colorsGroup = createSettingsGroup(container, 'Colors', 'astro-modular-settings');
 
 		// Theme selector
 		colorsGroup.addSetting((setting) => {
@@ -301,7 +301,7 @@ export class StyleTab extends TabRenderer {
 		});
 
 		// Custom Theme Section group with heading
-		const customThemeGroup = createSettingsGroup(container, 'Custom theme generation');
+		const customThemeGroup = createSettingsGroup(container, 'Custom theme generation', 'astro-modular-settings');
 
 		// Generate custom theme toggle
 		customThemeGroup.addSetting((setting) => {
@@ -540,7 +540,7 @@ export class StyleTab extends TabRenderer {
 		}
 
 		// Typography group with heading
-		const typographyGroup = createSettingsGroup(container, 'Typography');
+		const typographyGroup = createSettingsGroup(container, 'Typography', 'astro-modular-settings');
 
 		// Heading font dropdown
 		typographyGroup.addSetting((setting) => {

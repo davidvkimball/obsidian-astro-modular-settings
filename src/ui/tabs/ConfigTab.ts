@@ -10,7 +10,7 @@ export class ConfigTab extends TabRenderer {
 		const settings = this.getSettings();
 
 		// Group first three settings with no heading
-		const configGroup = createSettingsGroup(container);
+		const configGroup = createSettingsGroup(container, undefined, 'astro-modular-settings');
 
 		// Template selector
 		configGroup.addSetting((setting) => {
@@ -257,7 +257,7 @@ export class ConfigTab extends TabRenderer {
 		}
 
 		// Plugin Actions group with heading
-		const pluginActionsGroup = createSettingsGroup(container, 'Plugin actions');
+		const pluginActionsGroup = createSettingsGroup(container, 'Plugin actions', 'astro-modular-settings');
 
 		// Re-apply configuration button
 		pluginActionsGroup.addSetting((setting) => {

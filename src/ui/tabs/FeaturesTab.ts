@@ -9,7 +9,7 @@ export class FeaturesTab extends TabRenderer {
 		const settings = this.getSettings();
 
 		// Global options group with heading
-		const globalGroup = createSettingsGroup(container, 'Global options');
+		const globalGroup = createSettingsGroup(container, 'Global options', 'astro-modular-settings');
 
 		// Enable Projects
 		globalGroup.addSetting((setting) => {
@@ -285,7 +285,7 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Command Palette group with heading
-		const commandPaletteGroup = createSettingsGroup(container, 'Command palette');
+		const commandPaletteGroup = createSettingsGroup(container, 'Command palette', 'astro-modular-settings');
 
 		// Enable Command Palette
 		commandPaletteGroup.addSetting((setting) => {
@@ -616,7 +616,7 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Home Options group with heading
-		const homeOptionsGroup = createSettingsGroup(container, 'Home options');
+		const homeOptionsGroup = createSettingsGroup(container, 'Home options', 'astro-modular-settings');
 
 		// Featured Post
 		homeOptionsGroup.addSetting((setting) => {
@@ -968,7 +968,7 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Post Options group with heading
-		const postOptionsGroup = createSettingsGroup(container, 'Post options');
+		const postOptionsGroup = createSettingsGroup(container, 'Post options', 'astro-modular-settings');
 
 		// Posts per page
 		postOptionsGroup.addSetting((setting) => {
@@ -1343,7 +1343,7 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Optional Features group with heading
-		const optionalFeaturesGroup = createSettingsGroup(container, 'Optional features');
+		const optionalFeaturesGroup = createSettingsGroup(container, 'Optional features', 'astro-modular-settings');
 
 		// Profile Picture (keep existing implementation)
 		this.renderProfilePictureSetting(optionalFeaturesGroup, settings);

@@ -83,7 +83,7 @@ export class NavigationTab extends TabRenderer {
 
 
 		// Navigation Options group with heading
-		const navOptionsGroup = createSettingsGroup(container, 'Navigation options');
+		const navOptionsGroup = createSettingsGroup(container, 'Navigation options', 'astro-modular-settings');
 
 		// Show navigation toggle
 		navOptionsGroup.addSetting((setting) => {
