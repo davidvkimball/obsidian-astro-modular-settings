@@ -20,8 +20,8 @@ export class AdvancedTab extends TabRenderer {
 				.setDesc('Open your Astro configuration file in the editor')
 				.addButton(button => button
 					.setButtonText('Open config.ts')
-					.onClick(async () => {
-						await this.openConfigFile();
+					.onClick(() => {
+						this.openConfigFile();
 					}));
 		});
 
@@ -37,7 +37,7 @@ export class AdvancedTab extends TabRenderer {
 					try {
 						// Read the current config.ts file
 						const plugin = this.plugin as AstroModularPlugin;
-						const configContent = await plugin.configManager.fileManager.readConfig();
+						const configContent = plugin.configManager.fileManager.readConfig();
 						
 						if (!configContent) {
 							new Notice('Could not read config.ts file');
@@ -45,7 +45,7 @@ export class AdvancedTab extends TabRenderer {
 						}
 						
 						// Parse the config.ts file to extract current settings
-						const currentConfig = await plugin.configManager.fileManager.parseConfigFile(configContent) as Record<string, unknown>;
+						const currentConfig = plugin.configManager.fileManager.parseConfigFile(configContent) as Record<string, unknown>;
 						
 						if (!currentConfig) {
 							new Notice('Could not parse config.ts file');
@@ -326,7 +326,7 @@ export class AdvancedTab extends TabRenderer {
 					.setButtonText('Reset to defaults')
 					.setWarning()
 					.onClick(() => {
-					void (async () => {
+					(() => {
 						// Create a native Obsidian confirmation modal
 						const confirmModal = new Modal(this.app);
 						confirmModal.titleEl.setText('Reset to defaults');
@@ -470,7 +470,7 @@ export class AdvancedTab extends TabRenderer {
 		input.click();
 	}
 
-	private async openConfigFile(): Promise<void> {
+	private openConfigFile(): void {
 		try {
 			// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
 			const fs = require('fs') as typeof import('fs');

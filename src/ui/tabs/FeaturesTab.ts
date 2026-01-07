@@ -711,7 +711,7 @@ export class FeaturesTab extends TabRenderer {
 					text.setPlaceholder('getting-started');
 					text.setValue(settings.homeOptions?.featuredPost?.slug || 'getting-started');
 					let timeoutId: number | null = null;
-					text.onChange(async (value) => {
+					text.onChange((value) => {
 						if (timeoutId) {
 							clearTimeout(timeoutId);
 						}
@@ -777,7 +777,7 @@ export class FeaturesTab extends TabRenderer {
 					text.setPlaceholder('7');
 					text.setValue(String(settings.homeOptions?.recentPosts?.count || 7));
 					let timeoutId: number | null = null;
-					text.onChange(async (value) => {
+					text.onChange((value) => {
 						if (timeoutId) {
 							clearTimeout(timeoutId);
 						}
@@ -843,7 +843,7 @@ export class FeaturesTab extends TabRenderer {
 					text.setPlaceholder('2');
 					text.setValue(String(settings.homeOptions?.projects?.count || 2));
 					let timeoutId: number | null = null;
-					text.onChange(async (value) => {
+					text.onChange((value) => {
 						if (timeoutId) {
 							clearTimeout(timeoutId);
 						}
@@ -907,7 +907,7 @@ export class FeaturesTab extends TabRenderer {
 					text.setPlaceholder('3');
 					text.setValue(String(settings.homeOptions?.docs?.count || 3));
 					let timeoutId: number | null = null;
-					text.onChange(async (value) => {
+					text.onChange((value) => {
 						if (timeoutId) {
 							clearTimeout(timeoutId);
 						}

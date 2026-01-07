@@ -8,8 +8,8 @@ export class PluginConfigStep extends BaseWizardStep {
 		
 		// Get plugin status (pass content org from wizard state)
 		const contentOrg = state.selectedContentOrg;
-		void (async () => {
-			const pluginStatus = await (this.plugin as AstroModularPlugin).pluginManager.getPluginStatus(contentOrg);
+		(() => {
+			const pluginStatus = (this.plugin as AstroModularPlugin).pluginManager.getPluginStatus(contentOrg);
 			
 			const pluginConfig = container.createDiv('plugin-config');
 			pluginConfig.createEl('h2', { text: 'Plugin configuration' });
@@ -144,7 +144,7 @@ export class PluginConfigStep extends BaseWizardStep {
 				const success = await (this.plugin as AstroModularPlugin).pluginManager.configurePlugins(config);
 				if (success) {
 					// Reload plugin status to reflect changes
-					const updatedStatus = await (this.plugin as AstroModularPlugin).pluginManager.getPluginStatus(state.selectedContentOrg);
+					const updatedStatus = (this.plugin as AstroModularPlugin).pluginManager.getPluginStatus(state.selectedContentOrg);
 					
 					// Re-render the status display
 					// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
@@ -175,7 +175,7 @@ export class PluginConfigStep extends BaseWizardStep {
 
 		// Show manual instructions button
 		container.querySelector('#show-instructions')?.addEventListener('click', () => {
-			void (async () => {
+			(() => {
 			try {
 				// Create configuration based on current content organization choice
 				const contentOrg = state.selectedContentOrg;
@@ -197,7 +197,7 @@ export class PluginConfigStep extends BaseWizardStep {
 					}
 				};
 
-				const instructions = await (this.plugin as AstroModularPlugin).pluginManager.getManualConfigurationInstructions(config);
+				const instructions = (this.plugin as AstroModularPlugin).pluginManager.getManualConfigurationInstructions(config);
 				
 				// Create a modal to show instructions
 				const instructionModal = new Modal(this.app);

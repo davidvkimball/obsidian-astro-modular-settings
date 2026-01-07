@@ -3,13 +3,13 @@ import { AstroModularPlugin, PluginConfiguration } from '../../types';
 import { TabRenderer } from '../common/TabRenderer';
 
 export class PluginsTab extends TabRenderer {
-	async render(container: HTMLElement): Promise<void> {
+	render(container: HTMLElement): void {
 		container.empty();
 		const settings = this.getSettings();
 
 		// Get plugin status
 		const contentOrg = settings.contentOrganization;
-		const pluginStatus = await (this.plugin as AstroModularPlugin).pluginManager.getPluginStatus(contentOrg);
+		const pluginStatus = (this.plugin as AstroModularPlugin).pluginManager.getPluginStatus(contentOrg);
 
 		// Display plugin status
 		const statusContainer = container.createDiv('plugin-status-container');
@@ -125,7 +125,7 @@ export class PluginsTab extends TabRenderer {
 					const success = await (this.plugin as AstroModularPlugin).pluginManager.configurePlugins(config);
 					if (success) {
 						// Reload plugin status to reflect changes
-						const updatedStatus = await (this.plugin as AstroModularPlugin).pluginManager.getPluginStatus(settings.contentOrganization);
+						const updatedStatus = (this.plugin as AstroModularPlugin).pluginManager.getPluginStatus(settings.contentOrganization);
 						
 						// Re-render the status display
 						pluginStatusDiv.empty();
@@ -219,7 +219,7 @@ export class PluginsTab extends TabRenderer {
 			.setDesc('Get step-by-step instructions for manual configuration')
 			.addButton(button => button
 				.setButtonText('Show manual instructions')
-				.onClick(async () => {
+				.onClick(() => {
 					// Create configuration based on current content organization choice
 					const contentOrg = settings.contentOrganization;
 					const config: PluginConfiguration = {
@@ -240,7 +240,7 @@ export class PluginsTab extends TabRenderer {
 						}
 					};
 
-					const instructions = await (this.plugin as AstroModularPlugin).pluginManager.getManualConfigurationInstructions(config);
+					const instructions = (this.plugin as AstroModularPlugin).pluginManager.getManualConfigurationInstructions(config);
 					
 					// Create a modal to show instructions
 					const instructionModal = new Modal(this.app);

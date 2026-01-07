@@ -27,7 +27,7 @@ export abstract class TabRenderer {
 			
 			// Apply the current settings to the config file using individual features
 			const plugin = this.plugin as AstroModularPlugin;
-			const success = await plugin.configManager.updateIndividualFeatures(settings);
+			const success = plugin.configManager.updateIndividualFeatures(settings);
 
 			if (success) {
 				if (showNotice) {

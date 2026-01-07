@@ -14,7 +14,7 @@ export class PluginManager {
 		this.getContentOrganization = getContentOrganization;
 	}
 
-	async getPluginStatus(contentOrg?: ContentOrganizationType): Promise<PluginStatus[]> {
+	getPluginStatus(contentOrg?: ContentOrganizationType): PluginStatus[] {
 		const plugins = (this.app as unknown as { plugins?: ObsidianPlugins }).plugins;
 		const requiredPlugins = [
 			'astro-composer',
@@ -39,7 +39,7 @@ export class PluginManager {
 			// For Astro Composer, check content type settings and include in main status
 			let outOfSyncContentTypes: string[] | undefined;
 			if (pluginId === 'astro-composer' && plugin) {
-				const syncCheck = await this.checkAstroComposerSettings(plugin as Plugin, contentOrg);
+				const syncCheck = this.checkAstroComposerSettings(plugin as Plugin, contentOrg);
 				if (syncCheck) {
 					outOfSyncContentTypes = syncCheck.outOfSyncContentTypes;
 				}
@@ -56,7 +56,7 @@ export class PluginManager {
 				installed: isInstalled,
 				enabled: isInEnabledSet || false,
 				configurable: this.isPluginConfigurable(pluginId),
-				currentSettings: plugin ? await this.getPluginSettings(plugin as Plugin) : undefined,
+				currentSettings: plugin ? this.getPluginSettings(plugin as Plugin) : undefined,
 				outOfSyncContentTypes: outOfSyncContentTypes,
 				settingsMatch: pluginId === 'image-manager' ? imageManagerSettingsMatch : undefined
 			});
@@ -129,7 +129,7 @@ export class PluginManager {
 		};
 	}
 
-	private async checkAstroComposerSettings(plugin: Plugin, contentOrg?: ContentOrganizationType): Promise<{ outOfSyncContentTypes: string[] } | null> {
+	private checkAstroComposerSettings(plugin: Plugin, contentOrg?: ContentOrganizationType): { outOfSyncContentTypes: string[] } | null {
 		const contentOrgValue = contentOrg || this.getContentOrganization?.() || 'file-based';
 		const expectedMode = contentOrgValue === 'file-based' ? 'file' : 'folder';
 		
@@ -255,7 +255,7 @@ export class PluginManager {
 		return configurablePlugins.includes(pluginId);
 	}
 
-	private async getPluginSettings(plugin: Plugin): Promise<Record<string, unknown> | undefined> {
+	private getPluginSettings(plugin: Plugin): Record<string, unknown> | undefined {
 		// This would need to be implemented based on each plugin's specific API
 		// For now, return a placeholder
 		const pluginWithSettings = plugin as PluginWithSettings;
@@ -419,7 +419,7 @@ export class PluginManager {
 		}
 	}
 
-	async getManualConfigurationInstructions(config: PluginConfiguration): Promise<string> {
+	getManualConfigurationInstructions(config: PluginConfiguration): string {
 		let instructions = '## Obsidian Settings\n';
 		instructions += `1. Go to **Settings → Files & Links**\n`;
 		instructions += `2. Set **Default location for new attachments** to: `;

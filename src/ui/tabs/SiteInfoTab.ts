@@ -199,7 +199,7 @@ export class SiteInfoTab extends TabRenderer {
 		const assetsGroup = createSettingsGroup(assetsSection, undefined, 'astro-modular-settings');
 
 		// Helper function to copy file to public folder
-		const copyImageToPublic = async (sourcePath: string, targetFileName: string): Promise<void> => {
+		const copyImageToPublic = (sourcePath: string, targetFileName: string): void => {
 			try {
 				// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
 				const fs = require('fs') as typeof import('fs');
@@ -229,7 +229,7 @@ export class SiteInfoTab extends TabRenderer {
 		};
 
 		// Helper function to show file picker dialog
-		const showFilePicker = async (targetFileName: string): Promise<void> => {
+		const showFilePicker = (targetFileName: string): void => {
 			const fileInput = document.createElement('input');
 			fileInput.type = 'file';
 			fileInput.accept = '.png';
@@ -296,7 +296,7 @@ export class SiteInfoTab extends TabRenderer {
 									// Note: TFile doesn't have a path property in Obsidian API, but some implementations may have it
 									const filePath = (selectedFile as unknown as { path?: string }).path;
 									if (filePath) {
-										await copyImageToPublic(filePath, targetFileName);
+										copyImageToPublic(filePath, targetFileName);
 									} else {
 										// If no path, read file content and write it
 										const arrayBuffer = await selectedFile.arrayBuffer();

@@ -4,7 +4,7 @@ export class ThemeColorExtractor {
 	/**
 	 * Extract colors from the currently active Obsidian theme
 	 */
-	static async extractObsidianThemeColors(): Promise<ThemeColors> {
+	static extractObsidianThemeColors(): ThemeColors {
 		// Get computed styles from the document root
 		const styles = getComputedStyle(document.body);
 		

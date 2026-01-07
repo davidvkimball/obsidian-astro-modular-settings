@@ -17,26 +17,26 @@ export class ConfigManager {
 		this.presetModifier = new ConfigPresetModifier();
 	}
 
-	async getConfigFileInfo() {
+	getConfigFileInfo() {
 		return this.fileManager.getConfigFileInfo();
 	}
 
-	async readConfig(): Promise<string> {
+	readConfig(): string {
 		return this.fileManager.readConfig();
 	}
 
-	async writeConfig(content: string): Promise<boolean> {
+	writeConfig(content: string): boolean {
 		return this.fileManager.writeConfig(content);
 	}
 
-	async applyPreset(preset: PresetTemplate): Promise<boolean> {
+	applyPreset(preset: PresetTemplate): boolean {
 		// Read the existing config file
-		const currentConfig = await this.readConfig();
+		const currentConfig = this.readConfig();
 		
 		// Modify the existing config based on the preset
 		const modifiedConfig = this.presetModifier.modifyConfigFromPreset(preset, currentConfig);
 		
-		const writeResult = await this.writeConfig(modifiedConfig);
+		const writeResult = this.writeConfig(modifiedConfig);
 		
 		return writeResult;
 	}
@@ -45,50 +45,50 @@ export class ConfigManager {
 		return this.fileManager.detectAstroDevServer();
 	}
 
-	async updateIndividualFeatures(settings: AstroModularSettings): Promise<boolean> {
+	updateIndividualFeatures(settings: AstroModularSettings): boolean {
 		// Read the existing config file
-		const currentConfig = await this.readConfig();
+		const currentConfig = this.readConfig();
 		
 		// Modify the existing config based on individual features
 		const modifiedConfig = this.presetModifier.modifyConfigFromFeatures(settings, currentConfig);
 		
-		const writeResult = await this.writeConfig(modifiedConfig);
+		const writeResult = this.writeConfig(modifiedConfig);
 		
 		return writeResult;
 	}
 
-	async updateThemeOnly(theme: string): Promise<boolean> {
+	updateThemeOnly(theme: string): boolean {
 		// Read the existing config file
-		const currentConfig = await this.readConfig();
+		const currentConfig = this.readConfig();
 		
 		// Update only the theme setting
 		const modifiedConfig = this.presetModifier.updateThemeInConfig(currentConfig, theme);
 		
-		const writeResult = await this.writeConfig(modifiedConfig);
+		const writeResult = this.writeConfig(modifiedConfig);
 		
 		return writeResult;
 	}
 
-	async updateFontOnly(fontType: 'heading' | 'prose' | 'mono', fontName: string): Promise<boolean> {
+	updateFontOnly(fontType: 'heading' | 'prose' | 'mono', fontName: string): boolean {
 		// Read the existing config file
-		const currentConfig = await this.readConfig();
+		const currentConfig = this.readConfig();
 		
 		// Update only the specific font setting
 		const modifiedConfig = this.presetModifier.updateFontInConfig(currentConfig, fontType, fontName);
 		
-		const writeResult = await this.writeConfig(modifiedConfig);
+		const writeResult = this.writeConfig(modifiedConfig);
 		
 		return writeResult;
 	}
 
-	async updateFeatureOnly(featureName: string, value: boolean): Promise<boolean> {
+	updateFeatureOnly(featureName: string, value: boolean): boolean {
 		// Read the existing config file
-		const currentConfig = await this.readConfig();
+		const currentConfig = this.readConfig();
 		
 		// Update only the specific feature setting
 		const modifiedConfig = this.presetModifier.updateFeatureInConfig(currentConfig, featureName, value);
 		
-		const writeResult = await this.writeConfig(modifiedConfig);
+		const writeResult = this.writeConfig(modifiedConfig);
 		
 		return writeResult;
 	}

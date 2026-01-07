@@ -11,7 +11,7 @@ export class ConfigFileManager {
 		this.configPath = '../../src/config.ts';
 	}
 
-	async getConfigFileInfo(): Promise<ConfigFileInfo> {
+	getConfigFileInfo(): ConfigFileInfo {
 		// The main Astro config.ts file is at src/config.ts (two levels up from vault)
 		// NOTE: This plugin accesses files outside the Obsidian vault to manage Astro configuration.
 		// This is necessary for the plugin's core functionality of managing Astro Modular theme settings.
@@ -71,12 +71,12 @@ export class ConfigFileManager {
 			   content.includes('astro/config');
 	}
 
-	async readConfig(): Promise<string> {
-		const fileInfo = await this.getConfigFileInfo();
+	readConfig(): string {
+		const fileInfo = this.getConfigFileInfo();
 		return fileInfo.content;
 	}
 
-	async writeConfig(content: string): Promise<boolean> {
+	writeConfig(content: string): boolean {
 		// Try to write the file outside the vault using Node.js fs
 		// eslint-disable-next-line @typescript-eslint/no-require-imports, no-undef
 		const fs = require('fs') as typeof import('fs');
@@ -114,11 +114,11 @@ export class ConfigFileManager {
 		return false;
 	}
 
-	async parseConfigFile(content?: string): Promise<Record<string, unknown> | null> {
+	parseConfigFile(content?: string): Record<string, unknown> | null {
 		// Parse the config.ts file to extract current settings
 		// This extracts all key settings from the config using the marker system
 		
-		const configContent = content || await this.readConfig();
+		const configContent = content || this.readConfig();
 		if (!configContent) {
 			return null;
 		}

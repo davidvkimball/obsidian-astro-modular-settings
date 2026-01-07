@@ -37,7 +37,7 @@ export class StyleTab extends TabRenderer {
 						
 						// Apply only theme change to config.ts (not all settings)
 						try {
-							const success = await (this.plugin as AstroModularPlugin).configManager.updateThemeOnly(value);
+							const success = (this.plugin as AstroModularPlugin).configManager.updateThemeOnly(value);
 							if (success) {
 								new Notice(`Theme changed to ${value} and applied to config.ts`);
 							} else {
@@ -384,7 +384,7 @@ export class StyleTab extends TabRenderer {
 						button.onClick(() => {
 							void (async () => {
 								try {
-									const extractedColors = await ThemeColorExtractor.extractObsidianThemeColors();
+									const extractedColors = ThemeColorExtractor.extractObsidianThemeColors();
 									
 									// Store extracted colors
 									settings.themeColors.extractedColors = extractedColors;
@@ -521,7 +521,7 @@ export class StyleTab extends TabRenderer {
 									
 									// Apply theme and customThemeFile changes to config.ts
 									try {
-										const success = await (this.plugin as AstroModularPlugin).configManager.updateIndividualFeatures(settings);
+										const success = (this.plugin as AstroModularPlugin).configManager.updateIndividualFeatures(settings);
 										if (success) {
 											new Notice(`${themeFileName}.ts saved successfully! Use the main theme dropdown to switch to "custom" if you want to use this theme.`);
 										} else {
@@ -560,7 +560,7 @@ export class StyleTab extends TabRenderer {
 							
 							// Apply only heading font change to config.ts (not all settings)
 							try {
-								const success = await (this.plugin as AstroModularPlugin).configManager.updateFontOnly('heading', value);
+								const success = (this.plugin as AstroModularPlugin).configManager.updateFontOnly('heading', value);
 								if (success) {
 									new Notice('Heading font updated and applied to config.ts');
 								} else {
@@ -592,7 +592,7 @@ export class StyleTab extends TabRenderer {
 							
 							// Apply only prose font change to config.ts (not all settings)
 							try {
-								const success = await (this.plugin as AstroModularPlugin).configManager.updateFontOnly('prose', value);
+								const success = (this.plugin as AstroModularPlugin).configManager.updateFontOnly('prose', value);
 								if (success) {
 									new Notice('Prose font updated and applied to config.ts');
 								} else {
@@ -624,7 +624,7 @@ export class StyleTab extends TabRenderer {
 							
 							// Apply only monospace font change to config.ts (not all settings)
 							try {
-								const success = await (this.plugin as AstroModularPlugin).configManager.updateFontOnly('mono', value);
+								const success = (this.plugin as AstroModularPlugin).configManager.updateFontOnly('mono', value);
 								if (success) {
 									new Notice('Monospace font updated and applied to config.ts');
 								} else {

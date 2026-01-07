@@ -5,7 +5,7 @@ import { PresetWarningModal } from '../PresetWarningModal';
 import { createSettingsGroup } from '../../utils/settings-compat';
 
 export class ConfigTab extends TabRenderer {
-	async render(container: HTMLElement): Promise<void> {
+	render(container: HTMLElement): void {
 		container.empty();
 		const settings = this.getSettings();
 
@@ -43,7 +43,7 @@ export class ConfigTab extends TabRenderer {
 									const freshSettings = plugin.settings;
 									
 									// Apply the configuration
-									const presetSuccess = await plugin.configManager.applyPreset({
+									const presetSuccess = plugin.configManager.applyPreset({
 										name: freshSettings.currentTemplate,
 										description: '',
 										features: freshSettings.features,
@@ -167,10 +167,10 @@ export class ConfigTab extends TabRenderer {
 		void this.renderPluginStatus(container, settings);
 	}
 
-	private async renderPluginStatus(container: HTMLElement, settings: AstroModularSettings): Promise<void> {
+	private renderPluginStatus(container: HTMLElement, settings: AstroModularSettings): void {
 		// Get plugin status
 		const contentOrg = settings.contentOrganization;
-		const pluginStatus = await (this.plugin as AstroModularPlugin).pluginManager.getPluginStatus(contentOrg);
+		const pluginStatus = (this.plugin as AstroModularPlugin).pluginManager.getPluginStatus(contentOrg);
 
 		// Display plugin status
 		const statusContainer = container.createDiv('plugin-status-container');
@@ -300,7 +300,7 @@ export class ConfigTab extends TabRenderer {
 							const statusContainerEl = container.querySelector('.plugin-status-container');
 							if (statusContainerEl) {
 								statusContainerEl.remove();
-								await this.renderPluginStatus(container, settings);
+								this.renderPluginStatus(container, settings);
 							}
 						} else {
 							// Text is already in sentence case
@@ -317,7 +317,7 @@ export class ConfigTab extends TabRenderer {
 				.setDesc('Get step-by-step instructions for manual configuration')
 				.addButton(button => button
 					.setButtonText('Show manual instructions')
-					.onClick(async () => {
+					.onClick(() => {
 					// Create configuration based on current content organization choice
 					const contentOrg = settings.contentOrganization;
 					const config: PluginConfiguration = {
@@ -338,7 +338,7 @@ export class ConfigTab extends TabRenderer {
 						}
 					};
 					
-					const instructions = await (this.plugin as AstroModularPlugin).pluginManager.getManualConfigurationInstructions(config);
+					const instructions = (this.plugin as AstroModularPlugin).pluginManager.getManualConfigurationInstructions(config);
 					
 					// Create a modal to show instructions
 					const instructionModal = new Modal(this.app);

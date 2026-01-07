@@ -252,7 +252,7 @@ export class SetupWizardModal extends Modal {
 			
 			// Apply to config.ts to keep it in sync
 			const settings = this.plugin.settings;
-			await this.plugin.configManager.applyPreset({
+			this.plugin.configManager.applyPreset({
 				name: settings.currentTemplate,
 				description: '',
 				features: settings.features,
@@ -295,7 +295,7 @@ export class SetupWizardModal extends Modal {
 			
 			// Apply to config.ts
 			const settings = this.plugin.settings;
-			const presetSuccess = await this.plugin.configManager.applyPreset({
+			const presetSuccess = this.plugin.configManager.applyPreset({
 				name: settings.currentTemplate,
 				description: '',
 				features: settings.features,

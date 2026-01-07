@@ -53,7 +53,7 @@ export class FinalizeStep extends BaseWizardStep {
 			
 			// Always apply the configuration
 			const settings = plugin.settings;
-			const presetSuccess = await plugin.configManager.applyPreset({
+			const presetSuccess = plugin.configManager.applyPreset({
 				name: settings.currentTemplate,
 				description: '',
 				features: settings.features,
