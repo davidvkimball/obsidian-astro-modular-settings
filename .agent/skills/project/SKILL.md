@@ -1,11 +1,11 @@
 ---
 name: project
-description: Project-specific architecture, maintenance tasks, and unique conventions for Astro Modular Settings. Load when performing project-wide maintenance or working with the core architecture.
+description: Project-specific architecture, maintenance tasks, and unique conventions for this repository. Load when performing project-wide maintenance or working with the core architecture.
 ---
 
 # Project Context
 
-This skill provides the unique context and architectural details for the **Astro Modular Settings** repository.
+This skill provides the unique context and architectural details for the **Obsidian Sample Plugin Plus** repository.
 
 ## Purpose
 
@@ -20,15 +20,8 @@ Load this skill when:
 
 ## Project Overview
 
-- **Architecture**: Organized structure with main code in `src/main.ts` and modular tab-based settings.
-- **Purpose**: setup and configuration management of the Astro Modular theme. Provides a setup wizard and preset configurations.
-- **Key Features**: Setup wizard modal, tabbed settings interface (`TabRenderer`), external config management (`config.ts`) using markers.
-
-## Important Details
-
-- **Unorthodox Architecture**: Uses a setup wizard modal separate from the settings tab.
-- **Config Management**: Uses comment markers like `// [CONFIG:THEME]` in `astro.config.ts`. Do not remove these.
-- **SettingGroup API**: Uses backward-compatible implementation in `src/utils/settings-compat.ts`.
+- **Architecture**: Organized structure with main code in `src/main.ts` and settings in `src/settings.ts`.
+- **Reference Management**: Uses a `.ref` folder with symlinks to centralized Obsidian repositories for API and documentation.
 
 ## Maintenance Tasks
 
@@ -37,13 +30,5 @@ Load this skill when:
 
 ## Project-Specific Conventions
 
-- **Tabbed Settings Structure**: Settings are organized into tabs (General, Site Info, Navigation, Config, Style, Features, Plugins, Advanced) using `TabRenderer` subclasses
-- **Wizard Modal System**: Initial configuration uses a multi-step wizard modal (`SetupWizardModal`) with `BaseWizardStep` subclasses
-- **Config File Marker System**: Uses comment markers in `config.ts` for safe updates (see `CONFIG_MARKERS.md`)
-- **Plugin Integration Patterns**: Automatically configures external plugins based on content organization choice
-- **SettingGroup Pattern**: Uses `createSettingsGroup()` utility for backward-compatible `SettingGroup` support
-  - First group: NO heading (use `createSettingsGroup(containerEl)`)
-  - Later groups: WITH headings (use `createSettingsGroup(containerEl, 'Group Name')`)
-  - All settings must use `group.addSetting()` - never create divs directly on `containerEl` outside groups
-  - Conditional visibility: Apply to `setting.settingEl`, not separate containers
-  - **CRITICAL SPACING RULE**: When a settings group has NO heading, the LAST setting in that group MUST have bottom margin to create space before the next heading. Use `setting.settingEl.setCssProps({ marginBottom: 'var(--size-4-6)' })` on the last setting. This compensates for the lack of natural spacing that headings provide.
+- **Organized Source**: Prefer keeping logic separated into files within `src/` rather than bloating `main.ts`.
+- **Ref Symlinks**: Always use the `.ref/` path when looking up API documentation to ensure parity with the central reference store.
