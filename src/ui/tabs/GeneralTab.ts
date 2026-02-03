@@ -1,5 +1,4 @@
 import { TabRenderer } from '../common/TabRenderer';
-import { SetupWizardModal } from '../SetupWizardModal';
 import { TEMPLATE_OPTIONS, THEME_OPTIONS, AstroModularPlugin, AstroModularSettings } from '../../types';
 import { createSettingsGroup } from '../../utils/settings-compat';
 
@@ -86,6 +85,8 @@ export class GeneralTab extends TabRenderer {
 								Object.assign(plugin.settings, data);
 							}
 						});
+						// Lazy-load the wizard modal
+						const { SetupWizardModal } = await import('../SetupWizardModal');
 						const wizard = new SetupWizardModal(this.app, plugin);
 						wizard.open();
 					}));

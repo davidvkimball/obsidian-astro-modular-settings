@@ -9,6 +9,7 @@ import { AdvancedTab } from './tabs/AdvancedTab';
 
 export class AstroModularSettingsTab extends PluginSettingTab {
 	plugin: Plugin;
+	public icon = 'lucide-settings-2';
 
 	constructor(app: App, plugin: Plugin) {
 		super(app, plugin);
@@ -31,39 +32,39 @@ export class AstroModularSettingsTab extends PluginSettingTab {
 
 		// Tab definitions
 		const tabs = [
-			{ 
-				id: 'general', 
-				name: 'General', 
+			{
+				id: 'general',
+				name: 'General',
 				renderer: new GeneralTab(this.app, this.plugin)
 			},
-			{ 
-				id: 'site-info', 
-				name: 'Site Info', 
+			{
+				id: 'site-info',
+				name: 'Site Info',
 				renderer: new SiteInfoTab(this.app, this.plugin)
 			},
-			{ 
-				id: 'navigation', 
-				name: 'Navigation', 
+			{
+				id: 'navigation',
+				name: 'Navigation',
 				renderer: new NavigationTab(this.app, this.plugin)
 			},
-			{ 
-				id: 'config', 
-				name: 'Config', 
+			{
+				id: 'config',
+				name: 'Config',
 				renderer: new ConfigTab(this.app, this.plugin)
 			},
-			{ 
-				id: 'style', 
-				name: 'Style', 
+			{
+				id: 'style',
+				name: 'Style',
 				renderer: new StyleTab(this.app, this.plugin)
 			},
-			{ 
-				id: 'features', 
-				name: 'Features', 
+			{
+				id: 'features',
+				name: 'Features',
 				renderer: new FeaturesTab(this.app, this.plugin)
 			},
-			{ 
-				id: 'advanced', 
-				name: 'Advanced', 
+			{
+				id: 'advanced',
+				name: 'Advanced',
 				renderer: new AdvancedTab(this.app, this.plugin)
 			}
 		];
@@ -74,8 +75,8 @@ export class AstroModularSettingsTab extends PluginSettingTab {
 				text: tab.name,
 				cls: `tab-button ${index === 0 ? 'active' : ''}`
 			});
-			
-			
+
+
 			button.addEventListener('click', () => {
 				// Remove active class from all buttons
 				tabNav.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));

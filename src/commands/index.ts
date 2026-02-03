@@ -1,6 +1,5 @@
 import { Plugin } from 'obsidian';
 import { ObsidianApp, AstroModularPlugin, AstroModularSettings } from '../types';
-import { SetupWizardModal } from '../ui/SetupWizardModal';
 
 export function registerCommands(plugin: Plugin) {
 	// Open settings command
@@ -27,6 +26,8 @@ export function registerCommands(plugin: Plugin) {
 					Object.assign((plugin as AstroModularPlugin).settings, data);
 				}
 			});
+			// Lazy-load the wizard modal
+			const { SetupWizardModal } = await import('../ui/SetupWizardModal');
 			const wizard = new SetupWizardModal(plugin.app, plugin as AstroModularPlugin);
 			wizard.open();
 		}
