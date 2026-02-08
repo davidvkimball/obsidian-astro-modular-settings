@@ -88,10 +88,10 @@ export default class AstroModularSettingsPlugin extends Plugin {
 		// Force the settings tab to re-render with updated settings
 		// First reload settings from disk to ensure we have the latest values
 		await this.loadSettings();
-		
+
 		if (this.settingsTab) {
 			// Re-render the settings tab with updated settings
-			this.settingsTab.render();
+			this.settingsTab.display();
 		}
 	}
 
