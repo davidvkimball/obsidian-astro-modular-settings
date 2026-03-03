@@ -57,12 +57,12 @@ export abstract class TabRenderer {
 		return new Setting(container)
 			.setName(name)
 			.setDesc(description)
-			.addDropdown((dropdown: any) => {
+			.addDropdown(dropdown => {
 				Object.entries(options).forEach(([key, label]) => {
 					dropdown.addOption(key, label);
 				});
 				dropdown.setValue(value);
-				dropdown.onChange(async (value: any) => {
+				dropdown.onChange(async value => {
 					onChange(value);
 					await this.plugin.saveData(this.getSettings());
 					// Note: applyCurrentConfiguration should be called explicitly by the setting implementation
@@ -84,14 +84,14 @@ export abstract class TabRenderer {
 		return new Setting(container)
 			.setName(name)
 			.setDesc(description)
-			.addText((text: any) => {
+			.addText(text => {
 				text.setValue(value);
 				if (placeholder) {
 					text.setPlaceholder(placeholder);
 				}
 				
 				let timeoutId: number | null = null;
-				text.onChange((value: any) => {
+				text.onChange(value => {
 					// Clear existing timeout
 					if (timeoutId) {
 						clearTimeout(timeoutId);
@@ -135,9 +135,9 @@ export abstract class TabRenderer {
 		return new Setting(container)
 			.setName(name)
 			.setDesc(description)
-			.addToggle((toggle: any) => {
+			.addToggle(toggle => {
 				toggle.setValue(value);
-				toggle.onChange(async (value: any) => {
+				toggle.onChange(async value => {
 					onChange(value);
 					await this.plugin.saveData(this.getSettings());
 					// Note: applyCurrentConfiguration should be called explicitly by the setting implementation

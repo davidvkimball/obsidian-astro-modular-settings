@@ -34,7 +34,7 @@ export class NavigationTab extends TabRenderer {
 		new Setting(pagesSection)
 			.setName('Add page')
 			.setDesc('Add a new page to your navigation')
-				.addButton((button: any) => button
+				.addButton(button => button
 					// "+ Add page" is a button label, keep as is
 					// eslint-disable-next-line obsidianmd/ui/sentence-case
 					.setButtonText('+ Add page')
@@ -68,7 +68,7 @@ export class NavigationTab extends TabRenderer {
 		new Setting(socialSection)
 			.setName('Add social link')
 			.setDesc('Add a new social media link')
-				.addButton((button: any) => button
+				.addButton(button => button
 					// "+ Add social link" is a button label, keep as is
 					// eslint-disable-next-line obsidianmd/ui/sentence-case
 					.setButtonText('+ Add social link')
@@ -86,13 +86,13 @@ export class NavigationTab extends TabRenderer {
 		const navOptionsGroup = new SettingGroup(container).setHeading('Navigation options');
 
 		// Show navigation toggle
-		navOptionsGroup.addSetting((setting: any) => {
+		navOptionsGroup.addSetting(setting => {
 			setting
 				.setName('Show navigation')
 				.setDesc('Display navigation menu on your site')
-				.addToggle((toggle: any) => toggle
+				.addToggle(toggle => toggle
 					.setValue(settings.navigation.showNavigation ?? true)
-					.onChange(async (value: any) => {
+					.onChange(async value => {
 						settings.navigation.showNavigation = value;
 						await this.plugin.saveData(settings);
 						await (this.plugin as AstroModularPlugin).loadSettings();
@@ -102,15 +102,15 @@ export class NavigationTab extends TabRenderer {
 		});
 
 		// Navigation style dropdown
-		navOptionsGroup.addSetting((setting: any) => {
+		navOptionsGroup.addSetting(setting => {
 			setting
 				.setName('Navigation style')
 				.setDesc('Choose between minimal or traditional navigation style')
-				.addDropdown((dropdown: any) => dropdown
+				.addDropdown(dropdown => dropdown
 					.addOption('traditional', 'Traditional')
 					.addOption('minimal', 'Minimal')
 					.setValue(settings.navigation.style || 'traditional')
-					.onChange(async (value: any) => {
+					.onChange(async value => {
 						settings.navigation.style = value as 'minimal' | 'traditional';
 						await this.plugin.saveData(settings);
 						await (this.plugin as AstroModularPlugin).loadSettings();
@@ -120,13 +120,13 @@ export class NavigationTab extends TabRenderer {
 		});
 
 		// Show mobile menu toggle
-		navOptionsGroup.addSetting((setting: any) => {
+		navOptionsGroup.addSetting(setting => {
 			setting
 				.setName('Show mobile menu')
 				.setDesc('Display mobile navigation menu on smaller screens')
-				.addToggle((toggle: any) => toggle
+				.addToggle(toggle => toggle
 					.setValue(settings.navigation.showMobileMenu ?? true)
-					.onChange(async (value: any) => {
+					.onChange(async value => {
 						settings.navigation.showMobileMenu = value;
 						await this.plugin.saveData(settings);
 						await (this.plugin as AstroModularPlugin).loadSettings();
@@ -289,7 +289,7 @@ export class NavigationTab extends TabRenderer {
 		
 		// Handle input changes for pages
 		if (pagesList) {
-			pagesList.addEventListener('input', (e: any) => {
+			pagesList.addEventListener('input', e => {
 				const target = e.target as HTMLInputElement;
 				if (target.classList.contains('nav-title')) {
 					const item = target.closest('.nav-item');
@@ -336,7 +336,7 @@ export class NavigationTab extends TabRenderer {
 
 		// Handle input changes for social links
 		if (socialList) {
-			socialList.addEventListener('input', (e: any) => {
+			socialList.addEventListener('input', e => {
 				const target = e.target as HTMLInputElement;
 				if (target.classList.contains('nav-title') || target.classList.contains('nav-url') || target.classList.contains('nav-icon')) {
 					const item = target.closest('.nav-item');
@@ -430,7 +430,7 @@ export class NavigationTab extends TabRenderer {
 				this.render(container);
 				// Re-set icons after render (including new child buttons)
 				setTimeout(() => {
-					container.querySelectorAll('button[data-icon="trash"]').forEach((button: any) => {
+					container.querySelectorAll('button[data-icon="trash"]').forEach(button => {
 						button.textContent = '';
 						setIcon(button as HTMLElement, 'trash');
 					});

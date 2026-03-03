@@ -61,7 +61,7 @@ export class TemplateStep extends BaseWizardStep {
 				.setName('Edit config.ts directly (advanced)')
 				// eslint-disable-next-line obsidianmd/ui/sentence-case -- "Astro" is a proper noun
 				.setDesc('Skip the wizard and edit your Astro configuration file directly.')
-				.addButton((button: any) => button
+				.addButton(button => button
 					.setButtonText('Edit config.ts')
 					.onClick(() => {
 						this.openConfigFile();

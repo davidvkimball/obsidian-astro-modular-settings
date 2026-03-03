@@ -13,16 +13,16 @@ export class ConfigTab extends TabRenderer {
 		const configGroup = new SettingGroup(container);
 
 		// Template selector
-		configGroup.addSetting((setting: any) => {
+		configGroup.addSetting(setting => {
 			setting
 				.setName('Template')
 				.setDesc('Choose your content template')
-				.addDropdown((dropdown: any) => {
+				.addDropdown(dropdown => {
 					TEMPLATE_OPTIONS.forEach(template => {
 						dropdown.addOption(template.id, template.name);
 					});
 					dropdown.setValue(settings.currentTemplate);
-					dropdown.onChange((value: any) => {
+					dropdown.onChange(value => {
 						// Show warning modal for template changes
 						const changes = this.getTemplateChanges(value as TemplateType);
 						const modal = new PresetWarningModal(
@@ -74,11 +74,11 @@ export class ConfigTab extends TabRenderer {
 		});
 
 		// Deployment platform
-		configGroup.addSetting((setting: any) => {
+		configGroup.addSetting(setting => {
 			setting
 				.setName('Deployment')
 				.setDesc('Choose your deployment platform')
-				.addDropdown((dropdown: any) => {
+				.addDropdown(dropdown => {
 					dropdown.addOption('netlify', 'Netlify');
 					dropdown.addOption('vercel', 'Vercel');
 					dropdown.addOption('github-pages', 'GitHub pages');
@@ -86,7 +86,7 @@ export class ConfigTab extends TabRenderer {
 					// eslint-disable-next-line obsidianmd/ui/sentence-case
 					dropdown.addOption('cloudflare-workers', 'Cloudflare Workers');
 					dropdown.setValue(settings.deployment.platform);
-					dropdown.onChange(async (value: any) => {
+					dropdown.onChange(async value => {
 						settings.deployment.platform = value as 'netlify' | 'vercel' | 'github-pages' | 'cloudflare-workers';
 						await this.plugin.saveData(settings);
 						await (this.plugin as AstroModularPlugin).loadSettings();
@@ -103,15 +103,15 @@ export class ConfigTab extends TabRenderer {
 		});
 
 		// Content organization
-		configGroup.addSetting((setting: any) => {
+		configGroup.addSetting(setting => {
 			setting
 				.setName('Content organization')
 				.setDesc('Choose how to organize your content and assets')
-				.addDropdown((dropdown: any) => {
+				.addDropdown(dropdown => {
 					dropdown.addOption('file-based', 'File-based');
 					dropdown.addOption('folder-based', 'Folder-based');
 					dropdown.setValue(settings.contentOrganization);
-					dropdown.onChange(async (value: any) => {
+					dropdown.onChange(async value => {
 						settings.contentOrganization = value as 'file-based' | 'folder-based';
 						await this.plugin.saveData(settings);
 						await (this.plugin as AstroModularPlugin).loadSettings();
@@ -260,11 +260,11 @@ export class ConfigTab extends TabRenderer {
 		const pluginActionsGroup = new SettingGroup(container).setHeading('Plugin actions');
 
 		// Re-apply configuration button
-		pluginActionsGroup.addSetting((setting: any) => {
+		pluginActionsGroup.addSetting(setting => {
 			setting
 				.setName('Re-apply configuration')
 				.setDesc('Re-apply plugin settings based on your content organization choice (useful if settings were changed manually or configuration failed)')
-				.addButton((button: any) => button
+				.addButton(button => button
 					.setButtonText('Re-apply configuration')
 					.setCta()
 					.onClick(async () => {
@@ -311,11 +311,11 @@ export class ConfigTab extends TabRenderer {
 		});
 
 		// Show manual instructions button
-		pluginActionsGroup.addSetting((setting: any) => {
+		pluginActionsGroup.addSetting(setting => {
 			setting
 				.setName('Show manual instructions')
 				.setDesc('Get step-by-step instructions for manual configuration')
-				.addButton((button: any) => button
+				.addButton(button => button
 					.setButtonText('Show manual instructions')
 					.onClick(() => {
 					// Create configuration based on current content organization choice

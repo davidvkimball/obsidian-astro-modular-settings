@@ -77,12 +77,12 @@ export class FinalizeStep extends BaseWizardStep {
 	}
 
 	private formatTemplateName(template: string): string {
-		const option = TEMPLATE_OPTIONS.find((t: any) => t.id === template);
+		const option = TEMPLATE_OPTIONS.find(t => t.id === template);
 		return option ? option.name : template;
 	}
 
 	private formatThemeName(theme: string): string {
-		const option = THEME_OPTIONS.find((t: any) => t.id === theme);
+		const option = THEME_OPTIONS.find(t => t.id === theme);
 		return option ? option.name : theme;
 	}
 

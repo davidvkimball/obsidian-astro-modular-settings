@@ -12,13 +12,13 @@ export class AdvancedTab extends TabRenderer {
 		const advancedGroup = new SettingGroup(container);
 
 		// Edit config.ts directly button
-		advancedGroup.addSetting((setting: any) => {
+		advancedGroup.addSetting(setting => {
 			setting
 				.setName('Edit config.ts directly') // "config.ts" is a filename, keep as is
 				// False positive: Text is already in sentence case; "Astro" is a proper noun
 				// eslint-disable-next-line obsidianmd/ui/sentence-case
 				.setDesc('Open your Astro configuration file in the editor')
-				.addButton((button: any) => button
+				.addButton(button => button
 					.setButtonText('Open config.ts')
 					.onClick(() => {
 						this.openConfigFile();
@@ -26,11 +26,11 @@ export class AdvancedTab extends TabRenderer {
 		});
 
 		// Sync from config.ts button
-		advancedGroup.addSetting((setting: any) => {
+		advancedGroup.addSetting(setting => {
 			setting
 				.setName('Sync from config.ts')
 				.setDesc('Read current config.ts file and update plugin settings to match')
-				.addButton((button: any) => button
+				.addButton(button => button
 					.setButtonText('Sync from config.ts')
 					.setCta()
 					.onClick(async () => {
@@ -238,11 +238,11 @@ export class AdvancedTab extends TabRenderer {
 		});
 
 		// Reset to Template button
-		advancedGroup.addSetting((setting: any) => {
+		advancedGroup.addSetting(setting => {
 			setting
 				.setName('Reset to template')
-				.setDesc(`Reset all settings to the current template (${TEMPLATE_OPTIONS.find((t: any) => t.id === settings.currentTemplate)?.name})`)
-				.addButton((button: any) => button
+				.setDesc(`Reset all settings to the current template (${TEMPLATE_OPTIONS.find(t => t.id === settings.currentTemplate)?.name})`)
+				.addButton(button => button
 					.setButtonText('Reset to template')
 					.setWarning()
 					.onClick(async () => {
@@ -318,11 +318,11 @@ export class AdvancedTab extends TabRenderer {
 		});
 
 		// Reset to defaults
-		advancedGroup.addSetting((setting: any) => {
+		advancedGroup.addSetting(setting => {
 			setting
 				.setName('Reset to defaults')
 				.setDesc('Reset all settings to their default values')
-				.addButton((button: any) => button
+				.addButton(button => button
 					.setButtonText('Reset to defaults')
 					.setWarning()
 					.onClick(() => {
@@ -402,11 +402,11 @@ export class AdvancedTab extends TabRenderer {
 		});
 
 		// Export configuration
-		advancedGroup.addSetting((setting: any) => {
+		advancedGroup.addSetting(setting => {
 			setting
 				.setName('Export configuration')
 				.setDesc('Export your current configuration as JSON')
-				.addButton((button: any) => button
+				.addButton(button => button
 					.setButtonText('Export JSON')
 					.onClick(() => {
 						this.exportConfiguration();
@@ -414,11 +414,11 @@ export class AdvancedTab extends TabRenderer {
 		});
 
 		// Import configuration
-		advancedGroup.addSetting((setting: any) => {
+		advancedGroup.addSetting(setting => {
 			setting
 				.setName('Import configuration')
 				.setDesc('Import configuration from JSON file')
-				.addButton((button: any) => button
+				.addButton(button => button
 					.setButtonText('Import JSON')
 					.onClick(() => {
 						this.importConfiguration();

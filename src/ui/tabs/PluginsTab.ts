@@ -98,7 +98,7 @@ export class PluginsTab extends TabRenderer {
 		new Setting(container)
 			.setName('Configure automatically')
 			.setDesc('Automatically configure all installed plugins')
-			.addButton((button: any) => button
+			.addButton(button => button
 				.setButtonText('Configure automatically')
 				.setCta()
 				.onClick(async () => {
@@ -217,7 +217,7 @@ export class PluginsTab extends TabRenderer {
 		new Setting(container)
 			.setName('Show manual instructions')
 			.setDesc('Get step-by-step instructions for manual configuration')
-			.addButton((button: any) => button
+			.addButton(button => button
 				.setButtonText('Show manual instructions')
 				.onClick(() => {
 					// Create configuration based on current content organization choice

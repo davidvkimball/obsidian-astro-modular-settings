@@ -16,14 +16,14 @@ export class SiteInfoTab extends TabRenderer {
 		const siteInfoGroup = new SettingGroup(container);
 
 		// Site URL
-		siteInfoGroup.addSetting((setting: any) => {
+		siteInfoGroup.addSetting(setting => {
 			setting
 				.setName('Site URL')
 				.setDesc('Your site\'s base URL (e.g., https://yoursite.com)')
-				.addText((text: any) => {
+				.addText(text => {
 					text.setValue(settings.siteInfo.site);
 					let timeoutId: number | null = null;
-					text.onChange((value: any) => {
+					text.onChange(value => {
 						if (timeoutId) {
 							clearTimeout(timeoutId);
 						}
@@ -43,14 +43,14 @@ export class SiteInfoTab extends TabRenderer {
 		});
 
 		// Site Title
-		siteInfoGroup.addSetting((setting: any) => {
+		siteInfoGroup.addSetting(setting => {
 			setting
 				.setName('Site title')
 				.setDesc('Your site\'s title')
-				.addText((text: any) => {
+				.addText(text => {
 					text.setValue(settings.siteInfo.title);
 					let timeoutId: number | null = null;
-					text.onChange((value: any) => {
+					text.onChange(value => {
 						if (timeoutId) {
 							clearTimeout(timeoutId);
 						}
@@ -70,14 +70,14 @@ export class SiteInfoTab extends TabRenderer {
 		});
 
 		// Site Description
-		siteInfoGroup.addSetting((setting: any) => {
+		siteInfoGroup.addSetting(setting => {
 			setting
 				.setName('Site description')
 				.setDesc('A brief description of your site')
-				.addText((text: any) => {
+				.addText(text => {
 					text.setValue(settings.siteInfo.description);
 					let timeoutId: number | null = null;
-					text.onChange((value: any) => {
+					text.onChange(value => {
 						if (timeoutId) {
 							clearTimeout(timeoutId);
 						}
@@ -97,14 +97,14 @@ export class SiteInfoTab extends TabRenderer {
 		});
 
 		// Author Name
-		siteInfoGroup.addSetting((setting: any) => {
+		siteInfoGroup.addSetting(setting => {
 			setting
 				.setName('Author name')
 				.setDesc('Your name or the site author\'s name')
-				.addText((text: any) => {
+				.addText(text => {
 					text.setValue(settings.siteInfo.author);
 					let timeoutId: number | null = null;
-					text.onChange((value: any) => {
+					text.onChange(value => {
 						if (timeoutId) {
 							clearTimeout(timeoutId);
 						}
@@ -124,15 +124,15 @@ export class SiteInfoTab extends TabRenderer {
 		});
 
 		// Language - last setting in group without heading, add bottom margin
-		siteInfoGroup.addSetting((setting: any) => {
+		siteInfoGroup.addSetting(setting => {
 			setting
 				.setName('Language code')
 				// eslint-disable-next-line obsidianmd/ui/sentence-case
 				.setDesc('Your site\'s primary language (ISO 639-1 code)')
-				.addText((text: any) => {
+				.addText(text => {
 					text.setValue(settings.siteInfo.language);
 					let timeoutId: number | null = null;
-					text.onChange((value: any) => {
+					text.onChange(value => {
 						if (timeoutId) {
 							clearTimeout(timeoutId);
 						}
@@ -333,7 +333,7 @@ export class SiteInfoTab extends TabRenderer {
 		};
 
 		// Open Graph Image
-		assetsGroup.addSetting((setting: any) => {
+		assetsGroup.addSetting(setting => {
 			setting
 				.setName('Open graph image')
 				// False positive: "PNG" is an acronym and should be uppercase
@@ -351,7 +351,7 @@ export class SiteInfoTab extends TabRenderer {
 		});
 
 		// Open Graph Image Alt Text
-		assetsGroup.addSetting((setting: any) => {
+		assetsGroup.addSetting(setting => {
 			setting
 				// False positive: "Open Graph" is a proper noun (OG format standard)
 				// eslint-disable-next-line obsidianmd/ui/sentence-case
@@ -359,10 +359,10 @@ export class SiteInfoTab extends TabRenderer {
 				// False positive: "Open Graph" is a technical term (OG image standard) and should be capitalized
 				// eslint-disable-next-line obsidianmd/ui/sentence-case
 				.setDesc('Alternative text for the Open Graph image')
-				.addText((text: any) => {
+				.addText(text => {
 					text.setValue(settings.siteInfo.defaultOgImageAlt || settings.seo?.defaultOgImageAlt || 'Astro Modular logo.');
 					let timeoutId: number | null = null;
-					text.onChange((value: any) => {
+					text.onChange(value => {
 						if (timeoutId) {
 							clearTimeout(timeoutId);
 						}
@@ -394,7 +394,7 @@ export class SiteInfoTab extends TabRenderer {
 		});
 
 		// Favicon (always visible - used as fallback when theme-adaptive is enabled)
-		assetsGroup.addSetting((setting: any) => {
+		assetsGroup.addSetting(setting => {
 			setting
 				.setName('Favicon')
 				// False positive: "PNG" is an acronym and should be uppercase
@@ -412,13 +412,13 @@ export class SiteInfoTab extends TabRenderer {
 		});
 
 		// Theme-adaptive favicon toggle
-		assetsGroup.addSetting((setting: any) => {
+		assetsGroup.addSetting(setting => {
 			setting
 				.setName('Theme-adaptive favicon')
 				.setDesc('If enabled, favicon switches between light and dark variants based on browser theme preference. Standard favicon is used when browser\'s preference cannot be determined.')
-				.addToggle((toggle: any) => toggle
+				.addToggle(toggle => toggle
 					.setValue(settings.siteInfo.faviconThemeAdaptive ?? true)
-					.onChange(async (value: any) => {
+					.onChange(async value => {
 						settings.siteInfo.faviconThemeAdaptive = value;
 						await this.plugin.saveData(settings);
 						await (this.plugin as AstroModularPlugin).loadSettings();
@@ -431,7 +431,7 @@ export class SiteInfoTab extends TabRenderer {
 		// Light/Dark favicon fields (only shown when theme-adaptive is enabled)
 		if (settings.siteInfo.faviconThemeAdaptive ?? true) {
 			// Light theme favicon
-			assetsGroup.addSetting((setting: any) => {
+			assetsGroup.addSetting(setting => {
 				setting
 					.setName('Light theme favicon')
 					// False positive: "PNG" is an acronym and should be uppercase
@@ -449,7 +449,7 @@ export class SiteInfoTab extends TabRenderer {
 			});
 
 			// Dark theme favicon
-			assetsGroup.addSetting((setting: any) => {
+			assetsGroup.addSetting(setting => {
 				setting
 					.setName('Dark theme favicon')
 					// False positive: "PNG" is an acronym and should be uppercase
