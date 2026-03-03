@@ -70,12 +70,12 @@ export class WelcomeStep extends BaseWizardStep {
 		langInput.setAttribute('value', state.selectedSiteInfo.language);
 
 		// Add change handlers
-		container.querySelector('#run-wizard-startup')?.addEventListener('change', (e) => {
+		container.querySelector('#run-wizard-startup')?.addEventListener('change', (e: any) => {
 			const target = e.target as HTMLInputElement;
 			this.updateState({ runWizardOnStartup: target.checked });
 		});
 		
-		container.querySelector('#site-url')?.addEventListener('input', (e) => {
+		container.querySelector('#site-url')?.addEventListener('input', (e: any) => {
 			const currentState = this.getState();
 			this.updateState({
 				selectedSiteInfo: {
@@ -84,7 +84,7 @@ export class WelcomeStep extends BaseWizardStep {
 				}
 			});
 		});
-		container.querySelector('#site-title')?.addEventListener('input', (e) => {
+		container.querySelector('#site-title')?.addEventListener('input', (e: any) => {
 			const currentState = this.getState();
 			this.updateState({
 				selectedSiteInfo: {
@@ -93,7 +93,7 @@ export class WelcomeStep extends BaseWizardStep {
 				}
 			});
 		});
-		container.querySelector('#site-description')?.addEventListener('input', (e) => {
+		container.querySelector('#site-description')?.addEventListener('input', (e: any) => {
 			const currentState = this.getState();
 			this.updateState({
 				selectedSiteInfo: {
@@ -102,7 +102,7 @@ export class WelcomeStep extends BaseWizardStep {
 				}
 			});
 		});
-		container.querySelector('#site-author')?.addEventListener('input', (e) => {
+		container.querySelector('#site-author')?.addEventListener('input', (e: any) => {
 			const currentState = this.getState();
 			this.updateState({
 				selectedSiteInfo: {
@@ -111,7 +111,7 @@ export class WelcomeStep extends BaseWizardStep {
 				}
 			});
 		});
-		container.querySelector('#site-language')?.addEventListener('input', (e) => {
+		container.querySelector('#site-language')?.addEventListener('input', (e: any) => {
 			const currentState = this.getState();
 			this.updateState({
 				selectedSiteInfo: {

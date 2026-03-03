@@ -1,8 +1,8 @@
-import { Notice, setIcon } from 'obsidian';
+import { Notice, setIcon , SettingGroup} from 'obsidian';
 import { TabRenderer } from '../common/TabRenderer';
 import { THEME_OPTIONS, FONT_OPTIONS, AstroModularPlugin, ThemeType, AstroModularSettings, ColorScale } from '../../types';
 import { ThemeColorExtractor } from '../../utils/ThemeColorExtractor';
-import { createSettingsGroup } from '../../utils/settings-compat';
+
 
 export class StyleTab extends TabRenderer {
 	private mainContainer: HTMLElement | null = null;
@@ -13,19 +13,19 @@ export class StyleTab extends TabRenderer {
 		const settings = this.getSettings();
 
 		// Colors group with heading
-		const colorsGroup = createSettingsGroup(container, 'Colors', 'astro-modular-settings');
+		const colorsGroup = new SettingGroup(container).setHeading('Colors');
 
 		// Theme selector
-		colorsGroup.addSetting((setting) => {
+		colorsGroup.addSetting((setting: any) => {
 			setting
 			.setName('Theme')
 			.setDesc('Choose your color theme')
-			.addDropdown(dropdown => {
+			.addDropdown((dropdown: any) => {
 				THEME_OPTIONS.forEach(theme => {
 					dropdown.addOption(theme.id, theme.name);
 				});
 				dropdown.setValue(settings.currentTheme);
-				dropdown.onChange((value) => {
+				dropdown.onChange((value: any) => {
 					void (async () => {
 						settings.currentTheme = value as ThemeType;
 						await this.plugin.saveData(settings);
@@ -52,14 +52,14 @@ export class StyleTab extends TabRenderer {
 		});
 
 		// Available themes customization
-		colorsGroup.addSetting((setting) => {
+		colorsGroup.addSetting((setting: any) => {
 			setting
 				.setName('Customize available themes')
 				.setDesc('Control which themes are shown to users in the theme selector')
-				.addToggle(toggle => {
+				.addToggle((toggle: any) => {
 					const isCustomized = Array.isArray(settings.availableThemes);
 					toggle.setValue(isCustomized);
-					toggle.onChange((value) => {
+					toggle.onChange((value: any) => {
 						void (async () => {
 							if (value) {
 								// Enable customization - set to all themes except 'custom'
@@ -91,7 +91,7 @@ export class StyleTab extends TabRenderer {
 
 		// Show theme pills when customization is enabled - add as custom setting within group
 		if (Array.isArray(settings.availableThemes)) {
-			colorsGroup.addSetting((setting) => {
+			colorsGroup.addSetting((setting: any) => {
 				// Hide default UI elements
 				const nameEl = setting.settingEl.querySelector('.setting-item-name');
 				const descEl = setting.settingEl.querySelector('.setting-item-description');
@@ -301,16 +301,16 @@ export class StyleTab extends TabRenderer {
 		});
 
 		// Custom Theme Section group with heading
-		const customThemeGroup = createSettingsGroup(container, 'Custom theme generation', 'astro-modular-settings');
+		const customThemeGroup = new SettingGroup(container).setHeading('Custom theme generation');
 
 		// Generate custom theme toggle
-		customThemeGroup.addSetting((setting) => {
+		customThemeGroup.addSetting((setting: any) => {
 			setting
 				.setName('Generate custom theme')
 				.setDesc('Enable to extract colors from your Obsidian theme and generate custom theme files')
-				.addToggle(toggle => {
+				.addToggle((toggle: any) => {
 				toggle.setValue(settings.customThemeGenerationEnabled || false);
-				toggle.onChange((value) => {
+				toggle.onChange((value: any) => {
 					void (async () => {
 						settings.customThemeGenerationEnabled = value;
 						
@@ -341,14 +341,14 @@ export class StyleTab extends TabRenderer {
 		// Show custom theme options when enabled
 		if (settings.customThemeGenerationEnabled) {
 			// Theme file name input (always visible when custom theme generation is enabled)
-			customThemeGroup.addSetting((setting) => {
+			customThemeGroup.addSetting((setting: any) => {
 				setting
 					.setName('Custom theme file name')
 					.setDesc('Filename for the generated theme file (without .ts extension)')
-					.addText(text => {
+					.addText((text: any) => {
 						text.setValue(settings.customThemeFile || 'custom');
 						let timeoutId: number | null = null;
-						text.onChange((value) => {
+						text.onChange((value: any) => {
 							if (timeoutId) {
 								clearTimeout(timeoutId);
 							}
@@ -374,11 +374,11 @@ export class StyleTab extends TabRenderer {
 			});
 
 			// Extract from Obsidian button
-			customThemeGroup.addSetting((setting) => {
+			customThemeGroup.addSetting((setting: any) => {
 				setting
 					.setName('Extract from Obsidian theme')
 					.setDesc('Extract colors from your currently active Obsidian theme')
-					.addButton(button => {
+					.addButton((button: any) => {
 						button.setButtonText('Extract colors');
 						button.setCta();
 						button.onClick(() => {
@@ -406,7 +406,7 @@ export class StyleTab extends TabRenderer {
 
 			// Show last extracted timestamp - add as custom setting
 			if (settings.themeColors.lastExtracted) {
-				customThemeGroup.addSetting((setting) => {
+				customThemeGroup.addSetting((setting: any) => {
 					const lastExtracted = new Date(settings.themeColors.lastExtracted!).toLocaleString();
 					const nameEl = setting.settingEl.querySelector('.setting-item-name');
 					const descEl = setting.settingEl.querySelector('.setting-item-description');
@@ -428,15 +428,15 @@ export class StyleTab extends TabRenderer {
 			}
 
 			// Color mode selector (Simple vs Advanced)
-			customThemeGroup.addSetting((setting) => {
+			customThemeGroup.addSetting((setting: any) => {
 				setting
 					.setName('Color editing mode')
 					.setDesc('Choose how to edit your theme colors')
-					.addDropdown(dropdown => {
+					.addDropdown((dropdown: any) => {
 						dropdown.addOption('simple', 'Simple (accent + background)');
 						dropdown.addOption('advanced', 'Advanced (individual shades)');
 						dropdown.setValue(settings.themeColors.mode);
-						dropdown.onChange((value) => {
+						dropdown.onChange((value: any) => {
 							void (async () => {
 								settings.themeColors.mode = value as 'simple' | 'advanced';
 								await this.plugin.saveData(settings);
@@ -449,7 +449,7 @@ export class StyleTab extends TabRenderer {
 
 			// Color preview if colors are available - add as custom setting
 			if (settings.themeColors.extractedColors) {
-				customThemeGroup.addSetting((setting) => {
+				customThemeGroup.addSetting((setting: any) => {
 					const nameEl = setting.settingEl.querySelector('.setting-item-name');
 					const descEl = setting.settingEl.querySelector('.setting-item-description');
 					const controlEl = setting.settingEl.querySelector('.setting-item-control');
@@ -469,7 +469,7 @@ export class StyleTab extends TabRenderer {
 
 			// Color editing interface - add as custom setting
 			if (settings.themeColors.extractedColors) {
-				customThemeGroup.addSetting((setting) => {
+				customThemeGroup.addSetting((setting: any) => {
 					const nameEl = setting.settingEl.querySelector('.setting-item-name');
 					const descEl = setting.settingEl.querySelector('.setting-item-description');
 					const controlEl = setting.settingEl.querySelector('.setting-item-control');
@@ -490,11 +490,11 @@ export class StyleTab extends TabRenderer {
 			}
 
 			// Save to custom theme file
-			customThemeGroup.addSetting((setting) => {
+			customThemeGroup.addSetting((setting: any) => {
 				setting
 					.setName('Save to custom theme file')
 					.setDesc('Generate a custom theme file from your extracted colors')
-					.addButton(button => {
+					.addButton((button: any) => {
 						button.setButtonText('Save theme file');
 						button.setCta();
 						button.onClick(() => {
@@ -540,19 +540,19 @@ export class StyleTab extends TabRenderer {
 		}
 
 		// Typography group with heading
-		const typographyGroup = createSettingsGroup(container, 'Typography', 'astro-modular-settings');
+		const typographyGroup = new SettingGroup(container).setHeading('Typography');
 
 		// Heading font dropdown
-		typographyGroup.addSetting((setting) => {
+		typographyGroup.addSetting((setting: any) => {
 			setting
 				.setName('Heading font')
 				.setDesc('Font for headings and titles')
-				.addDropdown(dropdown => {
+				.addDropdown((dropdown: any) => {
 					FONT_OPTIONS.forEach(font => {
 						dropdown.addOption(font, font);
 					});
 					dropdown.setValue(settings.typography.headingFont);
-					dropdown.onChange((value) => {
+					dropdown.onChange((value: any) => {
 						void (async () => {
 							settings.typography.headingFont = value;
 							await this.plugin.saveData(settings);
@@ -575,16 +575,16 @@ export class StyleTab extends TabRenderer {
 		});
 
 		// Prose font dropdown
-		typographyGroup.addSetting((setting) => {
+		typographyGroup.addSetting((setting: any) => {
 			setting
 				.setName('Prose font')
 				.setDesc('Font for body text and content')
-				.addDropdown(dropdown => {
+				.addDropdown((dropdown: any) => {
 					FONT_OPTIONS.forEach(font => {
 						dropdown.addOption(font, font);
 					});
 					dropdown.setValue(settings.typography.proseFont);
-					dropdown.onChange((value) => {
+					dropdown.onChange((value: any) => {
 						void (async () => {
 							settings.typography.proseFont = value;
 							await this.plugin.saveData(settings);
@@ -607,16 +607,16 @@ export class StyleTab extends TabRenderer {
 		});
 
 		// Mono font dropdown
-		typographyGroup.addSetting((setting) => {
+		typographyGroup.addSetting((setting: any) => {
 			setting
 				.setName('Monospace font')
 				.setDesc('Font for code blocks and technical content')
-				.addDropdown(dropdown => {
+				.addDropdown((dropdown: any) => {
 					FONT_OPTIONS.forEach(font => {
 						dropdown.addOption(font, font);
 					});
 					dropdown.setValue(settings.typography.monoFont);
-					dropdown.onChange((value) => {
+					dropdown.onChange((value: any) => {
 						void (async () => {
 							settings.typography.monoFont = value;
 							await this.plugin.saveData(settings);
@@ -639,11 +639,11 @@ export class StyleTab extends TabRenderer {
 		});
 
 		// Font source dropdown
-		typographyGroup.addSetting((setting) => {
+		typographyGroup.addSetting((setting: any) => {
 			setting
 				.setName('Font source')
 				.setDesc('How fonts are loaded')
-				.addDropdown(dropdown => {
+				.addDropdown((dropdown: any) => {
 					// False positive: "Google Fonts" is a proper noun (product name) and should be capitalized
 					// eslint-disable-next-line obsidianmd/ui/sentence-case
 					dropdown.addOption('local', 'Local (Google Fonts)');
@@ -651,7 +651,7 @@ export class StyleTab extends TabRenderer {
 					// eslint-disable-next-line obsidianmd/ui/sentence-case
 					dropdown.addOption('cdn', 'CDN (Custom)');
 					dropdown.setValue(settings.typography.fontSource);
-					dropdown.onChange((value) => {
+					dropdown.onChange((value: any) => {
 						void (async () => {
 							settings.typography.fontSource = value as 'local' | 'cdn';
 							await this.plugin.saveData(settings);
@@ -673,16 +673,16 @@ export class StyleTab extends TabRenderer {
 		});
 
 		// Font display dropdown
-		typographyGroup.addSetting((setting) => {
+		typographyGroup.addSetting((setting: any) => {
 			setting
 				.setName('Font display')
 				.setDesc('Font display strategy')
-				.addDropdown(dropdown => {
+				.addDropdown((dropdown: any) => {
 					dropdown.addOption('swap', 'Swap (recommended)');
 					dropdown.addOption('fallback', 'Fallback');
 					dropdown.addOption('optional', 'Optional');
 					dropdown.setValue(settings.typography.fontDisplay || 'swap');
-					dropdown.onChange((value) => {
+					dropdown.onChange((value: any) => {
 						void (async () => {
 							settings.typography.fontDisplay = value as 'swap' | 'fallback' | 'optional';
 							await this.plugin.saveData(settings);
@@ -701,14 +701,14 @@ export class StyleTab extends TabRenderer {
 		});
 
 		// Content Width
-		typographyGroup.addSetting((setting) => {
+		typographyGroup.addSetting((setting: any) => {
 			setting
 				.setName('Content width')
 				.setDesc('Maximum width for content (e.g., 45rem)')
-				.addText(text => {
+				.addText((text: any) => {
 					text.setValue(settings.layout?.contentWidth || '45rem');
 					let timeoutId: number | null = null;
-					text.onChange((value) => {
+					text.onChange((value: any) => {
 						if (timeoutId) {
 							clearTimeout(timeoutId);
 						}
@@ -733,7 +733,7 @@ export class StyleTab extends TabRenderer {
 		// Custom font inputs (only show when CDN is selected)
 		if (settings.typography.fontSource === 'cdn') {
 			// Custom font URLs
-		typographyGroup.addSetting((setting) => {
+		typographyGroup.addSetting((setting: any) => {
 			setting
 				// False positive: "URLs" is an acronym and should be capitalized
 				// eslint-disable-next-line obsidianmd/ui/sentence-case
@@ -741,10 +741,10 @@ export class StyleTab extends TabRenderer {
 				// False positive: "Google Fonts" is a proper noun (product name) and should be capitalized
 				// eslint-disable-next-line obsidianmd/ui/sentence-case
 				.setDesc('Comma-separated URLs for custom fonts (e.g., Google Fonts URL)')
-				.addText(text => {
+				.addText((text: any) => {
 						text.setValue(settings.typography.customFonts?.urls || '');
 						let timeoutId: number | null = null;
-						text.onChange((value) => {
+						text.onChange((value: any) => {
 							if (timeoutId) {
 								clearTimeout(timeoutId);
 							}
@@ -767,14 +767,14 @@ export class StyleTab extends TabRenderer {
 			});
 
 			// Custom heading font name
-			typographyGroup.addSetting((setting) => {
+			typographyGroup.addSetting((setting: any) => {
 				setting
 					.setName('Custom heading font name')
 					.setDesc('Font family name for headings')
-					.addText(text => {
+					.addText((text: any) => {
 						text.setValue(settings.typography.customFonts?.heading || '');
 						let timeoutId: number | null = null;
-						text.onChange((value) => {
+						text.onChange((value: any) => {
 							if (timeoutId) {
 								clearTimeout(timeoutId);
 							}
@@ -797,14 +797,14 @@ export class StyleTab extends TabRenderer {
 			});
 
 			// Custom Body Font Name
-			typographyGroup.addSetting((setting) => {
+			typographyGroup.addSetting((setting: any) => {
 				setting
 					.setName('Custom body font name')
 					.setDesc('Font family name for body text')
-					.addText(text => {
+					.addText((text: any) => {
 						text.setValue(settings.typography.customFonts?.prose || '');
 						let timeoutId: number | null = null;
-						text.onChange((value) => {
+						text.onChange((value: any) => {
 							if (timeoutId) {
 								clearTimeout(timeoutId);
 							}
@@ -827,14 +827,14 @@ export class StyleTab extends TabRenderer {
 			});
 
 			// Custom Monospace Font Name
-			typographyGroup.addSetting((setting) => {
+			typographyGroup.addSetting((setting: any) => {
 				setting
 					.setName('Custom monospace font name')
 					.setDesc('Font family name for code')
-					.addText(text => {
+					.addText((text: any) => {
 						text.setValue(settings.typography.customFonts?.mono || '');
 						let timeoutId: number | null = null;
-						text.onChange((value) => {
+						text.onChange((value: any) => {
 							if (timeoutId) {
 								clearTimeout(timeoutId);
 							}

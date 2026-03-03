@@ -1,8 +1,8 @@
 {
 	"id": "astro-modular-settings",
 	"name": "Astro Modular Settings",
-	"version": "0.4.6",
-	"minAppVersion": "0.15.0",
+	"version": "0.4.7",
+	"minAppVersion": "1.11.0",
 	"description": "Onboarding and configuration management for Astro Modular theme.",
 	"author": "David V. Kimball",
 	"authorUrl": "https://davidvkimball.com",

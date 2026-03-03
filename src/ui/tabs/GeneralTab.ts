@@ -1,6 +1,7 @@
+import { SettingGroup } from "obsidian";
 import { TabRenderer } from '../common/TabRenderer';
 import { TEMPLATE_OPTIONS, THEME_OPTIONS, AstroModularPlugin, AstroModularSettings } from '../../types';
-import { createSettingsGroup } from '../../utils/settings-compat';
+
 
 export class GeneralTab extends TabRenderer {
 	render(container: HTMLElement): void {
@@ -10,10 +11,10 @@ export class GeneralTab extends TabRenderer {
 		const settings = this.getSettings();
 
 		// Current configuration as a settings group
-		const configGroup = createSettingsGroup(container, 'Current configuration', 'astro-modular-settings');
+		const configGroup = new SettingGroup(container).setHeading('Current configuration');
 		
 		// Create config items display in the original format
-		configGroup.addSetting((setting) => {
+		configGroup.addSetting((setting: any) => {
 			// Hide default UI elements
 			const nameEl = setting.settingEl.querySelector('.setting-item-name');
 			const descEl = setting.settingEl.querySelector('.setting-item-description');
@@ -38,12 +39,12 @@ export class GeneralTab extends TabRenderer {
 			// Template
 			const templateItem = configItems.createDiv('config-item');
 			templateItem.createEl('strong', { text: 'Template: ' });
-			templateItem.createSpan({ text: TEMPLATE_OPTIONS.find(t => t.id === settings.currentTemplate)?.name || 'Unknown' });
+			templateItem.createSpan({ text: TEMPLATE_OPTIONS.find((t: any) => t.id === settings.currentTemplate)?.name || 'Unknown' });
 			
 			// Theme
 			const themeItem = configItems.createDiv('config-item');
 			themeItem.createEl('strong', { text: 'Theme: ' });
-			themeItem.createSpan({ text: THEME_OPTIONS.find(t => t.id === settings.currentTheme)?.name || 'Unknown' });
+			themeItem.createSpan({ text: THEME_OPTIONS.find((t: any) => t.id === settings.currentTheme)?.name || 'Unknown' });
 			
 			// Organization
 			const orgItem = configItems.createDiv('config-item');
@@ -67,14 +68,14 @@ export class GeneralTab extends TabRenderer {
 		});
 
 		// Wizard settings group
-		const wizardGroup = createSettingsGroup(container, 'Wizard', 'astro-modular-settings');
+		const wizardGroup = new SettingGroup(container).setHeading('Wizard');
 		
 		// Run setup wizard button
-		wizardGroup.addSetting((setting) => {
+		wizardGroup.addSetting((setting: any) => {
 			setting
 				.setName('Setup wizard')
 				.setDesc('Run the setup wizard to reconfigure your theme')
-				.addButton(button => button
+				.addButton((button: any) => button
 					.setButtonText('Run setup wizard')
 					.setCta()
 					.onClick(async () => {
@@ -93,26 +94,26 @@ export class GeneralTab extends TabRenderer {
 		});
 
 		// Run wizard on startup
-		wizardGroup.addSetting((setting) => {
+		wizardGroup.addSetting((setting: any) => {
 			setting
 				.setName('Run wizard on startup')
 				.setDesc('Show the setup wizard when Obsidian starts (if not disabled)')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.runWizardOnStartup)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						settings.runWizardOnStartup = value;
 						await this.plugin.saveData(settings);
 					}));
 		});
 
 		// Remove ribbon icon toggle
-		wizardGroup.addSetting((setting) => {
+		wizardGroup.addSetting((setting: any) => {
 			setting
 				.setName('Remove ribbon icon')
 				.setDesc('Remove the wizard icon from the left ribbon')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.removeRibbonIcon ?? false)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						settings.removeRibbonIcon = value;
 						await this.plugin.saveData(settings);
 						// Update ribbon icon immediately

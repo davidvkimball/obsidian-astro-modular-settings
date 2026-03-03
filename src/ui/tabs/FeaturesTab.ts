@@ -1,7 +1,10 @@
-import { Setting, Notice } from 'obsidian';
+import { Setting, Notice , SettingGroup} from 'obsidian';
 import { TabRenderer } from '../common/TabRenderer';
 import { AstroModularPlugin, AstroModularSettings, ProfilePictureSettings } from '../../types';
-import { createSettingsGroup, SettingsContainer } from '../../utils/settings-compat';
+
+// MOCKED: SettingsContainer type
+type SettingsContainer = { addSetting: (cb: (setting: Setting) => void) => void };
+
 
 export class FeaturesTab extends TabRenderer {
 	render(container: HTMLElement): void {
@@ -9,16 +12,16 @@ export class FeaturesTab extends TabRenderer {
 		const settings = this.getSettings();
 
 		// Global options group with heading
-		const globalGroup = createSettingsGroup(container, 'Global options', 'astro-modular-settings');
+		const globalGroup = new SettingGroup(container).setHeading('Global options');
 
 		// Enable Projects
-		globalGroup.addSetting((setting) => {
+		globalGroup.addSetting((setting: any) => {
 			setting
 			.setName('Enable projects')
 			.setDesc('Enable projects as a unique content type for showcasing work and portfolios')
-			.addToggle(toggle => toggle
+			.addToggle((toggle: any) => toggle
 				.setValue(settings.optionalContentTypes?.projects ?? true)
-				.onChange(async (value) => {
+				.onChange(async (value: any) => {
 					if (!settings.optionalContentTypes) {
 						settings.optionalContentTypes = { projects: true, docs: true };
 					}
@@ -31,13 +34,13 @@ export class FeaturesTab extends TabRenderer {
 				}));
 
 		// Enable Docs
-		globalGroup.addSetting((setting) => {
+		globalGroup.addSetting((setting: any) => {
 			setting
 				.setName('Enable docs')
 				.setDesc('Enable docs as a unique content type for documentation and knowledge base')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.optionalContentTypes?.docs ?? true)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						if (!settings.optionalContentTypes) {
 							settings.optionalContentTypes = { projects: true, docs: true };
 						}
@@ -50,13 +53,13 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Table of contents
-		globalGroup.addSetting((setting) => {
+		globalGroup.addSetting((setting: any) => {
 			setting
 				.setName('Table of contents')
 				.setDesc('Show table of contents on content pages')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.tableOfContents?.enabled ?? true)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						if (!settings.tableOfContents) {
 							settings.tableOfContents = { enabled: true, depth: 4 };
 						}
@@ -76,7 +79,7 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// ToC depth - add as setting with conditional visibility
-		globalGroup.addSetting((setting) => {
+		globalGroup.addSetting((setting: any) => {
 			setting.settingEl.classList.add('toc-depth-setting');
 			setting.settingEl.setCssProps({
 				display: (settings.tableOfContents?.enabled ?? true) ? 'block' : 'none'
@@ -86,10 +89,10 @@ export class FeaturesTab extends TabRenderer {
 				// False positive: "ToC" is an acronym and should remain capitalized
 				// eslint-disable-next-line obsidianmd/ui/sentence-case
 				.setDesc('Maximum heading depth to include in ToC (2=H2, 3=H3, 4=H4, 5=H5, 6=H6)')
-				.addText(text => text
+				.addText((text: any) => text
 					.setPlaceholder('4')
 					.setValue(String(settings.tableOfContents?.depth || 4))
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						const num = parseInt(value) || 4;
 						const clampedNum = Math.max(2, Math.min(6, num));
 						if (!settings.tableOfContents) {
@@ -105,13 +108,13 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Footer enabled
-		globalGroup.addSetting((setting) => {
+		globalGroup.addSetting((setting: any) => {
 			setting
 				.setName('Footer')
 				.setDesc('Enable footer on your site')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.footer?.enabled ?? true)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						if (!settings.footer) {
 							settings.footer = { enabled: true, content: '© 2025 {author}. Built with the <a href="https://github.com/davidvkimball/astro-modular" target="_blank">Astro Modular</a> theme.', showSocialIconsInFooter: true };
 						}
@@ -135,7 +138,7 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Footer content - add as setting with conditional visibility
-		globalGroup.addSetting((setting) => {
+		globalGroup.addSetting((setting: any) => {
 			setting.settingEl.classList.add('footer-content-setting');
 			setting.settingEl.setCssProps({
 				display: (settings.footer?.enabled ?? true) ? 'block' : 'none'
@@ -210,7 +213,7 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Show social icons in footer - add as setting with conditional visibility
-		globalGroup.addSetting((setting) => {
+		globalGroup.addSetting((setting: any) => {
 			setting.settingEl.classList.add('footer-social-setting');
 			setting.settingEl.setCssProps({
 				display: (settings.footer?.enabled ?? true) ? 'block' : 'none'
@@ -218,9 +221,9 @@ export class FeaturesTab extends TabRenderer {
 			setting
 				.setName('Show social icons in footer')
 				.setDesc('Display social media icons in the footer')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.footer?.showSocialIconsInFooter ?? true)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						if (!settings.footer) {
 							settings.footer = { enabled: true, content: '© 2025 {author}. Built with the <a href="https://github.com/davidvkimball/astro-modular" target="_blank">Astro Modular</a> theme.', showSocialIconsInFooter: true };
 						}
@@ -233,13 +236,13 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Hide scroll bar
-		globalGroup.addSetting((setting) => {
+		globalGroup.addSetting((setting: any) => {
 			setting
 				.setName('Hide scroll bar')
 				.setDesc('Hide the browser scroll bar for a cleaner look')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.features?.hideScrollBar ?? false)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						settings.features.hideScrollBar = value;
 						await this.plugin.saveData(settings);
 						await (this.plugin as AstroModularPlugin).loadSettings();
@@ -249,13 +252,13 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Scroll to top
-		globalGroup.addSetting((setting) => {
+		globalGroup.addSetting((setting: any) => {
 			setting
 				.setName('Scroll to top')
 				.setDesc('Show scroll to top button')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.features?.scrollToTop ?? true)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						settings.features.scrollToTop = value;
 						await this.plugin.saveData(settings);
 						await (this.plugin as AstroModularPlugin).loadSettings();
@@ -265,17 +268,17 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Feature button
-		globalGroup.addSetting((setting) => {
+		globalGroup.addSetting((setting: any) => {
 			setting
 				.setName('Feature button')
 				.setDesc('Choose which feature button appears in the header')
-				.addDropdown(dropdown => dropdown
+				.addDropdown((dropdown: any) => dropdown
 					.addOption('mode', 'Dark/light mode toggle')
 					.addOption('graph', 'View graph')
 					.addOption('theme', 'Change theme')
 					.addOption('none', 'None')
 					.setValue(settings.features?.featureButton || 'mode')
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						settings.features.featureButton = value as 'mode' | 'graph' | 'theme' | 'none';
 						await this.plugin.saveData(settings);
 						await (this.plugin as AstroModularPlugin).loadSettings();
@@ -285,16 +288,16 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Command Palette group with heading
-		const commandPaletteGroup = createSettingsGroup(container, 'Command palette', 'astro-modular-settings');
+		const commandPaletteGroup = new SettingGroup(container).setHeading('Command palette');
 
 		// Enable Command Palette
-		commandPaletteGroup.addSetting((setting) => {
+		commandPaletteGroup.addSetting((setting: any) => {
 			setting
 				.setName('Enable command palette')
 				.setDesc('Add a command palette to your site')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.commandPalette?.enabled ?? true)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						if (!settings.commandPalette) {
 							settings.commandPalette = {
 								enabled: true,
@@ -312,7 +315,7 @@ export class FeaturesTab extends TabRenderer {
 						
 						// Update visibility of all command palette options
 						const cpSettings = container.querySelectorAll('.cp-option-setting');
-						cpSettings.forEach((el) => {
+						cpSettings.forEach((el: any) => {
 							(el as HTMLElement).setCssProps({ display: value ? 'block' : 'none' });
 						});
 						
@@ -322,7 +325,7 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Shortcut - add with conditional visibility
-		commandPaletteGroup.addSetting((setting) => {
+		commandPaletteGroup.addSetting((setting: any) => {
 			setting.settingEl.classList.add('cp-option-setting');
 			setting.settingEl.setCssProps({
 				display: (settings.commandPalette?.enabled ?? true) ? 'block' : 'none'
@@ -331,10 +334,10 @@ export class FeaturesTab extends TabRenderer {
 				.setName('Shortcut')
 				// eslint-disable-next-line obsidianmd/ui/sentence-case
 				.setDesc('Keyboard shortcut to open command palette (Ctrl = Cmd on Mac)')
-				.addText(text => {
+				.addText((text: any) => {
 					text.setValue(settings.commandPalette?.shortcut || 'ctrl+K');
 					let timeoutId: number | null = null;
-					text.onChange((value) => {
+					text.onChange((value: any) => {
 						if (timeoutId) {
 							clearTimeout(timeoutId);
 						}
@@ -357,7 +360,7 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Placeholder - add with conditional visibility
-		commandPaletteGroup.addSetting((setting) => {
+		commandPaletteGroup.addSetting((setting: any) => {
 			setting.settingEl.classList.add('cp-option-setting');
 			setting.settingEl.setCssProps({
 				display: (settings.commandPalette?.enabled ?? true) ? 'block' : 'none'
@@ -365,10 +368,10 @@ export class FeaturesTab extends TabRenderer {
 			setting
 				.setName('Placeholder')
 				.setDesc('Placeholder text in command palette search box')
-				.addText(text => {
+				.addText((text: any) => {
 					text.setValue(settings.commandPalette?.placeholder || 'Search posts');
 					let timeoutId: number | null = null;
-					text.onChange((value) => {
+					text.onChange((value: any) => {
 						if (timeoutId) {
 							clearTimeout(timeoutId);
 						}
@@ -391,7 +394,7 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Search content types - all with conditional visibility
-		commandPaletteGroup.addSetting((setting) => {
+		commandPaletteGroup.addSetting((setting: any) => {
 			setting.settingEl.classList.add('cp-option-setting');
 			setting.settingEl.setCssProps({
 				display: (settings.commandPalette?.enabled ?? true) ? 'block' : 'none'
@@ -399,9 +402,9 @@ export class FeaturesTab extends TabRenderer {
 			setting
 				.setName('Search posts')
 				.setDesc('Include posts in search results')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.commandPalette?.search?.posts ?? true)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						if (!settings.commandPalette) {
 							settings.commandPalette = { enabled: true, shortcut: 'ctrl+K', placeholder: 'Search posts', search: { posts: true, pages: false, projects: false, docs: false }, sections: { quickActions: true, pages: true, social: true }, quickActions: { enabled: true, toggleMode: true, graphView: true, changeTheme: true } };
 						}
@@ -415,7 +418,7 @@ export class FeaturesTab extends TabRenderer {
 					}));
 		});
 
-		commandPaletteGroup.addSetting((setting) => {
+		commandPaletteGroup.addSetting((setting: any) => {
 			setting.settingEl.classList.add('cp-option-setting');
 			setting.settingEl.setCssProps({
 				display: (settings.commandPalette?.enabled ?? true) ? 'block' : 'none'
@@ -423,9 +426,9 @@ export class FeaturesTab extends TabRenderer {
 			setting
 				.setName('Search pages')
 				.setDesc('Include pages in search results')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.commandPalette?.search?.pages ?? false)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						if (!settings.commandPalette?.search) {
 							settings.commandPalette.search = { posts: true, pages: false, projects: false, docs: false };
 						}
@@ -436,7 +439,7 @@ export class FeaturesTab extends TabRenderer {
 					}));
 		});
 
-		commandPaletteGroup.addSetting((setting) => {
+		commandPaletteGroup.addSetting((setting: any) => {
 			setting.settingEl.classList.add('cp-option-setting');
 			setting.settingEl.setCssProps({
 				display: (settings.commandPalette?.enabled ?? true) ? 'block' : 'none'
@@ -444,9 +447,9 @@ export class FeaturesTab extends TabRenderer {
 			setting
 				.setName('Search projects')
 				.setDesc('Include projects in search results')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.commandPalette?.search?.projects ?? false)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						if (!settings.commandPalette?.search) {
 							settings.commandPalette.search = { posts: true, pages: false, projects: false, docs: false };
 						}
@@ -457,7 +460,7 @@ export class FeaturesTab extends TabRenderer {
 					}));
 		});
 
-		commandPaletteGroup.addSetting((setting) => {
+		commandPaletteGroup.addSetting((setting: any) => {
 			setting.settingEl.classList.add('cp-option-setting');
 			setting.settingEl.setCssProps({
 				display: (settings.commandPalette?.enabled ?? true) ? 'block' : 'none'
@@ -465,9 +468,9 @@ export class FeaturesTab extends TabRenderer {
 			setting
 				.setName('Search docs')
 				.setDesc('Include docs in search results')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.commandPalette?.search?.docs ?? false)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						if (!settings.commandPalette?.search) {
 							settings.commandPalette.search = { posts: true, pages: false, projects: false, docs: false };
 						}
@@ -479,7 +482,7 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Command palette sections - all with conditional visibility
-		commandPaletteGroup.addSetting((setting) => {
+		commandPaletteGroup.addSetting((setting: any) => {
 			setting.settingEl.classList.add('cp-option-setting');
 			setting.settingEl.setCssProps({
 				display: (settings.commandPalette?.enabled ?? true) ? 'block' : 'none'
@@ -487,9 +490,9 @@ export class FeaturesTab extends TabRenderer {
 			setting
 				.setName('Show quick actions section')
 				.setDesc('Display quick actions in command palette')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.commandPalette?.sections?.quickActions ?? true)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						if (!settings.commandPalette?.sections) {
 							settings.commandPalette.sections = { quickActions: true, pages: true, social: true };
 						}
@@ -498,7 +501,7 @@ export class FeaturesTab extends TabRenderer {
 						
 						// Update visibility of quick actions options
 						const qaSettings = container.querySelectorAll('.qa-option-setting');
-						qaSettings.forEach((el) => {
+						qaSettings.forEach((el: any) => {
 							(el as HTMLElement).setCssProps({ display: value ? 'block' : 'none' });
 						});
 						
@@ -507,7 +510,7 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Quick actions options - with conditional visibility based on both enabled and quickActions section
-		commandPaletteGroup.addSetting((setting) => {
+		commandPaletteGroup.addSetting((setting: any) => {
 			setting.settingEl.classList.add('cp-option-setting', 'qa-option-setting');
 			setting.settingEl.setCssProps({
 				display: (settings.commandPalette?.enabled ?? true) && (settings.commandPalette?.sections?.quickActions ?? true) ? 'block' : 'none'
@@ -515,9 +518,9 @@ export class FeaturesTab extends TabRenderer {
 			setting
 				.setName('Toggle dark/light mode')
 				.setDesc('Show mode toggle button in command palette')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.commandPalette?.quickActions?.toggleMode ?? true)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						if (!settings.commandPalette?.quickActions) {
 							settings.commandPalette.quickActions = { enabled: true, toggleMode: true, graphView: true, changeTheme: true };
 						}
@@ -529,7 +532,7 @@ export class FeaturesTab extends TabRenderer {
 					}));
 		});
 
-		commandPaletteGroup.addSetting((setting) => {
+		commandPaletteGroup.addSetting((setting: any) => {
 			setting.settingEl.classList.add('cp-option-setting', 'qa-option-setting');
 			setting.settingEl.setCssProps({
 				display: (settings.commandPalette?.enabled ?? true) && (settings.commandPalette?.sections?.quickActions ?? true) ? 'block' : 'none'
@@ -537,9 +540,9 @@ export class FeaturesTab extends TabRenderer {
 			setting
 				.setName('View graph')
 				.setDesc('Show graph view button in command palette')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.commandPalette?.quickActions?.graphView ?? true)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						if (!settings.commandPalette?.quickActions) {
 							settings.commandPalette.quickActions = { enabled: true, toggleMode: true, graphView: true, changeTheme: true };
 						}
@@ -551,7 +554,7 @@ export class FeaturesTab extends TabRenderer {
 					}));
 		});
 
-		commandPaletteGroup.addSetting((setting) => {
+		commandPaletteGroup.addSetting((setting: any) => {
 			setting.settingEl.classList.add('cp-option-setting', 'qa-option-setting');
 			setting.settingEl.setCssProps({
 				display: (settings.commandPalette?.enabled ?? true) && (settings.commandPalette?.sections?.quickActions ?? true) ? 'block' : 'none'
@@ -559,9 +562,9 @@ export class FeaturesTab extends TabRenderer {
 			setting
 				.setName('Change theme')
 				.setDesc('Show theme selector button in command palette')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.commandPalette?.quickActions?.changeTheme ?? true)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						if (!settings.commandPalette?.quickActions) {
 							settings.commandPalette.quickActions = { enabled: true, toggleMode: true, graphView: true, changeTheme: true };
 						}
@@ -573,7 +576,7 @@ export class FeaturesTab extends TabRenderer {
 					}));
 		});
 
-		commandPaletteGroup.addSetting((setting) => {
+		commandPaletteGroup.addSetting((setting: any) => {
 			setting.settingEl.classList.add('cp-option-setting');
 			setting.settingEl.setCssProps({
 				display: (settings.commandPalette?.enabled ?? true) ? 'block' : 'none'
@@ -581,9 +584,9 @@ export class FeaturesTab extends TabRenderer {
 			setting
 				.setName('Show pages section')
 				.setDesc('Display navigation pages in command palette')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.commandPalette?.sections?.pages ?? true)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						if (!settings.commandPalette?.sections) {
 							settings.commandPalette.sections = { quickActions: true, pages: true, social: true };
 						}
@@ -594,7 +597,7 @@ export class FeaturesTab extends TabRenderer {
 					}));
 		});
 
-		commandPaletteGroup.addSetting((setting) => {
+		commandPaletteGroup.addSetting((setting: any) => {
 			setting.settingEl.classList.add('cp-option-setting');
 			setting.settingEl.setCssProps({
 				display: (settings.commandPalette?.enabled ?? true) ? 'block' : 'none'
@@ -602,9 +605,9 @@ export class FeaturesTab extends TabRenderer {
 			setting
 				.setName('Show social section')
 				.setDesc('Display social links in command palette')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.commandPalette?.sections?.social ?? true)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						if (!settings.commandPalette?.sections) {
 							settings.commandPalette.sections = { quickActions: true, pages: true, social: true };
 						}
@@ -616,16 +619,16 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Home Options group with heading
-		const homeOptionsGroup = createSettingsGroup(container, 'Home options', 'astro-modular-settings');
+		const homeOptionsGroup = new SettingGroup(container).setHeading('Home options');
 
 		// Featured Post
-		homeOptionsGroup.addSetting((setting) => {
+		homeOptionsGroup.addSetting((setting: any) => {
 			setting
 				.setName('Featured post')
 				.setDesc('Show featured post on homepage')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.homeOptions?.featuredPost?.enabled ?? true)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						if (!settings.homeOptions) {
 							settings.homeOptions = {
 								featuredPost: { enabled: true, type: 'latest', slug: 'getting-started' },
@@ -644,7 +647,7 @@ export class FeaturesTab extends TabRenderer {
 						
 						// Update visibility of featured post options
 						const fpSettings = container.querySelectorAll('.fp-option-setting');
-						fpSettings.forEach((el) => {
+						fpSettings.forEach((el: any) => {
 							(el as HTMLElement).setCssProps({ display: value ? 'block' : 'none' });
 						});
 						
@@ -654,7 +657,7 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Featured Post options - with conditional visibility
-		homeOptionsGroup.addSetting((setting) => {
+		homeOptionsGroup.addSetting((setting: any) => {
 			setting.settingEl.classList.add('fp-option-setting');
 			setting.settingEl.setCssProps({
 				display: (settings.homeOptions?.featuredPost?.enabled ?? true) ? 'block' : 'none'
@@ -662,12 +665,12 @@ export class FeaturesTab extends TabRenderer {
 			setting
 				.setName('Featured post type')
 				.setDesc('Show latest post or a specific featured post')
-				.addDropdown(dropdown => {
+				.addDropdown((dropdown: any) => {
 					dropdown
 						.addOption('latest', 'Latest')
 						.addOption('featured', 'Featured')
 						.setValue(settings.homeOptions?.featuredPost?.type || 'latest')
-						.onChange(async (value) => {
+						.onChange(async (value: any) => {
 							if (!settings.homeOptions?.featuredPost) {
 								settings.homeOptions.featuredPost = { enabled: true, type: 'latest', slug: 'getting-started' };
 							}
@@ -697,7 +700,7 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Featured post slug - with conditional visibility
-		homeOptionsGroup.addSetting((setting) => {
+		homeOptionsGroup.addSetting((setting: any) => {
 			setting.settingEl.classList.add('fp-option-setting', 'fp-slug-setting');
 			setting.settingEl.setCssProps({
 				display: (settings.homeOptions?.featuredPost?.enabled ?? true) && (settings.homeOptions?.featuredPost?.type === 'featured') ? 'block' : 'none'
@@ -705,13 +708,13 @@ export class FeaturesTab extends TabRenderer {
 			setting
 				.setName('Featured post slug')
 				.setDesc('Slug of the post to feature (e.g., "getting-started" for /posts/getting-started)')
-				.addText(text => {
+				.addText((text: any) => {
 					// False positive: "getting-started" is a placeholder example, not UI text
 					// eslint-disable-next-line obsidianmd/ui/sentence-case
 					text.setPlaceholder('getting-started');
 					text.setValue(settings.homeOptions?.featuredPost?.slug || 'getting-started');
 					let timeoutId: number | null = null;
-					text.onChange((value) => {
+					text.onChange((value: any) => {
 						if (timeoutId) {
 							clearTimeout(timeoutId);
 						}
@@ -740,13 +743,13 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Recent Posts
-		homeOptionsGroup.addSetting((setting) => {
+		homeOptionsGroup.addSetting((setting: any) => {
 			setting
 				.setName('Recent posts')
 				.setDesc('Show recent posts on homepage')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.homeOptions?.recentPosts?.enabled ?? true)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						if (!settings.homeOptions?.recentPosts) {
 							settings.homeOptions.recentPosts = { enabled: true, count: 7 };
 						}
@@ -765,7 +768,7 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Recent Posts count - with conditional visibility
-		homeOptionsGroup.addSetting((setting) => {
+		homeOptionsGroup.addSetting((setting: any) => {
 			setting.settingEl.classList.add('rp-count-setting');
 			setting.settingEl.setCssProps({
 				display: (settings.homeOptions?.recentPosts?.enabled ?? true) ? 'block' : 'none'
@@ -773,11 +776,11 @@ export class FeaturesTab extends TabRenderer {
 			setting
 				.setName('Recent posts count')
 				.setDesc('Number of recent posts to show')
-				.addText(text => {
+				.addText((text: any) => {
 					text.setPlaceholder('7');
 					text.setValue(String(settings.homeOptions?.recentPosts?.count || 7));
 					let timeoutId: number | null = null;
-					text.onChange((value) => {
+					text.onChange((value: any) => {
 						if (timeoutId) {
 							clearTimeout(timeoutId);
 						}
@@ -807,13 +810,13 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Projects
-		homeOptionsGroup.addSetting((setting) => {
+		homeOptionsGroup.addSetting((setting: any) => {
 			setting
 				.setName('Projects on homepage')
 				.setDesc('Show featured projects on homepage')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.homeOptions?.projects?.enabled ?? true)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						if (!settings.homeOptions?.projects) {
 							settings.homeOptions.projects = { enabled: true, count: 2 };
 						}
@@ -831,7 +834,7 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Projects count - with conditional visibility
-		homeOptionsGroup.addSetting((setting) => {
+		homeOptionsGroup.addSetting((setting: any) => {
 			setting.settingEl.classList.add('p-count-setting');
 			setting.settingEl.setCssProps({
 				display: (settings.homeOptions?.projects?.enabled ?? true) ? 'block' : 'none'
@@ -839,11 +842,11 @@ export class FeaturesTab extends TabRenderer {
 			setting
 				.setName('Projects count')
 				.setDesc('Number of projects to show')
-				.addText(text => {
+				.addText((text: any) => {
 					text.setPlaceholder('2');
 					text.setValue(String(settings.homeOptions?.projects?.count || 2));
 					let timeoutId: number | null = null;
-					text.onChange((value) => {
+					text.onChange((value: any) => {
 						if (timeoutId) {
 							clearTimeout(timeoutId);
 						}
@@ -871,13 +874,13 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Docs
-		homeOptionsGroup.addSetting((setting) => {
+		homeOptionsGroup.addSetting((setting: any) => {
 			setting
 				.setName('Docs on homepage')
 				.setDesc('Show featured docs on homepage')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.homeOptions?.docs?.enabled ?? true)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						if (!settings.homeOptions?.docs) {
 							settings.homeOptions.docs = { enabled: true, count: 3 };
 						}
@@ -895,7 +898,7 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Docs count - with conditional visibility
-		homeOptionsGroup.addSetting((setting) => {
+		homeOptionsGroup.addSetting((setting: any) => {
 			setting.settingEl.classList.add('d-count-setting');
 			setting.settingEl.setCssProps({
 				display: (settings.homeOptions?.docs?.enabled ?? true) ? 'block' : 'none'
@@ -903,11 +906,11 @@ export class FeaturesTab extends TabRenderer {
 			setting
 				.setName('Docs count')
 				.setDesc('Number of docs to show')
-				.addText(text => {
+				.addText((text: any) => {
 					text.setPlaceholder('3');
 					text.setValue(String(settings.homeOptions?.docs?.count || 3));
 					let timeoutId: number | null = null;
-					text.onChange((value) => {
+					text.onChange((value: any) => {
 						if (timeoutId) {
 							clearTimeout(timeoutId);
 						}
@@ -935,17 +938,17 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Blurb placement
-		homeOptionsGroup.addSetting((setting) => {
+		homeOptionsGroup.addSetting((setting: any) => {
 			setting
 				.setName('Blurb placement')
 				.setDesc('Where to place the blurb text on homepage')
-				.addDropdown(dropdown => {
+				.addDropdown((dropdown: any) => {
 					dropdown
 						.addOption('above', 'Above')
 						.addOption('below', 'Below')
 						.addOption('none', 'None')
 						.setValue(settings.homeOptions?.blurb?.placement || 'below')
-						.onChange(async (value) => {
+						.onChange(async (value: any) => {
 							if (!settings.homeOptions?.blurb) {
 								settings.homeOptions.blurb = { placement: 'below' };
 							}
@@ -968,17 +971,17 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Post Options group with heading
-		const postOptionsGroup = createSettingsGroup(container, 'Post options', 'astro-modular-settings');
+		const postOptionsGroup = new SettingGroup(container).setHeading('Post options');
 
 		// Posts per page
-		postOptionsGroup.addSetting((setting) => {
+		postOptionsGroup.addSetting((setting: any) => {
 			setting
 				.setName('Posts per page')
 				.setDesc('Number of posts to show per page')
-				.addText(text => text
+				.addText((text: any) => text
 					.setPlaceholder('6')
 					.setValue(String(settings.postOptions?.postsPerPage || 6))
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						const num = parseInt(value) || 6;
 						if (!settings.postOptions) {
 							settings.postOptions = {
@@ -1002,13 +1005,13 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Reading time
-		postOptionsGroup.addSetting((setting) => {
+		postOptionsGroup.addSetting((setting: any) => {
 			setting
 				.setName('Reading time')
 				.setDesc('Display estimated reading time on posts')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.postOptions?.readingTime ?? true)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						if (!settings.postOptions) {
 							settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
 						}
@@ -1021,13 +1024,13 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Word count
-		postOptionsGroup.addSetting((setting) => {
+		postOptionsGroup.addSetting((setting: any) => {
 			setting
 			.setName('Word count')
 			.setDesc('Display word count on posts')
-			.addToggle(toggle => toggle
+			.addToggle((toggle: any) => toggle
 				.setValue(settings.postOptions?.wordCount ?? true)
-				.onChange(async (value) => {
+				.onChange(async (value: any) => {
 					if (!settings.postOptions) {
 						settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
 					}
@@ -1040,13 +1043,13 @@ export class FeaturesTab extends TabRenderer {
 
 
 		// Tags
-		postOptionsGroup.addSetting((setting) => {
+		postOptionsGroup.addSetting((setting: any) => {
 			setting
 				.setName('Tags')
 				.setDesc('Show tags on posts')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.postOptions?.tags ?? true)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						if (!settings.postOptions) {
 							settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
 						}
@@ -1058,13 +1061,13 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Linked Mentions
-		postOptionsGroup.addSetting((setting) => {
+		postOptionsGroup.addSetting((setting: any) => {
 			setting
 				.setName('Linked mentions')
 				.setDesc('Show linked mentions and backlinks on posts')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.postOptions?.linkedMentions?.enabled ?? true)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						if (!settings.postOptions?.linkedMentions) {
 							settings.postOptions.linkedMentions = { enabled: true, linkedMentionsCompact: false };
 						}
@@ -1084,7 +1087,7 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Linked Mentions Compact - with conditional visibility
-		postOptionsGroup.addSetting((setting) => {
+		postOptionsGroup.addSetting((setting: any) => {
 			setting.settingEl.classList.add('lm-compact-setting');
 			setting.settingEl.setCssProps({
 				display: (settings.postOptions?.linkedMentions?.enabled ?? true) ? 'block' : 'none'
@@ -1092,9 +1095,9 @@ export class FeaturesTab extends TabRenderer {
 			setting
 				.setName('Compact view')
 				.setDesc('Use compact view for linked mentions')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.postOptions?.linkedMentions?.linkedMentionsCompact ?? false)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						if (!settings.postOptions?.linkedMentions) {
 							settings.postOptions.linkedMentions = { enabled: true, linkedMentionsCompact: false };
 						}
@@ -1106,13 +1109,13 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Graph view
-		postOptionsGroup.addSetting((setting) => {
+		postOptionsGroup.addSetting((setting: any) => {
 			setting
 				.setName('Graph view')
 				.setDesc('Show graph view of post connections')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.postOptions?.graphView?.enabled ?? true)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						if (!settings.postOptions?.graphView) {
 							settings.postOptions.graphView = { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true };
 						}
@@ -1123,7 +1126,7 @@ export class FeaturesTab extends TabRenderer {
 						
 						// Update visibility of graph view options
 						const gvSettings = container.querySelectorAll('.gv-option-setting');
-						gvSettings.forEach((el) => {
+						gvSettings.forEach((el: any) => {
 							(el as HTMLElement).setCssProps({ display: value ? 'block' : 'none' });
 						});
 						
@@ -1132,7 +1135,7 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Graph View options - with conditional visibility
-		postOptionsGroup.addSetting((setting) => {
+		postOptionsGroup.addSetting((setting: any) => {
 			setting.settingEl.classList.add('gv-option-setting');
 			setting.settingEl.setCssProps({
 				display: (settings.postOptions?.graphView?.enabled ?? true) ? 'block' : 'none'
@@ -1140,9 +1143,9 @@ export class FeaturesTab extends TabRenderer {
 			setting
 				.setName('Show in sidebar')
 				.setDesc('Display graph view in post sidebar')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.postOptions?.graphView?.showInSidebar ?? true)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						if (!settings.postOptions?.graphView) {
 							settings.postOptions.graphView = { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true };
 						}
@@ -1152,7 +1155,7 @@ export class FeaturesTab extends TabRenderer {
 					}));
 		});
 
-		postOptionsGroup.addSetting((setting) => {
+		postOptionsGroup.addSetting((setting: any) => {
 			setting.settingEl.classList.add('gv-option-setting');
 			setting.settingEl.setCssProps({
 				display: (settings.postOptions?.graphView?.enabled ?? true) ? 'block' : 'none'
@@ -1160,10 +1163,10 @@ export class FeaturesTab extends TabRenderer {
 			setting
 				.setName('Maximum nodes')
 				.setDesc('Maximum number of nodes to show in graph')
-				.addText(text => text
+				.addText((text: any) => text
 					.setPlaceholder('100')
 					.setValue(String(settings.postOptions?.graphView?.maxNodes || 100))
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						const num = parseInt(value) || 100;
 						if (!settings.postOptions?.graphView) {
 							settings.postOptions.graphView = { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true };
@@ -1174,7 +1177,7 @@ export class FeaturesTab extends TabRenderer {
 					}));
 		});
 
-		postOptionsGroup.addSetting((setting) => {
+		postOptionsGroup.addSetting((setting: any) => {
 			setting.settingEl.classList.add('gv-option-setting');
 			setting.settingEl.setCssProps({
 				display: (settings.postOptions?.graphView?.enabled ?? true) ? 'block' : 'none'
@@ -1182,9 +1185,9 @@ export class FeaturesTab extends TabRenderer {
 			setting
 				.setName('Show orphaned posts')
 				.setDesc('Include posts with no connections in graph view')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.postOptions?.graphView?.showOrphanedPosts ?? true)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						if (!settings.postOptions?.graphView) {
 							settings.postOptions.graphView = { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true };
 						}
@@ -1195,13 +1198,13 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Post navigation
-		postOptionsGroup.addSetting((setting) => {
+		postOptionsGroup.addSetting((setting: any) => {
 			setting
 				.setName('Post navigation')
 				.setDesc('Show next/previous post navigation')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(settings.postOptions?.postNavigation ?? true)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						if (!settings.postOptions) {
 							settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
 						}
@@ -1214,11 +1217,11 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Show post card cover images
-		postOptionsGroup.addSetting((setting) => {
+		postOptionsGroup.addSetting((setting: any) => {
 			setting
 				.setName('Show post card cover images')
 				.setDesc('Where to display cover images on post cards')
-				.addDropdown(dropdown => {
+				.addDropdown((dropdown: any) => {
 					dropdown
 						.addOption('all', 'All')
 						.addOption('featured', 'Featured')
@@ -1227,7 +1230,7 @@ export class FeaturesTab extends TabRenderer {
 						.addOption('featured-and-posts', 'Featured and posts')
 						.addOption('none', 'None')
 						.setValue(settings.postOptions?.showPostCardCoverImages || 'featured-and-posts')
-						.onChange(async (value) => {
+						.onChange(async (value: any) => {
 							if (!settings.postOptions) {
 								settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
 							}
@@ -1252,11 +1255,11 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Post card aspect ratio
-		postOptionsGroup.addSetting((setting) => {
+		postOptionsGroup.addSetting((setting: any) => {
 			setting
 				.setName('Post card aspect ratio')
 				.setDesc('Aspect ratio for post card cover images')
-				.addDropdown(dropdown => {
+				.addDropdown((dropdown: any) => {
 					dropdown
 						.addOption('16:9', '16:9')
 						.addOption('4:3', '4:3')
@@ -1268,7 +1271,7 @@ export class FeaturesTab extends TabRenderer {
 						.addOption('golden', 'Golden')
 						.addOption('custom', 'Custom')
 						.setValue(settings.postOptions?.postCardAspectRatio || 'og')
-						.onChange(async (value) => {
+						.onChange(async (value: any) => {
 							if (!settings.postOptions) {
 								settings.postOptions = { postsPerPage: 6, readingTime: true, wordCount: true, tags: true, linkedMentions: { enabled: true, linkedMentionsCompact: false }, graphView: { enabled: true, showInSidebar: true, maxNodes: 100, showOrphanedPosts: true }, postNavigation: true, showPostCardCoverImages: 'featured-and-posts', postCardAspectRatio: 'og', customPostCardAspectRatio: '2.5/1', comments: settings.optionalFeatures?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
 							}
@@ -1300,7 +1303,7 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Custom aspect ratio - with conditional visibility
-		postOptionsGroup.addSetting((setting) => {
+		postOptionsGroup.addSetting((setting: any) => {
 			setting.settingEl.classList.add('custom-ar-setting');
 			setting.settingEl.setCssProps({
 				display: (settings.postOptions?.postCardAspectRatio === 'custom') ? 'block' : 'none'
@@ -1308,10 +1311,10 @@ export class FeaturesTab extends TabRenderer {
 			setting
 				.setName('Custom aspect ratio')
 				.setDesc('Custom aspect ratio in format "width/height" (e.g., "2.5/1")')
-				.addText(text => {
+				.addText((text: any) => {
 					text.setValue(settings.postOptions?.customPostCardAspectRatio || '2.5/1');
 					let timeoutId: number | null = null;
-					text.onChange((value) => {
+					text.onChange((value: any) => {
 						if (timeoutId) {
 							clearTimeout(timeoutId);
 						}
@@ -1343,7 +1346,7 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Optional Features group with heading
-		const optionalFeaturesGroup = createSettingsGroup(container, 'Optional features', 'astro-modular-settings');
+		const optionalFeaturesGroup = new SettingGroup(container).setHeading('Optional features');
 
 		// Profile Picture (keep existing implementation)
 		this.renderProfilePictureSetting(optionalFeaturesGroup, settings);
@@ -1365,13 +1368,13 @@ export class FeaturesTab extends TabRenderer {
 		};
 
 		// Main toggle
-		group.addSetting((setting) => {
+		group.addSetting((setting: any) => {
 			setting
 				.setName('Profile picture')
 				.setDesc('Show profile picture in header or footer')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(isEnabled)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						settings.features.profilePicture = value;
 						if (!settings.optionalFeatures) {
 							settings.optionalFeatures = { profilePicture: profileSettings, comments: settings.postOptions?.comments || { enabled: false, provider: 'giscus', repo: '', repoId: '', category: '', categoryId: '', mapping: 'pathname', strict: '0', reactions: '1', metadata: '0', inputPosition: 'bottom', theme: 'preferred_color_scheme', lang: 'en', loading: 'lazy' } };
@@ -1383,7 +1386,7 @@ export class FeaturesTab extends TabRenderer {
 						// Update visibility of profile picture options
 						const ppSettings = setting.settingEl.parentElement?.querySelectorAll('.pp-option-setting');
 						if (ppSettings) {
-							ppSettings.forEach((el) => {
+							ppSettings.forEach((el: any) => {
 								(el as HTMLElement).setCssProps({ display: value ? 'block' : 'none' });
 							});
 						}
@@ -1398,7 +1401,7 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Detailed options - add as custom setting within group
-		group.addSetting((setting) => {
+		group.addSetting((setting: any) => {
 			setting.settingEl.classList.add('pp-option-setting');
 			setting.settingEl.setCssProps({
 				display: isEnabled ? 'block' : 'none',
@@ -1467,12 +1470,12 @@ export class FeaturesTab extends TabRenderer {
 			new Setting(optionsGrid)
 				.setName('Size')
 				.setDesc('Size of the profile picture')
-				.addDropdown(dropdown => dropdown
+				.addDropdown((dropdown: any) => dropdown
 					.addOption('sm', 'Small')
 					.addOption('md', 'Medium')
 					.addOption('lg', 'Large')
 					.setValue(profileSettings.size)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						profileSettings.size = value as 'sm' | 'md' | 'lg';
 						await this.plugin.saveData(settings);
 						await (this.plugin as AstroModularPlugin).loadSettings();
@@ -1500,11 +1503,11 @@ export class FeaturesTab extends TabRenderer {
 			new Setting(optionsGrid)
 				.setName('Placement')
 				.setDesc('Where to show the profile picture')
-				.addDropdown(dropdown => dropdown
+				.addDropdown((dropdown: any) => dropdown
 					.addOption('footer', 'Footer')
 					.addOption('header', 'Header')
 					.setValue(profileSettings.placement)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						profileSettings.placement = value as 'footer' | 'header';
 						await this.plugin.saveData(settings);
 						await (this.plugin as AstroModularPlugin).loadSettings();
@@ -1515,12 +1518,12 @@ export class FeaturesTab extends TabRenderer {
 			new Setting(optionsGrid)
 				.setName('Style')
 				.setDesc('Visual style of the profile picture')
-				.addDropdown(dropdown => dropdown
+				.addDropdown((dropdown: any) => dropdown
 					.addOption('circle', 'Circle')
 					.addOption('square', 'Square')
 					.addOption('none', 'None')
 					.setValue(profileSettings.style)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						profileSettings.style = value as 'circle' | 'square' | 'none';
 						await this.plugin.saveData(settings);
 						await (this.plugin as AstroModularPlugin).loadSettings();
@@ -1551,15 +1554,15 @@ export class FeaturesTab extends TabRenderer {
 		};
 
 		// Main toggle
-		group.addSetting((setting) => {
+		group.addSetting((setting: any) => {
 			setting
 				.setName('Post comments')
 				// False positive: "Giscus" is a proper noun (product name) and should be capitalized
 				// eslint-disable-next-line obsidianmd/ui/sentence-case
 				.setDesc('Enable Giscus comment system for posts')
-				.addToggle(toggle => toggle
+				.addToggle((toggle: any) => toggle
 					.setValue(isEnabled)
-					.onChange(async (value) => {
+					.onChange(async (value: any) => {
 						// Update all three locations to ensure consistency
 						settings.features.comments = value;
 						
@@ -1588,7 +1591,7 @@ export class FeaturesTab extends TabRenderer {
 					// Update visibility of comments options
 					const commentsSettings = commentsSettingsEls;
 						if (commentsSettings) {
-							commentsSettings.forEach((el) => {
+							commentsSettings.forEach((el: any) => {
 								(el as HTMLElement).setCssProps({ display: value ? 'block' : 'none' });
 							});
 						}
@@ -1603,7 +1606,7 @@ export class FeaturesTab extends TabRenderer {
 		});
 
 		// Options container - add as custom setting within group
-		group.addSetting((setting) => {
+		group.addSetting((setting: any) => {
 			setting.settingEl.classList.add('comments-option-setting');
 			setting.settingEl.setCssProps({
 				display: isEnabled ? 'block' : 'none',
