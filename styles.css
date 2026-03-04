@@ -655,22 +655,9 @@ body[data-astro-modular-ribbon-removed="true"] .menu-item .menu-item-icon:has(.l
 }
 
 /* Settings Tab Styles - Minimal and Clean */
-/* Override parent padding to get full width, then apply padding to children */
-.vertical-tab-content:has(.astro-modular-settings),
-.vertical-tab-container:has(.astro-modular-settings) {
-	padding: 0 !important;
-	margin: 0 !important;
-}
-
+/* This class is used purely for scoping descendant styles (heading spacing, input widths, etc.) */
 .astro-modular-settings {
 	font-family: var(--font-family);
-	height: 100%;
-	width: 100%;
-	display: flex;
-	flex-direction: column;
-	overflow: hidden;
-	margin: 0;
-	padding: 0;
 }
 
 /* Vertical Tab Content (Shell Commands style) - SCOPED to this plugin only */

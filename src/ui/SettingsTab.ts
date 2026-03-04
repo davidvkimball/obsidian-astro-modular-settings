@@ -34,6 +34,7 @@ export class AstroModularSettingsTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 		containerEl.addClass('astro-modular-settings-tab-root');
+		containerEl.addClass('astro-modular-settings');
 
 		this.tabContentMap.clear();
 		this.tabButtons.clear();
