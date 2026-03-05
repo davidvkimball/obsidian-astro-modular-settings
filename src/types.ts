@@ -77,6 +77,7 @@ export interface AstroModularSettings {
 export interface SiteInformation {
 	site: string;
 	title: string;
+	homepageTitle: string;
 	description: string;
 	author: string;
 	language: string;
@@ -440,6 +441,7 @@ export const DEFAULT_SETTINGS: AstroModularSettings = {
 	siteInfo: {
 		site: 'https://astro-modular.netlify.app',
 		title: 'Astro Modular',
+		homepageTitle: '',
 		description: 'A flexible blog theme designed for Obsidian users.',
 		author: 'David V. Kimball',
 		language: 'en',

@@ -691,6 +691,10 @@ export class ConfigPresetModifier {
 			`// [CONFIG:SITE_TITLE]\n  title: "${settings.siteInfo.title}"`
 		);
 		modifiedConfig = modifiedConfig.replace(
+			/\/\/ \[CONFIG:HOMEPAGE_TITLE\]\s*\n\s*homepageTitle:\s*"[^"]*"/,
+			`// [CONFIG:HOMEPAGE_TITLE]\n  homepageTitle: "${settings.siteInfo.homepageTitle ?? ''}"`
+		);
+		modifiedConfig = modifiedConfig.replace(
 			/\/\/ \[CONFIG:SITE_DESCRIPTION\]\s*\n\s*description:\s*"[^"]*"/,
 			`// [CONFIG:SITE_DESCRIPTION]\n  description: "${settings.siteInfo.description}"`
 		);

@@ -4,6 +4,7 @@ import { AstroModularSettings, AstroModularPlugin } from '../../types';
 export abstract class TabRenderer {
 	protected app: App;
 	protected plugin: Plugin;
+	private configDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 	constructor(
 		app: App,
@@ -11,6 +12,40 @@ export abstract class TabRenderer {
 	) {
 		this.app = app;
 		this.plugin = plugin;
+	}
+
+	/** Save data.json immediately, debounce config file write by 1s. */
+	protected debouncedSave(): void {
+		void this.plugin.saveData(this.getSettings());
+		if (this.configDebounceTimer) clearTimeout(this.configDebounceTimer);
+		this.configDebounceTimer = setTimeout(() => {
+			void this.applyCurrentConfiguration();
+			this.configDebounceTimer = null;
+		}, 1000);
+	}
+
+	/** Flush any pending debounced config write immediately. */
+	protected flushConfigWrite(): void {
+		if (this.configDebounceTimer) {
+			clearTimeout(this.configDebounceTimer);
+			this.configDebounceTimer = null;
+			void this.applyCurrentConfiguration();
+		}
+	}
+
+	/**
+	 * Wire up a text input with debounced save: data.json saves immediately,
+	 * config file write is debounced. On blur, pending write is flushed.
+	 */
+	protected bindDebouncedText(
+		textComponent: import('obsidian').TextComponent | import('obsidian').TextAreaComponent,
+		setter: (v: string) => void,
+	): void {
+		textComponent.onChange((v: string) => {
+			setter(v);
+			this.debouncedSave();
+		});
+		textComponent.inputEl.addEventListener('blur', () => this.flushConfigWrite());
 	}
 
 	abstract render(container: HTMLElement): void | Promise<void>;

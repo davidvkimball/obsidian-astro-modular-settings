@@ -69,6 +69,33 @@ export class SiteInfoTab extends TabRenderer {
 				});
 		});
 
+		// Homepage Title
+		siteInfoGroup.addSetting(setting => {
+			setting
+				.setName('Homepage title')
+				.setDesc('Custom meta title for the homepage only. If empty, uses the site title.')
+				.addText(text => {
+					text.setValue(settings.siteInfo.homepageTitle ?? '');
+					let timeoutId: number | null = null;
+					text.onChange(value => {
+						if (timeoutId) {
+							clearTimeout(timeoutId);
+						}
+						settings.siteInfo.homepageTitle = value;
+						void this.plugin.saveData(settings);
+						timeoutId = window.setTimeout(() => {
+							void this.applyCurrentConfiguration();
+						}, 1000);
+					});
+					text.inputEl.addEventListener('blur', () => {
+						if (timeoutId) {
+							clearTimeout(timeoutId);
+							void this.applyCurrentConfiguration();
+						}
+					});
+				});
+		});
+
 		// Site Description
 		siteInfoGroup.addSetting(setting => {
 			setting

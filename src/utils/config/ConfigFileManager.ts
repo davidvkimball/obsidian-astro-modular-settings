@@ -136,7 +136,12 @@ export class ConfigFileManager {
 		if (siteTitleMatch) {
 			siteInfo.title = siteTitleMatch[1];
 		}
-		
+
+		const homepageTitleMatch = configContent.match(/\/\/ \[CONFIG:HOMEPAGE_TITLE\]\s*\n\s*homepageTitle:\s*"([^"]*)"/);
+		if (homepageTitleMatch) {
+			siteInfo.homepageTitle = homepageTitleMatch[1];
+		}
+
 		const siteDescMatch = configContent.match(/\/\/ \[CONFIG:SITE_DESCRIPTION\]\s*\n\s*description:\s*"([^"]*)"/);
 		if (siteDescMatch) {
 			siteInfo.description = siteDescMatch[1];

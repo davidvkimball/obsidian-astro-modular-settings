@@ -4,7 +4,6 @@ import { TabRenderer } from '../common/TabRenderer';
 
 
 export class NavigationTab extends TabRenderer {
-	private saveTimeoutId: number | null = null;
 	private listenersAttached: boolean = false;
 
 	render(container: HTMLElement): void {
@@ -451,19 +450,6 @@ export class NavigationTab extends TabRenderer {
 		container.addEventListener('click', containerWithHandlers._removeHandler);
 	}
 
-	private debouncedSave(): void {
-		// Clear existing timeout
-		if (this.saveTimeoutId) {
-			clearTimeout(this.saveTimeoutId);
-		}
-		
-		// Set new timeout
-		this.saveTimeoutId = window.setTimeout(() => {
-			void this.plugin.saveData(this.getSettings());
-			void this.applyCurrentConfiguration(false); // No notification for drag and drop
-		}, 1000); // 1 second debounce
-	}
-	
 	private renderPageItem(container: HTMLElement, page: NavigationItem, index: number): void {
 		const hasChildren = page.children && page.children.length > 0;
 		
