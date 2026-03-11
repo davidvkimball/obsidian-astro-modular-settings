@@ -11,6 +11,23 @@ export class AdvancedTab extends TabRenderer {
 		// Group all settings with no heading
 		const advancedGroup = new SettingGroup(container);
 
+		// Apply all settings button
+		advancedGroup.addSetting(setting => {
+			setting
+				.setName('Apply all settings')
+				.setDesc('Write all current settings to your Astro config.ts file')
+				.addButton(button => button
+					.setButtonText('Apply to config.ts')
+					.setCta()
+					.onClick(async () => {
+						try {
+							await this.applyCurrentConfiguration(true);
+						} catch (error) {
+							new Notice(`Failed to apply settings: ${error instanceof Error ? error.message : String(error)}`);
+						}
+					}));
+		});
+
 		// Edit config.ts directly button
 		advancedGroup.addSetting(setting => {
 			setting

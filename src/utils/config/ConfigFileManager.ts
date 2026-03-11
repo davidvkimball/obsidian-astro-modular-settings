@@ -220,8 +220,8 @@ export class ConfigFileManager {
 		// Extract navigation settings
 		const navigation: Record<string, unknown> = { pages: [], social: [] };
 		
-		// Extract navigation pages (supports nested structure)
-		const pagesMatch = configContent.match(/\/\/ \[CONFIG:NAVIGATION_PAGES\]\s*\n\s*pages:\s*\[([\s\S]*?)\]/);
+		// Extract navigation pages (supports nested structure, stop before the next config parameter)
+		const pagesMatch = configContent.match(/\/\/ \[CONFIG:NAVIGATION_PAGES\]\s*\n\s*pages:\s*\[([\s\S]*?)\],?\s*(?=\/\/ \[CONFIG:NAVIGATION_SOCIAL\])/);
 		if (pagesMatch) {
 			const pagesContent = pagesMatch[1];
 			
