@@ -8,9 +8,18 @@ export class StyleTab extends TabRenderer {
 	private mainContainer: HTMLElement | null = null;
 
 	render(container: HTMLElement): void {
+		// Preserve scroll position across re-renders
+		const scrollParent = container.closest('.vertical-tab-content') as HTMLElement | null;
+		const scrollTop = scrollParent?.scrollTop ?? 0;
+
 		container.empty();
 		this.mainContainer = container; // Store reference to main container
 		const settings = this.getSettings();
+
+		// Restore scroll position after DOM updates
+		requestAnimationFrame(() => {
+			if (scrollParent) scrollParent.scrollTop = scrollTop;
+		});
 
 		// Colors group with heading
 		const colorsGroup = new SettingGroup(container).setHeading('Colors');
@@ -100,6 +109,7 @@ export class StyleTab extends TabRenderer {
 				if (descEl) (descEl as HTMLElement).setCssProps({ display: 'none' });
 				if (controlEl) (controlEl as HTMLElement).setCssProps({ display: 'none' });
 				setting.settingEl.setCssProps({
+					display: 'block',
 					borderTop: 'none',
 					paddingTop: '0',
 					paddingBottom: '0'
@@ -108,7 +118,7 @@ export class StyleTab extends TabRenderer {
 				const themePillsContainer = setting.settingEl.createDiv('theme-pills-container');
 			themePillsContainer.setCssProps({
 				marginTop: '10px',
-				marginBottom: '20px'
+				marginBottom: '32px'
 			});
 			
 			const pillsHeader = themePillsContainer.createEl('p', { 
@@ -122,11 +132,10 @@ export class StyleTab extends TabRenderer {
 			});
 			
 			const pillsWrapper = themePillsContainer.createDiv('theme-pills-wrapper');
-			pillsWrapper.setCssProps({
-				display: 'flex',
-				flexWrap: 'wrap',
-				gap: '8px'
-			});
+			pillsWrapper.style.display = 'flex';
+			pillsWrapper.style.flexWrap = 'wrap';
+			pillsWrapper.style.gap = '8px';
+			pillsWrapper.style.paddingBottom = '20px';
 			
 			// Show all themes (except custom) with selection state
 			const allThemes = THEME_OPTIONS.filter(theme => theme.id !== 'custom');
@@ -197,7 +206,7 @@ export class StyleTab extends TabRenderer {
 			// Add custom themes input field
 			const customThemesSection = themePillsContainer.createDiv('custom-themes-section');
 			customThemesSection.setCssProps({
-				marginTop: '15px',
+				marginTop: '32px',
 				padding: '10px',
 				backgroundColor: 'var(--background-secondary)',
 				borderRadius: '6px',
@@ -265,14 +274,22 @@ export class StyleTab extends TabRenderer {
 			
 			// Add click handler for folder button
 			folderButton.addEventListener('click', () => {
-				// Open file explorer to the themes/custom directory
-				// Path: go up two levels from vault (src/content) to project root, then down to src/themes/custom
-				const themesPath = '../../src/themes/custom';
-				// openWithDefaultApp is not available in Obsidian's App interface, but may exist in Electron
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-				void ((this.app as any).openWithDefaultApp?.(themesPath) ?? Promise.resolve()).catch((error: unknown) => {
-					new Notice(`Failed to open themes folder: ${error instanceof Error ? error.message : String(error)}`);
-				});
+				void (async () => {
+					try {
+						const path = require('path') as typeof import('path');
+						const fs = require('fs') as typeof import('fs');
+						const { shell } = require('electron') as { shell: { openPath: (p: string) => Promise<string> } };
+						const adapter = this.app.vault.adapter as unknown as { basePath?: string; path?: string };
+						const vaultPath = String(adapter.basePath || adapter.path || '');
+						const themesDir = path.resolve(vaultPath, '..', '..', 'src', 'themes', 'custom');
+						if (!fs.existsSync(themesDir)) {
+							fs.mkdirSync(themesDir, { recursive: true });
+						}
+						await shell.openPath(themesDir);
+					} catch (error) {
+						new Notice(`Failed to open themes folder: ${error instanceof Error ? error.message : String(error)}`);
+					}
+				})();
 			});
 			
 			// Use debounced input like other text fields
@@ -299,6 +316,7 @@ export class StyleTab extends TabRenderer {
 				}, 1000); // 1 second debounce
 			});
 		});
+		}
 
 		// Custom Theme Section group with heading
 		const customThemeGroup = new SettingGroup(container).setHeading('Custom theme generation');
@@ -855,7 +873,6 @@ export class StyleTab extends TabRenderer {
 						});
 					});
 			});
-		}
 		}
 	}
 
