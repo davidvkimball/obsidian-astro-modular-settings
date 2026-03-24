@@ -707,7 +707,7 @@ export class FeaturesTab extends TabRenderer {
 			});
 			setting
 				.setName('Featured post slug')
-				.setDesc('Slug of the post to feature (e.g., "getting-started" for /posts/getting-started)')
+				.setDesc('Slug of the post to feature (like "getting-started" for /posts/getting-started)')
 				.addText(text => {
 					// False positive: "getting-started" is a placeholder example, not UI text
 					// eslint-disable-next-line obsidianmd/ui/sentence-case
@@ -1310,7 +1310,7 @@ export class FeaturesTab extends TabRenderer {
 			});
 			setting
 				.setName('Custom aspect ratio')
-				.setDesc('Custom aspect ratio in format "width/height" (e.g., "2.5/1")')
+				.setDesc('Custom aspect ratio in format "width/height" (like "2.5/1")')
 				.addText(text => {
 					text.setValue(settings.postOptions?.customPostCardAspectRatio || '2.5/1');
 					let timeoutId: number | null = null;

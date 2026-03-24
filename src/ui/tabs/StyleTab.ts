@@ -403,10 +403,15 @@ export class StyleTab extends TabRenderer {
 							void (async () => {
 								try {
 									const extractedColors = ThemeColorExtractor.extractObsidianThemeColors();
-									
+
 									// Store extracted colors
 									settings.themeColors.extractedColors = extractedColors;
 									settings.themeColors.lastExtracted = new Date().toISOString();
+									// Sync simple colors from extraction
+									if (settings.themeColors.simpleColors) {
+										if (extractedColors.highlight?.[500]) settings.themeColors.simpleColors.accent = extractedColors.highlight[500];
+										if (extractedColors.primary?.[700]) settings.themeColors.simpleColors.background = extractedColors.primary[700];
+									}
 									await this.plugin.saveData(settings);
 									await (this.plugin as AstroModularPlugin).loadSettings();
 									
@@ -722,7 +727,7 @@ export class StyleTab extends TabRenderer {
 		typographyGroup.addSetting(setting => {
 			setting
 				.setName('Content width')
-				.setDesc('Maximum width for content (e.g., 45rem)')
+				.setDesc('Maximum width for content (like 45rem)')
 				.addText(text => {
 					text.setValue(settings.layout?.contentWidth || '45rem');
 					let timeoutId: number | null = null;
@@ -758,7 +763,7 @@ export class StyleTab extends TabRenderer {
 				.setName('Custom font URLs')
 				// False positive: "Google Fonts" is a proper noun (product name) and should be capitalized
 				// eslint-disable-next-line obsidianmd/ui/sentence-case
-				.setDesc('Comma-separated URLs for custom fonts (e.g., Google Fonts URL)')
+				.setDesc('Comma-separated URLs for custom fonts (like a Google Fonts URL)')
 				.addText(text => {
 						text.setValue(settings.typography.customFonts?.urls || '');
 						let timeoutId: number | null = null;

@@ -19,7 +19,7 @@ export class SiteInfoTab extends TabRenderer {
 		siteInfoGroup.addSetting(setting => {
 			setting
 				.setName('Site URL')
-				.setDesc('Your site\'s base URL (e.g., https://yoursite.com)')
+				.setDesc('Your site\'s base URL (like https://yoursite.com)')
 				.addText(text => {
 					text.setValue(settings.siteInfo.site);
 					let timeoutId: number | null = null;
