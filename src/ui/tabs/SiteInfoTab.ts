@@ -202,7 +202,6 @@ export class SiteInfoTab extends TabRenderer {
 			padding: '4px',
 			border: 'none',
 			backgroundColor: 'transparent',
-			color: 'var(--text-normal)',
 			display: 'flex',
 			alignItems: 'center',
 			justifyContent: 'center',

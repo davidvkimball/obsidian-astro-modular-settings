@@ -66,15 +66,14 @@ export class PluginManager {
 	}
 
 	private isPluginInstalled(pluginId: string): boolean {
-		// Check if plugin is in the community plugins list
-		// This works even when the plugin is disabled
 		const appPlugins = (this.app as unknown as { plugins?: ObsidianPlugins }).plugins;
-		const communityPlugins = appPlugins?.communityPlugins;
-		if (communityPlugins && Array.isArray(communityPlugins)) {
-			return communityPlugins.includes(pluginId);
+		// Primary: Obsidian keeps manifests for every installed community plugin (enabled or not)
+		if (appPlugins?.manifests && typeof appPlugins.manifests === 'object' && pluginId in appPlugins.manifests) {
+			return true;
 		}
-		
-		// Fallback: check if plugin exists in plugins object (only works when enabled)
+		if (appPlugins?.communityPlugins && Array.isArray(appPlugins.communityPlugins)) {
+			return appPlugins.communityPlugins.includes(pluginId);
+		}
 		return !!appPlugins?.plugins?.[pluginId];
 	}
 
@@ -86,133 +85,140 @@ export class PluginManager {
 		return names[pluginId] || pluginId;
 	}
 
-	private checkObsidianSettings(contentOrg?: ContentOrganizationType): PluginStatus {
+	/** True when vault Files & Links attachment location matches Astro Modular content organization */
+	private isVaultAttachmentConfiguredForContentOrg(contentOrg?: ContentOrganizationType): boolean {
 		const contentOrgValue = contentOrg || this.getContentOrganization?.() || 'file-based';
 		const vaultConfig = (this.app.vault as unknown as { config?: ObsidianVaultConfig }).config;
-		
-		// Get the expected attachment location based on content organization
 		const expectedLocation = contentOrgValue === 'file-based' ? 'subfolder' : 'same-folder';
 		const expectedSubfolder = 'attachments';
-		
-		// Check if settings match
-		let isConfigured = false;
-		
-		// Normalize the attachment path for comparison
-		const attachmentPath = (vaultConfig?.attachmentFolderPath || '').trim();
-		const normalizedPath = attachmentPath.replace(/\/+$/, ''); // Remove trailing slashes
-		
+		const attachmentPath = (vaultConfig?.attachmentFolderPath ?? '').trim();
+		const normalizedPath = attachmentPath.replace(/\/+$/, '');
 		if (expectedLocation === 'subfolder') {
-			// For file-based: should be "./attachments" or "attachments"
-			// Check various formats that Obsidian might use
-			isConfigured = normalizedPath === `./${expectedSubfolder}` || 
-			               normalizedPath === `${expectedSubfolder}` ||
-			               normalizedPath.endsWith(`/${expectedSubfolder}`) ||
-			               normalizedPath === `.${expectedSubfolder}` ||
-			               normalizedPath === `${expectedSubfolder}/` ||
-			               normalizedPath === `./${expectedSubfolder}/`;
-		} else {
-			// For folder-based: should be "./" or empty (same folder)
-			// Obsidian stores empty string or "./" for "same folder as current file"
-			isConfigured = normalizedPath === './' || 
-			               normalizedPath === '' || 
-			               normalizedPath === '.' ||
-			               normalizedPath === undefined ||
-			               normalizedPath === null;
+			return normalizedPath === `./${expectedSubfolder}` ||
+				normalizedPath === `${expectedSubfolder}` ||
+				normalizedPath.endsWith(`/${expectedSubfolder}`) ||
+				normalizedPath === `.${expectedSubfolder}` ||
+				normalizedPath === `${expectedSubfolder}/` ||
+				normalizedPath === `./${expectedSubfolder}/`;
 		}
-		
+		return normalizedPath === './' ||
+			normalizedPath === '' ||
+			normalizedPath === '.' ||
+			normalizedPath === undefined ||
+			normalizedPath === null;
+	}
+
+	private checkObsidianSettings(contentOrg?: ContentOrganizationType): PluginStatus {
+		const isConfigured = this.isVaultAttachmentConfiguredForContentOrg(contentOrg);
 		return {
 			name: 'Attachment settings',
-			installed: isConfigured, // Use installed field to indicate configured status
-			enabled: false, // Not applicable for settings
+			installed: isConfigured,
+			enabled: false,
 			configurable: true,
 			currentSettings: undefined
 		};
 	}
 
+	/** Last path segment of a content folder path, lowercased (e.g. `content/posts` → `posts`) */
+	private contentTypeFolderKey(folder: string): string {
+		const normalized = folder.replace(/\\/g, '/').trim();
+		const parts = normalized.split('/').filter(Boolean);
+		const last = parts[parts.length - 1] ?? normalized;
+		return last.toLowerCase();
+	}
+
+	private findContentTypeByCanonical(
+		contentTypes: unknown[],
+		canonical: string
+	): { enabled?: boolean; creationMode?: string } | undefined {
+		for (const ct of contentTypes) {
+			if (!ct || typeof ct !== 'object') continue;
+			const o = ct as Record<string, unknown>;
+			if (typeof o.folder === 'string' && this.contentTypeFolderKey(o.folder) === canonical) {
+				return o as { enabled?: boolean; creationMode?: string };
+			}
+		}
+		for (const ct of contentTypes) {
+			if (!ct || typeof ct !== 'object') continue;
+			const o = ct as Record<string, unknown>;
+			if (typeof o.id === 'string') {
+				const low = o.id.toLowerCase();
+				if (low === canonical || low.startsWith(`${canonical}-`)) {
+					return o as { enabled?: boolean; creationMode?: string };
+				}
+			}
+		}
+		return undefined;
+	}
+
 	private checkAstroComposerSettings(plugin: Plugin, contentOrg?: ContentOrganizationType): { outOfSyncContentTypes: string[] } | null {
 		const contentOrgValue = contentOrg || this.getContentOrganization?.() || 'file-based';
 		const expectedMode = contentOrgValue === 'file-based' ? 'file' : 'folder';
-		
+
 		try {
 			const pluginSettings = (plugin as PluginWithSettings).settings;
 			if (!pluginSettings) {
 				return null;
 			}
-			
+
 			const mismatchedTypes: string[] = [];
-			
-			// Check if using new contentTypes array structure
-			if (Array.isArray(pluginSettings.contentTypes)) {
-				// New structure: check each content type in the contentTypes array
-				const expectedContentTypes = ['posts', 'pages', 'projects', 'docs'];
-				
+			const expectedContentTypes = ['posts', 'pages', 'projects', 'docs'];
+			const contentTypes = pluginSettings.contentTypes;
+			const hasNewContentTypes = Array.isArray(contentTypes) && contentTypes.length > 0;
+
+			if (hasNewContentTypes) {
 				for (const expectedType of expectedContentTypes) {
-					const contentType = pluginSettings.contentTypes.find((ct: unknown) => 
-						ct && typeof ct === 'object' && ct !== null && 'folder' in ct && typeof (ct as { folder?: unknown }).folder === 'string' && (ct as { folder: string }).folder.toLowerCase() === expectedType
-					) as { enabled?: boolean; creationMode?: string } | undefined;
-					
-					if (contentType) {
-						// Content type exists - check if it's enabled and matches expected mode
-						if (contentType.enabled !== false) { // Only check if enabled (or not explicitly disabled)
-							if (contentType.creationMode !== expectedMode) {
-								mismatchedTypes.push(expectedType);
-							}
-						}
-						// If disabled, we don't check it (don't add to mismatched)
-					} else {
-						// Content type not found - only check if it's one of the required ones
-						// For now, we'll only check the ones that exist
+					const contentType = this.findContentTypeByCanonical(contentTypes, expectedType);
+					if (!contentType) {
+						continue;
+					}
+					if (contentType.enabled === false) {
+						continue;
+					}
+					if (contentType.creationMode !== expectedMode) {
+						mismatchedTypes.push(expectedType);
 					}
 				}
 			} else {
-				// Fallback to old structure for backward compatibility
-				// Check posts: use global creationMode
 				if (pluginSettings.creationMode && typeof pluginSettings.creationMode === 'string') {
 					if (pluginSettings.creationMode !== expectedMode) {
 						mismatchedTypes.push('posts');
 					}
 				} else {
-					// No creationMode set, needs configuration
 					mismatchedTypes.push('posts');
 				}
-				
-				// Check pages: use pagesCreationMode
+
 				if (pluginSettings.pagesCreationMode) {
 					if (pluginSettings.pagesCreationMode !== expectedMode) {
 						mismatchedTypes.push('pages');
 					}
 				} else {
-					// No pagesCreationMode set, needs configuration
 					mismatchedTypes.push('pages');
 				}
-				
-				// Check projects and docs: use customContentTypes
+
 				if (Array.isArray(pluginSettings.customContentTypes)) {
-					for (const contentType of ['projects', 'docs']) {
-						const customType = pluginSettings.customContentTypes.find((ct: unknown) => 
-							ct && typeof ct === 'object' && ct !== null && 'folder' in ct && typeof (ct as { folder?: unknown }).folder === 'string' && (ct as { folder: string }).folder.toLowerCase() === contentType
+					for (const contentType of ['projects', 'docs'] as const) {
+						const customType = pluginSettings.customContentTypes.find((ct: unknown) =>
+							ct && typeof ct === 'object' && ct !== null && 'folder' in ct &&
+							typeof (ct as { folder?: unknown }).folder === 'string' &&
+							this.contentTypeFolderKey((ct as { folder: string }).folder) === contentType
 						) as { creationMode?: string } | undefined;
 						if (customType && customType.creationMode) {
 							if (customType.creationMode !== expectedMode) {
 								mismatchedTypes.push(contentType);
 							}
 						} else {
-							// Custom type exists but no creationMode set, needs configuration
 							mismatchedTypes.push(contentType);
 						}
 					}
 				} else {
-					// No customContentTypes array, projects and docs need configuration
 					mismatchedTypes.push('projects', 'docs');
 				}
 			}
-			
-			// If all content types match, return null (no issues)
+
 			if (mismatchedTypes.length === 0) {
 				return null;
 			}
-			
-			// Return the list of out-of-sync content types
 			return { outOfSyncContentTypes: mismatchedTypes };
 		} catch (error) {
 			console.error('Failed to check Astro Composer settings:', error);
@@ -220,27 +226,40 @@ export class PluginManager {
 		}
 	}
 	
+	private normalizeImageManagerTemplate(value: unknown): string {
+		if (typeof value !== 'string') {
+			return '';
+		}
+		return value.trim().replace(/\{image-url\}/gi, '{image-url}');
+	}
+
 	private checkImageManagerSettings(plugin: Plugin, contentOrg?: ContentOrganizationType): boolean {
 		const contentOrgValue = contentOrg || this.getContentOrganization?.() || 'file-based';
-		const expectedFormat = contentOrgValue === 'file-based' 
-			? '[[attachments/{image-url}]]' 
-			: '[[{image-url}]]';
-		
+		const expectedFormat =
+			contentOrgValue === 'file-based'
+				? '[[attachments/{image-url}]]'
+				: '[[{image-url}]]';
+		const vaultOk = this.isVaultAttachmentConfiguredForContentOrg(contentOrg);
+
 		try {
 			const pluginSettings = (plugin as PluginWithSettings).settings;
 			if (!pluginSettings) {
 				return false;
 			}
-			
-			// Check that propertyLinkFormat is set to 'custom'
+
 			const propertyLinkFormat = pluginSettings.propertyLinkFormat;
-			if (propertyLinkFormat !== 'custom') {
-				return false;
+			// Image Manager (current): PropertyLinkFormat — obsidian | path | relative | wikilink | markdown | custom
+			if (propertyLinkFormat === 'obsidian') {
+				return vaultOk;
 			}
-			
-			// Check the customPropertyLinkFormat matches expected format
-			const actualFormat = pluginSettings.customPropertyLinkFormat;
-			return actualFormat === expectedFormat;
+			if (propertyLinkFormat === 'wikilink' && vaultOk) {
+				return true;
+			}
+			if (propertyLinkFormat === 'custom') {
+				const actual = this.normalizeImageManagerTemplate(pluginSettings.customPropertyLinkFormat);
+				return actual === this.normalizeImageManagerTemplate(expectedFormat);
+			}
+			return false;
 		} catch (error) {
 			console.error('Failed to check Image Manager settings:', error);
 			return false;
@@ -340,46 +359,43 @@ export class PluginManager {
 			
 			const pluginSettings = astroComposerPluginWithSettings.settings;
 			const creationMode = settings.creationMode;
-			
-			// Check if using new contentTypes array structure
-			if (Array.isArray(pluginSettings.contentTypes)) {
-				// New structure: update each content type in the contentTypes array
-				const contentTypesToUpdate = ['posts', 'pages', 'projects', 'docs'];
-				
-				for (const contentType of pluginSettings.contentTypes) {
-					if (contentType && typeof contentType === 'object' && contentType !== null) {
-						const contentTypeObj = contentType as Record<string, unknown>;
-						const folderName = (typeof contentTypeObj.folder === 'string' ? contentTypeObj.folder : '').toLowerCase();
-						if (contentTypesToUpdate.includes(folderName)) {
-							contentTypeObj.creationMode = creationMode;
-						}
+			const contentTypes = pluginSettings.contentTypes;
+			const hasNewContentTypes = Array.isArray(contentTypes) && contentTypes.length > 0;
+
+			if (hasNewContentTypes) {
+				const canonicals = ['posts', 'pages', 'projects', 'docs'];
+				for (const contentType of contentTypes) {
+					if (!contentType || typeof contentType !== 'object') continue;
+					const contentTypeObj = contentType as Record<string, unknown>;
+					const folderRaw = typeof contentTypeObj.folder === 'string' ? contentTypeObj.folder : '';
+					const key = this.contentTypeFolderKey(folderRaw);
+					const idStr = typeof contentTypeObj.id === 'string' ? contentTypeObj.id : '';
+					const idLow = idStr.toLowerCase();
+					const matchesCanonical = canonicals.includes(key) ||
+						canonicals.some(c => idLow === c || idLow.startsWith(`${c}-`));
+					if (matchesCanonical) {
+						contentTypeObj.creationMode = creationMode;
+						contentTypeObj.indexFileName = settings.indexFileName;
 					}
 				}
 			} else {
-				// Fallback to old structure for backward compatibility
-				// Update posts: use global creationMode (for posts)
 				pluginSettings.creationMode = creationMode;
-				
-				// Update pages: use pagesCreationMode
 				pluginSettings.pagesCreationMode = creationMode;
-				
-				// Update projects and docs: use customContentTypes array
 				if (Array.isArray(pluginSettings.customContentTypes)) {
 					for (const customType of pluginSettings.customContentTypes) {
 						if (customType && typeof customType === 'object' && customType !== null) {
 							const customTypeObj = customType as Record<string, unknown>;
-							// Check if this is projects or docs by folder name
-							const folderName = (typeof customTypeObj.folder === 'string' ? customTypeObj.folder : '').toLowerCase();
+							const folderName = typeof customTypeObj.folder === 'string'
+								? this.contentTypeFolderKey(customTypeObj.folder)
+								: '';
 							if (folderName === 'projects' || folderName === 'docs') {
 								customTypeObj.creationMode = creationMode;
 							}
 						}
 					}
 				}
+				pluginSettings.indexFileName = settings.indexFileName;
 			}
-			
-			// Update index file name
-			pluginSettings.indexFileName = settings.indexFileName;
 			
 			// Save the settings
 			const pluginWithSave = astroComposerPlugin as { saveSettings?: () => Promise<void> };
@@ -400,12 +416,12 @@ export class PluginManager {
 			
 			const imageManagerPluginWithSettings = imageManagerPlugin as PluginWithSettings | undefined;
 			if (imageManagerPluginWithSettings && imageManagerPluginWithSettings.settings) {
-				// Update Image Manager settings
-				// Set propertyLinkFormat to 'custom' and update customPropertyLinkFormat
+				// Align with Image Manager: custom template + follow Obsidian attachment location after vault configure
 				// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 				const pluginSettings = imageManagerPluginWithSettings.settings as Record<string, unknown>;
 				pluginSettings.propertyLinkFormat = 'custom';
 				pluginSettings.customPropertyLinkFormat = settings.customPropertyLinkFormat;
+				pluginSettings.attachmentLocation = 'obsidian';
 				
 				// Save the settings
 				const pluginWithSave = imageManagerPlugin as { saveSettings?: () => Promise<void> };
@@ -444,8 +460,10 @@ export class PluginManager {
 		
 		instructions += '## Image Manager Plugin\n';
 		instructions += `1. Go to **Settings → Community plugins → Image Manager**\n`;
-		instructions += `2. Set **Property insertion → Property link format** to: **"Custom format"**\n`;
-		instructions += `3. Set **Property insertion → Custom format template** to: "${config.imageManagerSettings.customPropertyLinkFormat}"\n`;
+		instructions += `2. Under **General**, set **Attachment location** to **"Use Obsidian's settings"** (matches Files & Links above).\n`;
+		instructions += `3. Under **Property insertion**, either:\n`;
+		instructions += `   - Set **Property link format** to **"Use Obsidian's settings"** (recommended when vault attachment settings match Astro Modular), or\n`;
+		instructions += `   - Set **Property link format** to **"Custom format"** and **Custom format template** to: \`${config.imageManagerSettings.customPropertyLinkFormat}\`\n`;
 		
 		instructions += '**Note**: After making these changes, you should see them reflected in Obsidian\'s settings interface. If the automatic configuration worked, these settings should already be applied.\n';
 		

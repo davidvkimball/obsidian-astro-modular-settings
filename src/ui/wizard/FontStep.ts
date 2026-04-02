@@ -5,6 +5,7 @@ import { WizardState } from './WizardState';
 
 export class FontStep extends BaseWizardStep {
 	render(container: HTMLElement): void {
+		container.empty();
 		const state = this.getState();
 		
 		const fontSelection = container.createDiv('font-selection');

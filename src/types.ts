@@ -361,6 +361,8 @@ export interface ObsidianPlugins {
 	plugins?: Record<string, unknown>;
 	enabledPlugins?: Set<string>;
 	communityPlugins?: string[];
+	/** Installed community plugin manifests (id → manifest); reliable when plugin is disabled */
+	manifests?: Record<string, { id?: string }>;
 }
 
 export interface ObsidianVaultConfig {

@@ -2,6 +2,7 @@ import { BaseWizardStep } from './BaseWizardStep';
 
 export class DeploymentStep extends BaseWizardStep {
 	render(container: HTMLElement): void {
+		container.empty();
 		const state = this.getState();
 		
 		const deploymentSelection = container.createDiv('deployment-selection');

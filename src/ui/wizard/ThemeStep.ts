@@ -3,6 +3,7 @@ import { THEME_OPTIONS } from '../../types';
 
 export class ThemeStep extends BaseWizardStep {
 	render(container: HTMLElement): void {
+		container.empty();
 		const state = this.getState();
 		const isDarkMode = this.isObsidianDarkMode();
 		

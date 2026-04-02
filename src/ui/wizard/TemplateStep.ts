@@ -4,6 +4,7 @@ import { Notice, Setting } from 'obsidian';
 
 export class TemplateStep extends BaseWizardStep {
 	render(container: HTMLElement): void {
+		container.empty();
 		const state = this.getState();
 		
 		const templateSelectionDiv = container.createDiv('template-selection');

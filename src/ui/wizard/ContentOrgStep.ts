@@ -2,6 +2,7 @@ import { BaseWizardStep } from './BaseWizardStep';
 
 export class ContentOrgStep extends BaseWizardStep {
 	render(container: HTMLElement): void {
+		container.empty();
 		const state = this.getState();
 		
 		const contentOrgSelection = container.createDiv('content-org-selection');

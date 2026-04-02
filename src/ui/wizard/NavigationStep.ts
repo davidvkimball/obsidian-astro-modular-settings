@@ -16,6 +16,7 @@ interface ElementWithHandlers extends HTMLElement {
 
 export class NavigationStep extends BaseWizardStep {
 	render(container: HTMLElement): void {
+		container.empty();
 		const state = this.getState();
 		
 		const navigationSelection = container.createDiv('navigation-selection');
