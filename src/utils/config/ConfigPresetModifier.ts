@@ -28,6 +28,46 @@ export class ConfigPresetModifier {
 		return JSON.stringify(value);
 	}
 
+	/** Escape `\` and `"` for embedding in a TypeScript `"..."` string literal. */
+	private escapeTsDoubleQuotedString(value: string): string {
+		return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+	}
+
+	/** Apply SITE_URL … SITE_LANGUAGE marker lines from `settings.siteInfo`. */
+	private applySiteInformationMarkers(settings: AstroModularSettings, modifiedConfig: string): string {
+		const si = settings.siteInfo;
+		if (!si) {
+			return modifiedConfig;
+		}
+		const q = (s: string) => this.escapeTsDoubleQuotedString(s);
+		let out = modifiedConfig;
+		out = out.replace(
+			/\/\/ \[CONFIG:SITE_URL\]\s*\n\s*site:\s*"[^"]*"/,
+			`// [CONFIG:SITE_URL]\n  site: "${q(si.site)}"`
+		);
+		out = out.replace(
+			/\/\/ \[CONFIG:SITE_TITLE\]\s*\n\s*title:\s*"[^"]*"/,
+			`// [CONFIG:SITE_TITLE]\n  title: "${q(si.title)}"`
+		);
+		out = out.replace(
+			/\/\/ \[CONFIG:HOMEPAGE_TITLE\]\s*\n\s*homepageTitle:\s*"[^"]*"/,
+			`// [CONFIG:HOMEPAGE_TITLE]\n  homepageTitle: "${q(si.homepageTitle ?? '')}"`
+		);
+		out = out.replace(
+			/\/\/ \[CONFIG:SITE_DESCRIPTION\]\s*\n\s*description:\s*"[^"]*"/,
+			`// [CONFIG:SITE_DESCRIPTION]\n  description: "${q(si.description)}"`
+		);
+		out = out.replace(
+			/\/\/ \[CONFIG:SITE_AUTHOR\]\s*\n\s*author:\s*"[^"]*"/,
+			`// [CONFIG:SITE_AUTHOR]\n  author: "${q(si.author)}"`
+		);
+		out = out.replace(
+			/\/\/ \[CONFIG:SITE_LANGUAGE\]\s*\n\s*language:\s*"[^"]*"/,
+			`// [CONFIG:SITE_LANGUAGE]\n  language: "${q(si.language)}"`
+		);
+		return out;
+	}
+
 	getTemplateConfig(templateName: string, settings: AstroModularSettings): Record<string, unknown> {
 		// Expose template config for external use
 		return this.templateManager.getTemplateConfig(templateName, settings);
@@ -681,32 +721,6 @@ export class ConfigPresetModifier {
 			return currentConfig; // Return original config if syntax is broken
 		}
 		
-		// Update site information
-		modifiedConfig = modifiedConfig.replace(
-			/\/\/ \[CONFIG:SITE_URL\]\s*\n\s*site:\s*"[^"]*"/,
-			`// [CONFIG:SITE_URL]\n  site: "${settings.siteInfo.site}"`
-		);
-		modifiedConfig = modifiedConfig.replace(
-			/\/\/ \[CONFIG:SITE_TITLE\]\s*\n\s*title:\s*"[^"]*"/,
-			`// [CONFIG:SITE_TITLE]\n  title: "${settings.siteInfo.title}"`
-		);
-		modifiedConfig = modifiedConfig.replace(
-			/\/\/ \[CONFIG:HOMEPAGE_TITLE\]\s*\n\s*homepageTitle:\s*"[^"]*"/,
-			`// [CONFIG:HOMEPAGE_TITLE]\n  homepageTitle: "${settings.siteInfo.homepageTitle ?? ''}"`
-		);
-		modifiedConfig = modifiedConfig.replace(
-			/\/\/ \[CONFIG:SITE_DESCRIPTION\]\s*\n\s*description:\s*"[^"]*"/,
-			`// [CONFIG:SITE_DESCRIPTION]\n  description: "${settings.siteInfo.description}"`
-		);
-		modifiedConfig = modifiedConfig.replace(
-			/\/\/ \[CONFIG:SITE_AUTHOR\]\s*\n\s*author:\s*"[^"]*"/,
-			`// [CONFIG:SITE_AUTHOR]\n  author: "${settings.siteInfo.author}"`
-		);
-		modifiedConfig = modifiedConfig.replace(
-			/\/\/ \[CONFIG:SITE_LANGUAGE\]\s*\n\s*language:\s*"[^"]*"/,
-			`// [CONFIG:SITE_LANGUAGE]\n  language: "${settings.siteInfo.language}"`
-		);
-		
 		// Update favicon theme adaptive
 		if (settings.siteInfo.faviconThemeAdaptive !== undefined) {
 			modifiedConfig = modifiedConfig.replace(
@@ -717,9 +731,10 @@ export class ConfigPresetModifier {
 		
 		// Update default OG image alt text
 		if (settings.siteInfo.defaultOgImageAlt) {
+			const ogAlt = this.escapeTsDoubleQuotedString(settings.siteInfo.defaultOgImageAlt);
 			modifiedConfig = modifiedConfig.replace(
 				/\/\/ \[CONFIG:DEFAULT_OG_IMAGE_ALT\]\s*\n\s*defaultOgImageAlt:\s*"[^"]*"/,
-				`// [CONFIG:DEFAULT_OG_IMAGE_ALT]\n  defaultOgImageAlt: "${settings.siteInfo.defaultOgImageAlt}"`
+				`// [CONFIG:DEFAULT_OG_IMAGE_ALT]\n  defaultOgImageAlt: "${ogAlt}"`
 			);
 		}
 		
@@ -937,14 +952,15 @@ export class ConfigPresetModifier {
 		// Update SEO settings (backwards compatibility - also check siteInfo)
 		const defaultOgImageAlt = settings.siteInfo?.defaultOgImageAlt || settings.seo?.defaultOgImageAlt;
 		if (defaultOgImageAlt) {
+			const ogAltEsc = this.escapeTsDoubleQuotedString(defaultOgImageAlt);
 			// Try both marker formats for backwards compatibility
 			modifiedConfig = modifiedConfig.replace(
 				/\/\/ \[CONFIG:SEO_DEFAULT_OG_IMAGE_ALT\]\s*\n\s*defaultOgImageAlt:\s*"[^"]*"/,
-				`// [CONFIG:SEO_DEFAULT_OG_IMAGE_ALT]\n    defaultOgImageAlt: "${defaultOgImageAlt}"`
+				`// [CONFIG:SEO_DEFAULT_OG_IMAGE_ALT]\n    defaultOgImageAlt: "${ogAltEsc}"`
 			);
 			modifiedConfig = modifiedConfig.replace(
 				/\/\/ \[CONFIG:DEFAULT_OG_IMAGE_ALT\]\s*\n\s*defaultOgImageAlt:\s*"[^"]*"/,
-				`// [CONFIG:DEFAULT_OG_IMAGE_ALT]\n  defaultOgImageAlt: "${defaultOgImageAlt}"`
+				`// [CONFIG:DEFAULT_OG_IMAGE_ALT]\n  defaultOgImageAlt: "${ogAltEsc}"`
 			);
 		}
 		
@@ -1480,6 +1496,8 @@ export class ConfigPresetModifier {
 				`// [CONFIG:PROFILE_PICTURE_STYLE]\n    style: "${settings.optionalFeatures.profilePicture.style}"`
 			);
 		}
+
+		modifiedConfig = this.applySiteInformationMarkers(settings, modifiedConfig);
 		
 		return modifiedConfig;
 	}

@@ -79,6 +79,7 @@ export class AdvancedTab extends TabRenderer {
 							const siteInfo = currentConfig.siteInfo as Record<string, unknown>;
 							settings.siteInfo.site = (siteInfo.site as string | undefined) ?? settings.siteInfo.site;
 							settings.siteInfo.title = (siteInfo.title as string | undefined) ?? settings.siteInfo.title;
+							settings.siteInfo.homepageTitle = (siteInfo.homepageTitle as string | undefined) ?? settings.siteInfo.homepageTitle;
 							settings.siteInfo.description = (siteInfo.description as string | undefined) ?? settings.siteInfo.description;
 							settings.siteInfo.author = (siteInfo.author as string | undefined) ?? settings.siteInfo.author;
 							settings.siteInfo.language = (siteInfo.language as string | undefined) ?? settings.siteInfo.language;
