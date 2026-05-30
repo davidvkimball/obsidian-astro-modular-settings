@@ -143,7 +143,7 @@ export class ThemeColorExtractor {
 
 		// Create a temporary element to compute the color
 		const tempElement = document.createElement('div');
-		tempElement.setCssProps({ color: colorValue });
+		tempElement.setCssStyles({ color: colorValue });
 		document.body.appendChild(tempElement);
 		
 		const computedColor = getComputedStyle(tempElement).color;

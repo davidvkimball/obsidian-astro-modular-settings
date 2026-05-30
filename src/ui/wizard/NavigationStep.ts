@@ -104,7 +104,7 @@ export class NavigationStep extends BaseWizardStep {
 		const childrenContainer = navItem.createDiv('nav-children-container');
 		childrenContainer.setAttribute('data-parent-index', index.toString());
 		if (!hasChildren) {
-			childrenContainer.setCssProps({ display: 'none' });
+			childrenContainer.setCssStyles({ display: 'none' });
 		}
 		
 		childrenContainer.createDiv('nav-children-label').textContent = 'Child pages:';
@@ -342,7 +342,7 @@ export class NavigationStep extends BaseWizardStep {
 					const navItem = target.closest('.nav-item');
 					const childrenContainer = navItem?.querySelector('.nav-children-container') as HTMLElement | null;
 					if (childrenContainer && (!state.selectedNavigation.pages[parentIndex].children || state.selectedNavigation.pages[parentIndex].children.length === 0)) {
-						childrenContainer.setCssProps({ display: 'none' });
+						childrenContainer.setCssStyles({ display: 'none' });
 					}
 				}
 				this.render(container);
@@ -360,7 +360,7 @@ export class NavigationStep extends BaseWizardStep {
 				const navItem = target.closest('.nav-item');
 				const childrenContainer = navItem?.querySelector('.nav-children-container') as HTMLElement;
 				if (childrenContainer) {
-					childrenContainer.setCssProps({ display: 'block' });
+					childrenContainer.setCssStyles({ display: 'block' });
 				}
 				this.render(container);
 			}
@@ -387,14 +387,14 @@ export class NavigationStep extends BaseWizardStep {
 			const target = e.target as HTMLElement;
 			if (target.classList.contains('nav-item')) {
 				draggedElement = target;
-				target.setCssProps({ opacity: '0.5' });
+				target.setCssStyles({ opacity: '0.5' });
 			}
 		};
 
 		const dragEndHandler = (e: DragEvent) => {
 			const target = e.target as HTMLElement;
 			if (target.classList.contains('nav-item')) {
-				target.setCssProps({ opacity: '1' });
+				target.setCssStyles({ opacity: '1' });
 				draggedElement = null;
 			}
 		};
@@ -407,12 +407,12 @@ export class NavigationStep extends BaseWizardStep {
 				const midpoint = rect.top + rect.height / 2;
 				
 				if (e.clientY < midpoint) {
-					target.setCssProps({
+					target.setCssStyles({
 						borderTop: '2px solid var(--interactive-accent)',
 						borderBottom: 'none'
 					});
 				} else {
-					target.setCssProps({
+					target.setCssStyles({
 						borderBottom: '2px solid var(--interactive-accent)',
 						borderTop: 'none'
 					});
@@ -423,7 +423,7 @@ export class NavigationStep extends BaseWizardStep {
 		const dragLeaveHandler = (e: DragEvent) => {
 			const target = e.target as HTMLElement;
 			if (target.classList.contains('nav-item')) {
-				target.setCssProps({
+				target.setCssStyles({
 					borderTop: 'none',
 					borderBottom: 'none'
 				});
@@ -441,7 +441,7 @@ export class NavigationStep extends BaseWizardStep {
 				const isSocial = target.closest('#social-list');
 				
 				// Clear visual indicators
-				target.setCssProps({
+				target.setCssStyles({
 					borderTop: 'none',
 					borderBottom: 'none'
 				});

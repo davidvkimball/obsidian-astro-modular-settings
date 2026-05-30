@@ -138,8 +138,8 @@ export class SetupWizardModal extends Modal {
 		
 		const progressBar = progress.createDiv('progress-bar');
 		const progressFill = progressBar.createDiv('progress-fill');
-		// Set dynamic width using setCssProps
-		progressFill.setCssProps({ width: `${this.stateManager.getProgress()}%` });
+		// Set dynamic width using setCssStyles
+		progressFill.setCssStyles({ width: `${this.stateManager.getProgress()}%` });
 		
 		// Add step text below the progress bar
 		const progressText = progress.createDiv('progress-text');

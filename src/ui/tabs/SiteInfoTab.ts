@@ -177,7 +177,7 @@ export class SiteInfoTab extends TabRenderer {
 					});
 				});
 			// Add bottom margin to last setting in group without heading to create space before next heading
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				marginBottom: 'var(--size-4-6)'
 			});
 		});
@@ -187,7 +187,7 @@ export class SiteInfoTab extends TabRenderer {
 		const assetsHeaderSetting = new Setting(assetsSection)
 			.setHeading()
 			.setName('Assets & metadata');
-		assetsHeaderSetting.settingEl.setCssProps({
+		assetsHeaderSetting.settingEl.setCssStyles({
 			marginTop: 'var(--size-4-6)',
 			marginBottom: 'var(--size-4-2)',
 			position: 'relative'
@@ -198,7 +198,7 @@ export class SiteInfoTab extends TabRenderer {
 			cls: 'clickable-icon',
 			attr: { 'aria-label': 'Open public folder' }
 		});
-		sharedFolderButton.setCssProps({
+		sharedFolderButton.setCssStyles({
 			padding: '4px',
 			border: 'none',
 			backgroundColor: 'transparent',
@@ -286,7 +286,7 @@ export class SiteInfoTab extends TabRenderer {
 						});
 						
 						const buttonContainer = contentDiv.createDiv();
-						buttonContainer.setCssProps({
+						buttonContainer.setCssStyles({
 							marginTop: '20px',
 							display: 'flex',
 							gap: '10px',

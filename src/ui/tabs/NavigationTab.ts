@@ -14,71 +14,25 @@ export class NavigationTab extends TabRenderer {
 
 		// Navigation pages section
 		const pagesSection = container.createDiv('settings-section');
-		
+
 		// Navigation Pages heading
 		new Setting(pagesSection)
 			.setHeading()
 			.setName('Navigation pages')
 			.setDesc('Add or remove pages from your main navigation menu.');
 
-		// Display existing pages using programmatic DOM creation
-		const pagesList = pagesSection.createDiv('nav-items');
-		pagesList.id = 'pages-list';
-		
-		settings.navigation.pages.forEach((page, index) => {
-			this.renderPageItem(pagesList, page, index);
-		});
-
-		// Add page button
-		new Setting(pagesSection)
-			.setName('Add page')
-			.setDesc('Add a new page to your navigation')
-				.addButton(button => button
-					// "+ Add page" is a button label, keep as is
-					// eslint-disable-next-line obsidianmd/ui/sentence-case
-					.setButtonText('+ Add page')
-					.setCta()
-					.onClick(async () => {
-						settings.navigation.pages.push({ title: 'New Page', url: '/new-page' });
-						await this.plugin.saveData(settings);
-						await this.applyCurrentConfiguration(false);
-						new Notice('Navigation page added and applied to config.ts');
-						this.render(container); // Re-render
-					}));
+		this.renderPagesList(pagesSection, () => this.render(container));
 
 		// Social links section
 		const socialSection = container.createDiv('settings-section');
-		
+
 		// Social Links heading
 		new Setting(socialSection)
 			.setHeading()
 			.setName('Social links')
 			.setDesc('Add or remove social media links.');
 
-		// Display existing social links using programmatic DOM creation
-		const socialList = socialSection.createDiv('nav-items');
-		socialList.id = 'social-list';
-		
-		settings.navigation.social.forEach((social, index) => {
-			this.renderSocialItem(socialList, social, index);
-		});
-
-		// Add social link button
-		new Setting(socialSection)
-			.setName('Add social link')
-			.setDesc('Add a new social media link')
-				.addButton(button => button
-					// "+ Add social link" is a button label, keep as is
-					// eslint-disable-next-line obsidianmd/ui/sentence-case
-					.setButtonText('+ Add social link')
-					.setCta()
-					.onClick(async () => {
-						settings.navigation.social.push({ title: 'New Social', url: 'https://example.com', icon: '' });
-						await this.plugin.saveData(settings);
-						await this.applyCurrentConfiguration(false);
-						new Notice('Social link added and applied to config.ts');
-						this.render(container); // Re-render
-					}));
+		this.renderSocialList(socialSection, () => this.render(container));
 
 
 		// Navigation Options group with heading
@@ -137,12 +91,92 @@ export class NavigationTab extends TabRenderer {
 		// Setup event delegation for input fields and remove buttons
 		// This must be done AFTER all DOM elements are created
 		this.setupEventDelegation(container);
-		
+
 		// Drag and drop functionality
 		this.setupDragAndDrop(container);
 	}
 
-	private setupDragAndDrop(container: HTMLElement): void {
+	/**
+	 * Render the navigation pages list, its add-page button, and wire up the
+	 * drag/drop + event delegation scoped to the given section element. Used by
+	 * both the legacy tabbed render() and the declarative settings page. The
+	 * onReRender callback re-renders the owning UI after add/remove/reorder.
+	 */
+	renderPagesSection(section: HTMLElement, onReRender: () => void): void {
+		this.renderPagesList(section, onReRender);
+		this.setupEventDelegation(section, onReRender);
+		this.setupDragAndDrop(section, onReRender);
+	}
+
+	/**
+	 * Render the social links list, its add button, and wire up the drag/drop +
+	 * event delegation scoped to the given section element.
+	 */
+	renderSocialSection(section: HTMLElement, onReRender: () => void): void {
+		this.renderSocialList(section, onReRender);
+		this.setupEventDelegation(section, onReRender);
+		this.setupDragAndDrop(section, onReRender);
+	}
+
+	private renderPagesList(pagesSection: HTMLElement, onReRender: () => void): void {
+		const settings = this.getSettings();
+
+		// Display existing pages using programmatic DOM creation
+		const pagesList = pagesSection.createDiv('nav-items');
+		pagesList.id = 'pages-list';
+
+		settings.navigation.pages.forEach((page, index) => {
+			this.renderPageItem(pagesList, page, index);
+		});
+
+		// Add page button
+		new Setting(pagesSection)
+			.setName('Add page')
+			.setDesc('Add a new page to your navigation')
+				.addButton(button => button
+					// "+ Add page" is a button label, keep as is
+					// eslint-disable-next-line obsidianmd/ui/sentence-case
+					.setButtonText('+ Add page')
+					.setCta()
+					.onClick(async () => {
+						settings.navigation.pages.push({ title: 'New Page', url: '/new-page' });
+						await this.plugin.saveData(settings);
+						await this.applyCurrentConfiguration(false);
+						new Notice('Navigation page added and applied to config.ts');
+						onReRender();
+					}));
+	}
+
+	private renderSocialList(socialSection: HTMLElement, onReRender: () => void): void {
+		const settings = this.getSettings();
+
+		// Display existing social links using programmatic DOM creation
+		const socialList = socialSection.createDiv('nav-items');
+		socialList.id = 'social-list';
+
+		settings.navigation.social.forEach((social, index) => {
+			this.renderSocialItem(socialList, social, index);
+		});
+
+		// Add social link button
+		new Setting(socialSection)
+			.setName('Add social link')
+			.setDesc('Add a new social media link')
+				.addButton(button => button
+					// "+ Add social link" is a button label, keep as is
+					// eslint-disable-next-line obsidianmd/ui/sentence-case
+					.setButtonText('+ Add social link')
+					.setCta()
+					.onClick(async () => {
+						settings.navigation.social.push({ title: 'New Social', url: 'https://example.com', icon: '' });
+						await this.plugin.saveData(settings);
+						await this.applyCurrentConfiguration(false);
+						new Notice('Social link added and applied to config.ts');
+						onReRender();
+					}));
+	}
+
+	private setupDragAndDrop(container: HTMLElement, onReRender?: () => void): void {
 		let draggedElement: HTMLElement | null = null;
 
 		// Create handlers
@@ -150,14 +184,14 @@ export class NavigationTab extends TabRenderer {
 			const target = e.target as HTMLElement;
 			if (target.classList.contains('nav-item')) {
 				draggedElement = target;
-				target.setCssProps({ opacity: '0.5' });
+				target.setCssStyles({ opacity: '0.5' });
 			}
 		};
 
 		const dragEndHandler = (e: DragEvent) => {
 			const target = e.target as HTMLElement;
 			if (target.classList.contains('nav-item')) {
-				target.setCssProps({ opacity: '1' });
+				target.setCssStyles({ opacity: '1' });
 				draggedElement = null;
 			}
 		};
@@ -170,12 +204,12 @@ export class NavigationTab extends TabRenderer {
 				const midpoint = rect.top + rect.height / 2;
 				
 				if (e.clientY < midpoint) {
-					target.setCssProps({
+					target.setCssStyles({
 						borderTop: '2px solid var(--interactive-accent)',
 						borderBottom: 'none'
 					});
 				} else {
-					target.setCssProps({
+					target.setCssStyles({
 						borderBottom: '2px solid var(--interactive-accent)',
 						borderTop: 'none'
 					});
@@ -186,7 +220,7 @@ export class NavigationTab extends TabRenderer {
 		const dragLeaveHandler = (e: DragEvent) => {
 			const target = e.target as HTMLElement;
 			if (target.classList.contains('nav-item')) {
-				target.setCssProps({
+				target.setCssStyles({
 					borderTop: 'none',
 					borderBottom: 'none'
 				});
@@ -204,7 +238,7 @@ export class NavigationTab extends TabRenderer {
 				const isSocial = target.closest('#social-list');
 				
 				// Clear visual indicators
-				target.setCssProps({
+				target.setCssStyles({
 					borderTop: 'none',
 					borderBottom: 'none'
 				});
@@ -228,9 +262,13 @@ export class NavigationTab extends TabRenderer {
 					// Save changes
 					await this.plugin.saveData(currentSettings);
 					await this.applyCurrentConfiguration();
-					
+
 					// Re-render to update data indices and visual order
-					this.render(container);
+					if (onReRender) {
+						onReRender();
+					} else {
+						this.render(container);
+					}
 				}
 			}
 		};
@@ -279,8 +317,15 @@ export class NavigationTab extends TabRenderer {
 		}
 	}
 
-	private setupEventDelegation(container: HTMLElement): void {
+	private setupEventDelegation(container: HTMLElement, onReRender?: () => void): void {
 		const settings = this.getSettings();
+		const reRender = () => {
+			if (onReRender) {
+				onReRender();
+			} else {
+				this.render(container);
+			}
+		};
 		
 		// Find the lists
 		const pagesList = container.querySelector('#pages-list');
@@ -369,7 +414,7 @@ export class NavigationTab extends TabRenderer {
 					await (this.plugin as AstroModularPlugin).loadSettings();
 					await this.applyCurrentConfiguration(false);
 					new Notice('Navigation page removed and applied to config.ts');
-					this.render(container); // Re-render to update indices
+					reRender(); // Re-render to update indices
 				} else {
 					currentSettings.navigation.social.splice(index, 1);
 					await this.plugin.saveData(currentSettings);
@@ -377,7 +422,7 @@ export class NavigationTab extends TabRenderer {
 					await (this.plugin as AstroModularPlugin).loadSettings();
 					await this.applyCurrentConfiguration(false);
 					new Notice('Social link removed and applied to config.ts');
-					this.render(container); // Re-render to update indices
+					reRender(); // Re-render to update indices
 				}
 			} else if (target.classList.contains('nav-child-remove')) {
 				e.preventDefault();
@@ -401,9 +446,9 @@ export class NavigationTab extends TabRenderer {
 					const navItem = target.closest('.nav-item');
 					const childrenContainer = navItem?.querySelector('.nav-children-container') as HTMLElement | null;
 					if (childrenContainer && (!currentSettings.navigation.pages[parentIndex].children || currentSettings.navigation.pages[parentIndex].children.length === 0)) {
-						childrenContainer.setCssProps({ display: 'none' });
+						childrenContainer.setCssStyles({ display: 'none' });
 					}
-					this.render(container);
+					reRender();
 				}
 			} else if (target.classList.contains('nav-add-child')) {
 				e.preventDefault();
@@ -424,9 +469,9 @@ export class NavigationTab extends TabRenderer {
 				const navItem = target.closest('.nav-item');
 				const childrenContainer = navItem?.querySelector('.nav-children-container') as HTMLElement;
 				if (childrenContainer) {
-					childrenContainer.setCssProps({ display: 'block' });
+					childrenContainer.setCssStyles({ display: 'block' });
 				}
-				this.render(container);
+				reRender();
 				// Re-set icons after render (including new child buttons)
 				setTimeout(() => {
 					container.querySelectorAll('button[data-icon="trash"]').forEach(button => {
@@ -492,7 +537,7 @@ export class NavigationTab extends TabRenderer {
 		const childrenContainer = navItem.createDiv('nav-children-container');
 		childrenContainer.setAttribute('data-parent-index', index.toString());
 		if (!hasChildren) {
-			childrenContainer.setCssProps({ display: 'none' });
+			childrenContainer.setCssStyles({ display: 'none' });
 		}
 		
 		childrenContainer.createDiv('nav-children-label').textContent = 'Child pages:';

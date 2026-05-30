@@ -105,10 +105,10 @@ export class StyleTab extends TabRenderer {
 				const nameEl = setting.settingEl.querySelector('.setting-item-name');
 				const descEl = setting.settingEl.querySelector('.setting-item-description');
 				const controlEl = setting.settingEl.querySelector('.setting-item-control');
-				if (nameEl) (nameEl as HTMLElement).setCssProps({ display: 'none' });
-				if (descEl) (descEl as HTMLElement).setCssProps({ display: 'none' });
-				if (controlEl) (controlEl as HTMLElement).setCssProps({ display: 'none' });
-				setting.settingEl.setCssProps({
+				if (nameEl) (nameEl as HTMLElement).setCssStyles({ display: 'none' });
+				if (descEl) (descEl as HTMLElement).setCssStyles({ display: 'none' });
+				if (controlEl) (controlEl as HTMLElement).setCssStyles({ display: 'none' });
+				setting.settingEl.setCssStyles({
 					display: 'block',
 					borderTop: 'none',
 					paddingTop: '0',
@@ -116,7 +116,7 @@ export class StyleTab extends TabRenderer {
 				});
 				
 				const themePillsContainer = setting.settingEl.createDiv('theme-pills-container');
-			themePillsContainer.setCssProps({
+			themePillsContainer.setCssStyles({
 				marginTop: '10px',
 				marginBottom: '32px'
 			});
@@ -125,7 +125,7 @@ export class StyleTab extends TabRenderer {
 				text: 'Available themes (click to toggle selection):',
 				cls: 'theme-pills-header'
 			});
-			pillsHeader.setCssProps({
+			pillsHeader.setCssStyles({
 				fontSize: '14px',
 				marginBottom: '8px',
 				color: 'var(--text-muted)'
@@ -147,13 +147,13 @@ export class StyleTab extends TabRenderer {
 					
 					// Style based on selection state
 					if (isSelected) {
-						pill.setCssProps({
+						pill.setCssStyles({
 							backgroundColor: 'var(--interactive-accent)',
 							color: 'var(--text-on-accent)',
 							border: '1px solid var(--interactive-accent)'
 						});
 					} else {
-						pill.setCssProps({
+						pill.setCssStyles({
 							backgroundColor: 'var(--background-secondary)',
 							color: 'var(--text-muted)',
 							border: '1px solid var(--background-modifier-border)'
@@ -164,7 +164,7 @@ export class StyleTab extends TabRenderer {
 					
 				// Add selection indicator
 				const indicator = pill.createSpan({ text: isSelected ? '✓' : '○' });
-				indicator.setCssProps({
+				indicator.setCssStyles({
 					fontSize: '10px',
 					opacity: '0.8'
 				});
@@ -205,7 +205,7 @@ export class StyleTab extends TabRenderer {
 			
 			// Add custom themes input field
 			const customThemesSection = themePillsContainer.createDiv('custom-themes-section');
-			customThemesSection.setCssProps({
+			customThemesSection.setCssStyles({
 				marginTop: '32px',
 				padding: '10px',
 				backgroundColor: 'var(--background-secondary)',
@@ -217,7 +217,7 @@ export class StyleTab extends TabRenderer {
 				text: 'Custom themes (comma-separated):',
 				cls: 'custom-themes-label'
 			});
-			customThemesLabel.setCssProps({
+			customThemesLabel.setCssStyles({
 				display: 'block',
 				fontSize: '12px',
 				color: 'var(--text-muted)',
@@ -226,7 +226,7 @@ export class StyleTab extends TabRenderer {
 			
 			// Create input container with folder button
 			const inputContainer = customThemesSection.createDiv('custom-themes-input-container');
-			inputContainer.setCssProps({
+			inputContainer.setCssStyles({
 				display: 'flex',
 				gap: '6px',
 				alignItems: 'center'
@@ -240,7 +240,7 @@ export class StyleTab extends TabRenderer {
 					spellcheck: 'false'
 				}
 			});
-			customThemesInput.setCssProps({
+			customThemesInput.setCssStyles({
 				flex: '1',
 				padding: '6px 8px',
 				border: '1px solid var(--background-modifier-border)',
@@ -257,7 +257,7 @@ export class StyleTab extends TabRenderer {
 					'aria-label': 'Open themes folder'
 				}
 			});
-			folderButton.setCssProps({
+			folderButton.setCssStyles({
 				padding: '4px',
 				border: 'none',
 				backgroundColor: 'transparent',
@@ -434,10 +434,10 @@ export class StyleTab extends TabRenderer {
 					const nameEl = setting.settingEl.querySelector('.setting-item-name');
 					const descEl = setting.settingEl.querySelector('.setting-item-description');
 					const controlEl = setting.settingEl.querySelector('.setting-item-control');
-					if (nameEl) (nameEl as HTMLElement).setCssProps({ display: 'none' });
-					if (descEl) (descEl as HTMLElement).setCssProps({ display: 'none' });
-					if (controlEl) (controlEl as HTMLElement).setCssProps({ display: 'none' });
-					setting.settingEl.setCssProps({
+					if (nameEl) (nameEl as HTMLElement).setCssStyles({ display: 'none' });
+					if (descEl) (descEl as HTMLElement).setCssStyles({ display: 'none' });
+					if (controlEl) (controlEl as HTMLElement).setCssStyles({ display: 'none' });
+					setting.settingEl.setCssStyles({
 						borderTop: 'none',
 						paddingTop: '0',
 						paddingBottom: '0'
@@ -446,7 +446,7 @@ export class StyleTab extends TabRenderer {
 						text: `Last extracted: ${lastExtracted}`,
 						cls: 'theme-extraction-timestamp'
 					});
-					timestampEl.setCssProps({ color: 'var(--text-muted)' });
+					timestampEl.setCssStyles({ color: 'var(--text-muted)' });
 				});
 			}
 
@@ -476,10 +476,10 @@ export class StyleTab extends TabRenderer {
 					const nameEl = setting.settingEl.querySelector('.setting-item-name');
 					const descEl = setting.settingEl.querySelector('.setting-item-description');
 					const controlEl = setting.settingEl.querySelector('.setting-item-control');
-					if (nameEl) (nameEl as HTMLElement).setCssProps({ display: 'none' });
-					if (descEl) (descEl as HTMLElement).setCssProps({ display: 'none' });
-					if (controlEl) (controlEl as HTMLElement).setCssProps({ display: 'none' });
-					setting.settingEl.setCssProps({
+					if (nameEl) (nameEl as HTMLElement).setCssStyles({ display: 'none' });
+					if (descEl) (descEl as HTMLElement).setCssStyles({ display: 'none' });
+					if (controlEl) (controlEl as HTMLElement).setCssStyles({ display: 'none' });
+					setting.settingEl.setCssStyles({
 						borderTop: 'none',
 						paddingTop: '0',
 						paddingBottom: '0'
@@ -496,10 +496,10 @@ export class StyleTab extends TabRenderer {
 					const nameEl = setting.settingEl.querySelector('.setting-item-name');
 					const descEl = setting.settingEl.querySelector('.setting-item-description');
 					const controlEl = setting.settingEl.querySelector('.setting-item-control');
-					if (nameEl) (nameEl as HTMLElement).setCssProps({ display: 'none' });
-					if (descEl) (descEl as HTMLElement).setCssProps({ display: 'none' });
-					if (controlEl) (controlEl as HTMLElement).setCssProps({ display: 'none' });
-					setting.settingEl.setCssProps({
+					if (nameEl) (nameEl as HTMLElement).setCssStyles({ display: 'none' });
+					if (descEl) (descEl as HTMLElement).setCssStyles({ display: 'none' });
+					if (controlEl) (controlEl as HTMLElement).setCssStyles({ display: 'none' });
+					setting.settingEl.setCssStyles({
 						borderTop: 'none',
 						paddingTop: '0',
 						paddingBottom: '0'
@@ -882,14 +882,23 @@ export class StyleTab extends TabRenderer {
 	}
 
 	/**
-	 * Render color preview
+	 * Public wrapper so the declarative Style page (SettingsTab.getSettingDefinitions)
+	 * can reuse the same config-write flow the imperative custom sections used.
 	 */
-	private renderColorPreview(container: HTMLElement, colors: { primary: ColorScale; highlight: ColorScale }): void {
+	public applyConfiguration(): Promise<void> {
+		return this.applyCurrentConfiguration();
+	}
+
+	/**
+	 * Render color preview. Public so the declarative Style page can reuse it
+	 * inside a named render def (the color preview is genuinely custom UI).
+	 */
+	public renderColorPreview(container: HTMLElement, colors: { primary: ColorScale; highlight: ColorScale }): void {
 		const previewSection = container.createDiv('color-preview-section');
 		previewSection.createEl('h4', { text: 'Color preview' });
 		
 		const previewContainer = previewSection.createDiv('color-preview-container');
-		previewContainer.setCssProps({
+		previewContainer.setCssStyles({
 			display: 'flex',
 			gap: '10px',
 			marginTop: '10px'
@@ -901,7 +910,7 @@ export class StyleTab extends TabRenderer {
 			const colorValue = colors.primary[shade];
 			if (colorValue) {
 				const colorBox = previewContainer.createDiv('color-box');
-				colorBox.setCssProps({
+				colorBox.setCssStyles({
 					width: '20px',
 					height: '20px',
 					backgroundColor: colorValue,
@@ -918,7 +927,7 @@ export class StyleTab extends TabRenderer {
 			const colorValue = colors.highlight[shade];
 			if (colorValue) {
 				const colorBox = previewContainer.createDiv('color-box');
-				colorBox.setCssProps({
+				colorBox.setCssStyles({
 					width: '20px',
 					height: '20px',
 					backgroundColor: colorValue,
@@ -931,11 +940,12 @@ export class StyleTab extends TabRenderer {
 	}
 
 	/**
-	 * Render simple color editor (accent + background)
+	 * Render simple color editor (accent + background). Public so the declarative
+	 * Style page can reuse it inside a named render def (custom color widgets).
 	 */
-	private renderSimpleColorEditor(container: HTMLElement, settings: AstroModularSettings): void {
+	public renderSimpleColorEditor(container: HTMLElement, settings: AstroModularSettings): void {
 		const simpleSection = container.createDiv('simple-color-inputs');
-		simpleSection.setCssProps({ marginBottom: '20px' }); // Add spacing below the simple editor
+		simpleSection.setCssStyles({ marginBottom: '20px' }); // Add spacing below the simple editor
 		simpleSection.createEl('h4', { text: 'Simple color editor' });
 
 		// Always initialize simple colors from extracted colors to ensure they're current
@@ -955,7 +965,7 @@ export class StyleTab extends TabRenderer {
 			type: 'text', 
 			value: settings.themeColors.simpleColors.accent 
 		});
-		accentTextInput.setCssProps({ fontFamily: 'var(--font-monospace)' });
+		accentTextInput.setCssStyles({ fontFamily: 'var(--font-monospace)' });
 		
 		const accentColorPicker = accentDiv.createEl('input', { type: 'color' });
 		accentColorPicker.value = settings.themeColors.simpleColors.accent;
@@ -985,7 +995,7 @@ export class StyleTab extends TabRenderer {
 			type: 'text', 
 			value: settings.themeColors.simpleColors.background 
 		});
-		backgroundTextInput.setCssProps({ fontFamily: 'var(--font-monospace)' });
+		backgroundTextInput.setCssStyles({ fontFamily: 'var(--font-monospace)' });
 		
 		const backgroundColorPicker = backgroundDiv.createEl('input', { type: 'color' });
 		backgroundColorPicker.value = settings.themeColors.simpleColors.background;
@@ -1009,9 +1019,10 @@ export class StyleTab extends TabRenderer {
 	}
 
 	/**
-	 * Render advanced color editor (individual shades)
+	 * Render advanced color editor (individual shades). Public so the declarative
+	 * Style page can reuse it inside a named render def (custom color widgets).
 	 */
-	private renderAdvancedColorEditor(container: HTMLElement, settings: AstroModularSettings): void {
+	public renderAdvancedColorEditor(container: HTMLElement, settings: AstroModularSettings): void {
 		const advancedSection = container.createDiv('advanced-mode-section');
 		advancedSection.createEl('h4', { text: 'Advanced color editor' });
 
@@ -1024,7 +1035,7 @@ export class StyleTab extends TabRenderer {
 			const colorValue = settings.themeColors.extractedColors?.primary?.[shade];
 			if (colorValue) {
 				const settingItem = primarySection.createDiv('setting-item');
-				settingItem.setCssProps({
+				settingItem.setCssStyles({
 					display: 'flex',
 					alignItems: 'center',
 					gap: '10px',
@@ -1033,21 +1044,21 @@ export class StyleTab extends TabRenderer {
 				
 				const label = settingItem.createDiv('setting-item-name');
 				label.textContent = `${shade}:`;
-				label.setCssProps({
+				label.setCssStyles({
 					minWidth: '40px',
 					fontSize: '12px',
 					color: 'var(--text-muted)'
 				});
 				
 				const control = settingItem.createDiv('setting-item-control');
-				control.setCssProps({
+				control.setCssStyles({
 					display: 'flex',
 					gap: '8px',
 					alignItems: 'center'
 				});
 				
 				const textInput = control.createEl('input', { type: 'text', value: colorValue });
-				textInput.setCssProps({
+				textInput.setCssStyles({
 					width: '100px',
 					fontFamily: 'var(--font-monospace)',
 					fontSize: '12px'
@@ -1085,7 +1096,7 @@ export class StyleTab extends TabRenderer {
 			const colorValue = settings.themeColors.extractedColors?.highlight?.[shade];
 			if (colorValue) {
 				const settingItem = highlightSection.createDiv('setting-item');
-				settingItem.setCssProps({
+				settingItem.setCssStyles({
 					display: 'flex',
 					alignItems: 'center',
 					gap: '10px',
@@ -1094,21 +1105,21 @@ export class StyleTab extends TabRenderer {
 				
 				const label = settingItem.createDiv('setting-item-name');
 				label.textContent = `${shade}:`;
-				label.setCssProps({
+				label.setCssStyles({
 					minWidth: '40px',
 					fontSize: '12px',
 					color: 'var(--text-muted)'
 				});
 				
 				const control = settingItem.createDiv('setting-item-control');
-				control.setCssProps({
+				control.setCssStyles({
 					display: 'flex',
 					gap: '8px',
 					alignItems: 'center'
 				});
 				
 				const textInput = control.createEl('input', { type: 'text', value: colorValue });
-				textInput.setCssProps({
+				textInput.setCssStyles({
 					width: '100px',
 					fontFamily: 'var(--font-monospace)',
 					fontSize: '12px'

@@ -19,10 +19,10 @@ export class GeneralTab extends TabRenderer {
 			const nameEl = setting.settingEl.querySelector('.setting-item-name');
 			const descEl = setting.settingEl.querySelector('.setting-item-description');
 			const controlEl = setting.settingEl.querySelector('.setting-item-control');
-			if (nameEl) (nameEl as HTMLElement).setCssProps({ display: 'none' });
-			if (descEl) (descEl as HTMLElement).setCssProps({ display: 'none' });
-			if (controlEl) (controlEl as HTMLElement).setCssProps({ display: 'none' });
-			setting.settingEl.setCssProps({
+			if (nameEl) (nameEl as HTMLElement).setCssStyles({ display: 'none' });
+			if (descEl) (descEl as HTMLElement).setCssStyles({ display: 'none' });
+			if (controlEl) (controlEl as HTMLElement).setCssStyles({ display: 'none' });
+			setting.settingEl.setCssStyles({
 				borderTop: 'none',
 				paddingTop: '0',
 				paddingBottom: '0',
@@ -31,7 +31,7 @@ export class GeneralTab extends TabRenderer {
 			
 			// Create config items container - full width, left aligned
 			const configItems = setting.settingEl.createDiv('config-items');
-			configItems.setCssProps({
+			configItems.setCssStyles({
 				width: '100%',
 				marginBottom: '0'
 			});

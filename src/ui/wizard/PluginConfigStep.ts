@@ -106,7 +106,7 @@ export class PluginConfigStep extends BaseWizardStep {
 		if (hasSyncIssues && plugin.outOfSyncContentTypes) {
 			const syncDetails = info.createEl('p', { text: `Out of sync: ${plugin.outOfSyncContentTypes.join(', ')}`, cls: 'sync-details' });
 			// Set dynamic styles
-			syncDetails.setCssProps({
+			syncDetails.setCssStyles({
 				fontSize: '0.9em',
 				opacity: '0.8',
 				marginTop: '4px'
@@ -207,7 +207,7 @@ export class PluginConfigStep extends BaseWizardStep {
 				
 				// Create a container for the instructions
 				const contentDiv = instructionModal.contentEl.createDiv();
-				contentDiv.setCssProps({
+				contentDiv.setCssStyles({
 					padding: '20px',
 					lineHeight: '1.6'
 				});
@@ -229,7 +229,7 @@ export class PluginConfigStep extends BaseWizardStep {
 						}
 						const h2 = contentDiv.createEl('h2');
 						h2.setText(trimmedLine.substring(3));
-						h2.setCssProps({
+						h2.setCssStyles({
 							marginTop: '20px',
 							marginBottom: '10px',
 							fontSize: '1.2em',
@@ -240,7 +240,7 @@ export class PluginConfigStep extends BaseWizardStep {
 							if (!currentList) {
 								currentList = contentDiv.createEl('ol');
 								if (currentList) {
-									currentList.setCssProps({
+									currentList.setCssStyles({
 										marginLeft: '20px',
 										marginBottom: '15px'
 									});
@@ -248,7 +248,7 @@ export class PluginConfigStep extends BaseWizardStep {
 							}
 							if (currentList) {
 								const li = currentList.createEl('li');
-								li.setCssProps({
+								li.setCssStyles({
 									marginBottom: '5px'
 								});
 								// Parse bold text in the line
@@ -259,7 +259,7 @@ export class PluginConfigStep extends BaseWizardStep {
 							if (!currentList) {
 								currentList = contentDiv.createEl('ul');
 								if (currentList) {
-									currentList.setCssProps({
+									currentList.setCssStyles({
 										marginLeft: '20px',
 										marginBottom: '15px'
 									});
@@ -267,7 +267,7 @@ export class PluginConfigStep extends BaseWizardStep {
 							}
 							if (currentList) {
 								const li = currentList.createEl('li');
-								li.setCssProps({
+								li.setCssStyles({
 									marginBottom: '5px'
 								});
 								// Parse bold text in the line
@@ -279,7 +279,7 @@ export class PluginConfigStep extends BaseWizardStep {
 							currentList = null; // End current list
 						}
 						const p = contentDiv.createEl('p');
-						p.setCssProps({
+						p.setCssStyles({
 							marginBottom: '10px'
 						});
 						// Parse bold text in the line

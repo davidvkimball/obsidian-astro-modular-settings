@@ -46,12 +46,12 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 					});
 					// Show/hide options
 					const optionsDiv = container.querySelector('.profile-picture-options') as HTMLElement;
-					if (optionsDiv) optionsDiv.setCssProps({ display: value ? 'block' : 'none' });
+					if (optionsDiv) optionsDiv.setCssStyles({ display: value ? 'block' : 'none' });
 				}));
 
 		// Options container
 		const optionsContainer = container.createDiv('profile-picture-options');
-		optionsContainer.setCssProps({ display: isEnabled ? 'block' : 'none' });
+		optionsContainer.setCssStyles({ display: isEnabled ? 'block' : 'none' });
 		optionsContainer.className = 'profile-picture-options';
 
 		// Helper function to create settings
@@ -134,18 +134,18 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 							}
 						});
 						const optionsDiv = container.querySelector('.comments-options') as HTMLElement;
-						if (optionsDiv) optionsDiv.setCssProps({ display: value ? 'block' : 'none' });
+						if (optionsDiv) optionsDiv.setCssStyles({ display: value ? 'block' : 'none' });
 					});
 			});
 
 		// Options container
 		const optionsContainer = container.createDiv('comments-options');
-		optionsContainer.setCssProps({ display: isEnabled ? 'block' : 'none' });
+		optionsContainer.setCssStyles({ display: isEnabled ? 'block' : 'none' });
 		optionsContainer.className = 'comments-options';
 
 		// Instructions
 		const instructionsDiv = optionsContainer.createDiv('comments-instructions');
-		instructionsDiv.setCssProps({
+		instructionsDiv.setCssStyles({
 			marginBottom: '15px',
 			padding: '10px',
 			background: 'var(--background-modifier-border)',
@@ -154,7 +154,7 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 		});
 		
 		const instructionsText = instructionsDiv.createEl('p');
-		instructionsText.setCssProps({
+		instructionsText.setCssStyles({
 			margin: '0',
 			fontSize: '13px',
 			color: 'var(--text-muted)',
@@ -172,7 +172,7 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 				rel: 'noopener noreferrer'
 			}
 		});
-		giscusLink.setCssProps({
+		giscusLink.setCssStyles({
 			color: 'var(--interactive-accent)',
 			textDecoration: 'none'
 		});
@@ -180,10 +180,10 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 		
 		// Add hover effects to the link
 		giscusLink.addEventListener('mouseenter', () => {
-			giscusLink.setCssProps({ textDecoration: 'underline' });
+			giscusLink.setCssStyles({ textDecoration: 'underline' });
 		});
 		giscusLink.addEventListener('mouseleave', () => {
-			giscusLink.setCssProps({ textDecoration: 'none' });
+			giscusLink.setCssStyles({ textDecoration: 'none' });
 		});
 
 		// Script textarea
@@ -214,7 +214,7 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 			}
 		});
 		
-		textarea.setCssProps({
+		textarea.setCssStyles({
 			width: '100%',
 			fontFamily: 'var(--font-monospace)',
 			fontSize: '12px',
@@ -231,7 +231,7 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 		
 		// Validation and parsing
 		const validationDiv = optionsContainer.createDiv('script-validation');
-		validationDiv.setCssProps({
+		validationDiv.setCssStyles({
 			marginTop: '8px',
 			fontSize: '12px'
 		});
@@ -278,7 +278,7 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 				// False positive: "Giscus" is a proper noun (service name)
 				// eslint-disable-next-line obsidianmd/ui/sentence-case
 				const successSpan = validationDiv.createEl('span', { text: '✓ Valid Giscus script detected' });
-				successSpan.setCssProps({ color: 'var(--text-success)' });
+				successSpan.setCssStyles({ color: 'var(--text-success)' });
 				
 				// Parse and update script settings without forcing comments to be enabled
 				const parsed = GiscusScriptParser.parseScript(scriptContent);
@@ -317,7 +317,7 @@ export class OptionalFeaturesStep extends BaseWizardStep {
 			} else {
 				validationDiv.empty();
 				const errorSpan = validationDiv.createEl('span', { text: `✗ ${validation.error}` });
-				errorSpan.setCssProps({ color: 'var(--text-error)' });
+				errorSpan.setCssStyles({ color: 'var(--text-error)' });
 			}
 		};
 		

@@ -71,7 +71,7 @@ export class TemplateStep extends BaseWizardStep {
 			// Add spacing above the setting
 			const settingEl = setting.settingEl;
 			if (settingEl) {
-				settingEl.setCssProps({ marginTop: '2rem' });
+				settingEl.setCssStyles({ marginTop: '2rem' });
 			}
 		}
 	}

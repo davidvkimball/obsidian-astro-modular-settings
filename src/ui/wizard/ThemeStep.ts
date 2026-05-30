@@ -23,13 +23,13 @@ export class ThemeStep extends BaseWizardStep {
 			}
 			themeOption.setAttribute('data-theme', theme.id);
 			// Set dynamic background
-			themeOption.setCssProps({
+			themeOption.setCssStyles({
 				background: isDarkMode ? theme.backgroundColorDark : theme.backgroundColorLight
 			});
 			
 			const themePreview = themeOption.createDiv('theme-preview');
 			// Set dynamic background
-			themePreview.setCssProps({
+			themePreview.setCssStyles({
 				background: `linear-gradient(135deg, ${theme.previewColors.join(', ')})`
 			});
 			

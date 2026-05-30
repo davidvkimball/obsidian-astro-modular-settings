@@ -86,7 +86,7 @@ export class PluginsTab extends TabRenderer {
 					text: `Out of sync: ${plugin.outOfSyncContentTypes.join(', ')}`,
 					cls: 'sync-details'
 				});
-				detailsP.setCssProps({
+				detailsP.setCssStyles({
 					fontSize: '0.9em',
 					opacity: '0.8',
 					marginTop: '4px'
@@ -192,7 +192,7 @@ export class PluginsTab extends TabRenderer {
 									text: `Out of sync: ${plugin.outOfSyncContentTypes.join(', ')}`,
 									cls: 'sync-details'
 								});
-								detailsP.setCssProps({
+								detailsP.setCssStyles({
 									fontSize: '0.9em',
 									opacity: '0.8',
 									marginTop: '4px'
@@ -248,7 +248,7 @@ export class PluginsTab extends TabRenderer {
 					
 					// Create a container for the instructions
 					const contentDiv = instructionModal.contentEl.createDiv();
-					contentDiv.setCssProps({
+					contentDiv.setCssStyles({
 						padding: '20px',
 						lineHeight: '1.6'
 					});
@@ -270,7 +270,7 @@ export class PluginsTab extends TabRenderer {
 							}
 							const h2 = contentDiv.createEl('h2');
 							h2.setText(trimmedLine.substring(3));
-							h2.setCssProps({
+							h2.setCssStyles({
 								marginTop: '20px',
 								marginBottom: '10px',
 								fontSize: '1.2em',
@@ -280,13 +280,13 @@ export class PluginsTab extends TabRenderer {
 							// Numbered list item
 							if (!currentList) {
 								currentList = contentDiv.createEl('ol');
-								currentList.setCssProps({
+								currentList.setCssStyles({
 									marginLeft: '20px',
 									marginBottom: '15px'
 								});
 							}
 							const li = currentList.createEl('li');
-							li.setCssProps({
+							li.setCssStyles({
 								marginBottom: '5px'
 							});
 							// Parse bold text in the line
@@ -295,13 +295,13 @@ export class PluginsTab extends TabRenderer {
 							// Bullet list item
 							if (!currentList) {
 								currentList = contentDiv.createEl('ul');
-								currentList.setCssProps({
+								currentList.setCssStyles({
 									marginLeft: '20px',
 									marginBottom: '15px'
 								});
 							}
 							const li = currentList.createEl('li');
-							li.setCssProps({
+							li.setCssStyles({
 								marginBottom: '5px'
 							});
 							// Parse bold text in the line
@@ -312,7 +312,7 @@ export class PluginsTab extends TabRenderer {
 								currentList = null; // End current list
 							}
 							const p = contentDiv.createEl('p');
-							p.setCssProps({
+							p.setCssStyles({
 								marginBottom: '10px'
 							});
 							// Parse bold text in the line

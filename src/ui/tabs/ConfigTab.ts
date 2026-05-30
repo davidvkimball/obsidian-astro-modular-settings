@@ -148,7 +148,7 @@ export class ConfigTab extends TabRenderer {
 					});
 				});
 			// Add bottom margin to last setting in group without heading to create space before next heading
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				marginBottom: 'var(--size-4-6)'
 			});
 		});
@@ -158,7 +158,7 @@ export class ConfigTab extends TabRenderer {
 		const pluginConfigHeading = new Setting(container)
 			.setHeading()
 			.setName('Plugin configuration');
-		pluginConfigHeading.settingEl.setCssProps({
+		pluginConfigHeading.settingEl.setCssStyles({
 			marginTop: '0',
 			marginBottom: 'var(--size-4-2)'
 		});
@@ -167,7 +167,10 @@ export class ConfigTab extends TabRenderer {
 		void this.renderPluginStatus(container, settings);
 	}
 
-	private renderPluginStatus(container: HTMLElement, settings: AstroModularSettings): void {
+	// Public so the declarative Config sub-page (SettingsTab.getSettingDefinitions)
+	// can reuse the exact plugin-status + plugin-actions DOM. Behaviour is
+	// unchanged for the tabbed fallback that calls it from render().
+	renderPluginStatus(container: HTMLElement, settings: AstroModularSettings): void {
 		// Get plugin status
 		const contentOrg = settings.contentOrganization;
 		const pluginStatus = (this.plugin as AstroModularPlugin).pluginManager.getPluginStatus(contentOrg);
@@ -248,16 +251,21 @@ export class ConfigTab extends TabRenderer {
 					cls: 'sync-details'
 				});
 				// Set dynamic styles
-				detailsP.setCssProps({
+				detailsP.setCssStyles({
 					fontSize: '0.9em',
 					opacity: '0.8',
 					marginTop: '4px'
 				});
 			}
 		}
+	}
 
-		// Plugin Actions group with heading
-		const pluginActionsGroup = new SettingGroup(container).setHeading('Plugin actions');
+	// Renders the re-apply / manual-instructions actions. Split out of
+	// renderPluginStatus so the declarative Config sub-page can give it its own
+	// "Plugin actions" group heading rather than nesting it under the status
+	// group (where it visually merged on Obsidian 1.13+).
+	renderPluginActions(container: HTMLElement, settings: AstroModularSettings): void {
+		const pluginActionsGroup = new SettingGroup(container);
 
 		// Re-apply configuration button
 		pluginActionsGroup.addSetting(setting => {
@@ -296,11 +304,14 @@ export class ConfigTab extends TabRenderer {
 							const creationMode = contentOrg === 'file-based' ? 'file' : 'folder';
 							
 							new Notice(`Configuration re-applied successfully!\n\n• Obsidian: Attachments → ${attachmentLocation}\n• Astro Composer: Creation mode → ${creationMode}\n• Image Manager: Format updated for ${contentOrg}`, 8000);
-							// Refresh the plugin status display
-							const statusContainerEl = container.querySelector('.plugin-status-container');
-							if (statusContainerEl) {
+							// Refresh the plugin status display. The status cards now live
+							// in a separate group from these actions, so locate them in the
+							// settings DOM and re-render into their own container.
+							const statusContainerEl = container.ownerDocument.querySelector('.plugin-status-container');
+							if (statusContainerEl?.parentElement) {
+								const statusParent = statusContainerEl.parentElement;
 								statusContainerEl.remove();
-								this.renderPluginStatus(container, settings);
+								this.renderPluginStatus(statusParent, settings);
 							}
 						} else {
 							// Text is already in sentence case
@@ -346,7 +357,7 @@ export class ConfigTab extends TabRenderer {
 					
 					// Create a container for the instructions
 					const contentDiv = instructionModal.contentEl.createDiv();
-					contentDiv.setCssProps({
+					contentDiv.setCssStyles({
 						padding: '20px',
 						lineHeight: '1.6'
 					});
@@ -368,7 +379,7 @@ export class ConfigTab extends TabRenderer {
 							}
 							const h2 = contentDiv.createEl('h2');
 							h2.setText(trimmedLine.substring(3));
-							h2.setCssProps({
+							h2.setCssStyles({
 								marginTop: '20px',
 								marginBottom: '10px',
 								fontSize: '1.2em',
@@ -378,13 +389,13 @@ export class ConfigTab extends TabRenderer {
 							// Numbered list item
 							if (!currentList) {
 								currentList = contentDiv.createEl('ol');
-								currentList.setCssProps({
+								currentList.setCssStyles({
 									marginLeft: '20px',
 									marginBottom: '15px'
 								});
 							}
 							const li = currentList.createEl('li');
-							li.setCssProps({
+							li.setCssStyles({
 								marginBottom: '5px'
 							});
 							// Parse bold text in the line
@@ -393,13 +404,13 @@ export class ConfigTab extends TabRenderer {
 							// Bullet list item
 							if (!currentList) {
 								currentList = contentDiv.createEl('ul');
-								currentList.setCssProps({
+								currentList.setCssStyles({
 									marginLeft: '20px',
 									marginBottom: '15px'
 								});
 							}
 							const li = currentList.createEl('li');
-							li.setCssProps({
+							li.setCssStyles({
 								marginBottom: '5px'
 							});
 							// Parse bold text in the line
@@ -410,7 +421,7 @@ export class ConfigTab extends TabRenderer {
 								currentList = null; // End current list
 							}
 							const p = contentDiv.createEl('p');
-							p.setCssProps({
+							p.setCssStyles({
 								marginBottom: '10px'
 							});
 							// Parse bold text in the line
@@ -439,7 +450,9 @@ export class ConfigTab extends TabRenderer {
 		});
 	}
 
-	private async updatePluginSettingsWithTemplate(template: string): Promise<void> {
+	// Public so the declarative Config sub-page can reuse the template-apply
+	// flow without duplicating it. Unchanged for the tabbed fallback.
+	async updatePluginSettingsWithTemplate(template: string): Promise<void> {
 		// Get the current plugin settings
 		const plugin = this.plugin as AstroModularPlugin;
 		const settings = plugin.settings;
@@ -616,7 +629,9 @@ export class ConfigTab extends TabRenderer {
 		await this.plugin.saveData(settings);
 	}
 
-	private getTemplateChanges(templateId: string): string[] {
+	// Public so the declarative Config sub-page can reuse the change summary
+	// shown in the preset warning modal. Unchanged for the tabbed fallback.
+	getTemplateChanges(templateId: string): string[] {
 		const changes: string[] = [];
 		const settings = this.getSettings();
 		

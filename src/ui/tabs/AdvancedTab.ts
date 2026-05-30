@@ -1,4 +1,4 @@
-import { Notice, Modal , SettingGroup} from 'obsidian';
+import { Notice, Modal, Setting, SettingGroup } from 'obsidian';
 import { TabRenderer } from '../common/TabRenderer';
 import { DEFAULT_SETTINGS, TEMPLATE_OPTIONS, AstroModularPlugin } from '../../types';
 
@@ -6,52 +6,60 @@ import { DEFAULT_SETTINGS, TEMPLATE_OPTIONS, AstroModularPlugin } from '../../ty
 export class AdvancedTab extends TabRenderer {
 	render(container: HTMLElement): void {
 		container.empty();
-		const settings = this.getSettings();
 
 		// Group all settings with no heading
 		const advancedGroup = new SettingGroup(container);
 
-		// Apply all settings button
-		advancedGroup.addSetting(setting => {
-			setting
-				.setName('Apply all settings')
-				.setDesc('Write all current settings to your Astro config.ts file')
-				.addButton(button => button
-					.setButtonText('Apply to config.ts')
-					.setCta()
-					.onClick(async () => {
-						try {
-							await this.applyCurrentConfiguration(true);
-						} catch (error) {
-							new Notice(`Failed to apply settings: ${error instanceof Error ? error.message : String(error)}`);
-						}
-					}));
-		});
+		advancedGroup.addSetting(setting => this.buildApplyAllSetting(setting));
+		advancedGroup.addSetting(setting => this.buildEditConfigSetting(setting));
+		advancedGroup.addSetting(setting => this.buildSyncFromConfigSetting(setting));
+		advancedGroup.addSetting(setting => this.buildResetToTemplateSetting(setting));
+		advancedGroup.addSetting(setting => this.buildResetToDefaultsSetting(setting));
+		advancedGroup.addSetting(setting => this.buildExportConfigurationSetting(setting));
+		advancedGroup.addSetting(setting => this.buildImportConfigurationSetting(setting));
+	}
 
-		// Edit config.ts directly button
-		advancedGroup.addSetting(setting => {
-			setting
-				.setName('Edit config.ts directly') // "config.ts" is a filename, keep as is
-				// False positive: Text is already in sentence case; "Astro" is a proper noun
-				// eslint-disable-next-line obsidianmd/ui/sentence-case
-				.setDesc('Open your Astro configuration file in the editor')
-				.addButton(button => button
-					.setButtonText('Open config.ts')
-					.onClick(() => {
-						this.openConfigFile();
-					}));
-		});
-
-		// Sync from config.ts button
-		advancedGroup.addSetting(setting => {
-			setting
-				.setName('Sync from config.ts')
-				.setDesc('Read current config.ts file and update plugin settings to match')
-				.addButton(button => button
-					.setButtonText('Sync from config.ts')
-					.setCta()
-					.onClick(async () => {
+	// Apply all settings button
+	public buildApplyAllSetting(setting: Setting): void {
+		setting
+			.setName('Apply all settings')
+			.setDesc('Write all current settings to your Astro config.ts file')
+			.addButton(button => button
+				.setButtonText('Apply to config.ts')
+				.setCta()
+				.onClick(async () => {
 					try {
+						await this.applyCurrentConfiguration(true);
+					} catch (error) {
+						new Notice(`Failed to apply settings: ${error instanceof Error ? error.message : String(error)}`);
+					}
+				}));
+	}
+
+	// Edit config.ts directly button
+	public buildEditConfigSetting(setting: Setting): void {
+		setting
+			.setName('Edit config.ts directly') // "config.ts" is a filename, keep as is
+			// False positive: Text is already in sentence case; "Astro" is a proper noun
+			// eslint-disable-next-line obsidianmd/ui/sentence-case
+			.setDesc('Open your Astro configuration file in the editor')
+			.addButton(button => button
+				.setButtonText('Open config.ts')
+				.onClick(() => {
+					this.openConfigFile();
+				}));
+	}
+
+	// Sync from config.ts button
+	public buildSyncFromConfigSetting(setting: Setting): void {
+		setting
+			.setName('Sync from config.ts')
+			.setDesc('Read current config.ts file and update plugin settings to match')
+			.addButton(button => button
+				.setButtonText('Sync from config.ts')
+				.setCta()
+				.onClick(async () => {
+				try {
 						// Read the current config.ts file
 						const plugin = this.plugin as AstroModularPlugin;
 						const configContent = plugin.configManager.fileManager.readConfig();
@@ -253,21 +261,22 @@ export class AdvancedTab extends TabRenderer {
 						new Notice(`Failed to sync from config.ts: ${error instanceof Error ? error.message : String(error)}`);
 					}
 				}));
-		});
+	}
 
-		// Reset to Template button
-		advancedGroup.addSetting(setting => {
-			setting
-				.setName('Reset to template')
-				.setDesc(`Reset all settings to the current template (${TEMPLATE_OPTIONS.find(t => t.id === settings.currentTemplate)?.name})`)
-				.addButton(button => button
-					.setButtonText('Reset to template')
-					.setWarning()
-					.onClick(async () => {
-					// Reset settings to template defaults
-					try {
-						// Load the template preset
-						const templatePreset = (this.plugin as AstroModularPlugin).configManager.getTemplatePreset(settings.currentTemplate);
+	// Reset to Template button
+	public buildResetToTemplateSetting(setting: Setting): void {
+		const settings = this.getSettings();
+		setting
+			.setName('Reset to template')
+			.setDesc(`Reset all settings to the current template (${TEMPLATE_OPTIONS.find(t => t.id === settings.currentTemplate)?.name})`)
+			.addButton(button => button
+				.setButtonText('Reset to template')
+				.setWarning()
+				.onClick(async () => {
+				// Reset settings to template defaults
+				try {
+					// Load the template preset
+					const templatePreset = (this.plugin as AstroModularPlugin).configManager.getTemplatePreset(settings.currentTemplate);
 						if (templatePreset && templatePreset.config) {
 							// Preserve user-specific settings that shouldn't be reset
 							const preservedSiteInfo = settings.siteInfo;
@@ -333,17 +342,17 @@ export class AdvancedTab extends TabRenderer {
 						new Notice(`Failed to reset to template: ${error instanceof Error ? error.message : String(error)}`);
 					}
 				}));
-		});
+	}
 
-		// Reset to defaults
-		advancedGroup.addSetting(setting => {
-			setting
-				.setName('Reset to defaults')
-				.setDesc('Reset all settings to their default values')
-				.addButton(button => button
-					.setButtonText('Reset to defaults')
-					.setWarning()
-					.onClick(() => {
+	// Reset to defaults
+	public buildResetToDefaultsSetting(setting: Setting): void {
+		setting
+			.setName('Reset to defaults')
+			.setDesc('Reset all settings to their default values')
+			.addButton(button => button
+				.setButtonText('Reset to defaults')
+				.setWarning()
+				.onClick(() => {
 					(() => {
 						// Create a native Obsidian confirmation modal
 						const confirmModal = new Modal(this.app);
@@ -354,7 +363,7 @@ export class AdvancedTab extends TabRenderer {
 						contentDiv.createEl('p', { text: 'This will preserve your site info and navigation pages/links.' });
 						
 						const buttonContainer = contentDiv.createDiv();
-						buttonContainer.setCssProps({
+						buttonContainer.setCssStyles({
 							marginTop: '20px',
 							display: 'flex',
 							gap: '10px',
@@ -417,31 +426,30 @@ export class AdvancedTab extends TabRenderer {
 						confirmModal.open();
 					})();
 				}));
-		});
+	}
 
-		// Export configuration
-		advancedGroup.addSetting(setting => {
-			setting
-				.setName('Export configuration')
-				.setDesc('Export your current configuration as JSON')
-				.addButton(button => button
-					.setButtonText('Export JSON')
-					.onClick(() => {
-						this.exportConfiguration();
-					}));
-		});
+	// Export configuration button
+	public buildExportConfigurationSetting(setting: Setting): void {
+		setting
+			.setName('Export configuration')
+			.setDesc('Export your current configuration as JSON')
+			.addButton(button => button
+				.setButtonText('Export JSON')
+				.onClick(() => {
+					this.exportConfiguration();
+				}));
+	}
 
-		// Import configuration
-		advancedGroup.addSetting(setting => {
-			setting
-				.setName('Import configuration')
-				.setDesc('Import configuration from JSON file')
-				.addButton(button => button
-					.setButtonText('Import JSON')
-					.onClick(() => {
-						this.importConfiguration();
-					}));
-		});
+	// Import configuration button
+	public buildImportConfigurationSetting(setting: Setting): void {
+		setting
+			.setName('Import configuration')
+			.setDesc('Import configuration from JSON file')
+			.addButton(button => button
+				.setButtonText('Import JSON')
+				.onClick(() => {
+					this.importConfiguration();
+				}));
 	}
 
 	private exportConfiguration(): void {

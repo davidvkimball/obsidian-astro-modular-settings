@@ -70,7 +70,7 @@ export class FeaturesTab extends TabRenderer {
 						// Update visibility of ToC depth setting
 						const tocDepthSetting = container.querySelector('.toc-depth-setting') as HTMLElement;
 						if (tocDepthSetting) {
-							tocDepthSetting.setCssProps({ display: value ? 'block' : 'none' });
+							tocDepthSetting.setCssStyles({ display: value ? 'block' : 'none' });
 						}
 						
 						await this.applyCurrentConfiguration();
@@ -81,7 +81,7 @@ export class FeaturesTab extends TabRenderer {
 		// ToC depth - add as setting with conditional visibility
 		globalGroup.addSetting(setting => {
 			setting.settingEl.classList.add('toc-depth-setting');
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				display: (settings.tableOfContents?.enabled ?? true) ? 'block' : 'none'
 			});
 			setting
@@ -126,10 +126,10 @@ export class FeaturesTab extends TabRenderer {
 						const footerContentSetting = container.querySelector('.footer-content-setting') as HTMLElement;
 						const footerSocialSetting = container.querySelector('.footer-social-setting') as HTMLElement;
 						if (footerContentSetting) {
-							footerContentSetting.setCssProps({ display: value ? 'block' : 'none' });
+							footerContentSetting.setCssStyles({ display: value ? 'block' : 'none' });
 						}
 						if (footerSocialSetting) {
-							footerSocialSetting.setCssProps({ display: value ? 'block' : 'none' });
+							footerSocialSetting.setCssStyles({ display: value ? 'block' : 'none' });
 						}
 						
 						await this.applyCurrentConfiguration();
@@ -140,7 +140,7 @@ export class FeaturesTab extends TabRenderer {
 		// Footer content - add as setting with conditional visibility
 		globalGroup.addSetting(setting => {
 			setting.settingEl.classList.add('footer-content-setting');
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				display: (settings.footer?.enabled ?? true) ? 'block' : 'none'
 			});
 			setting
@@ -150,7 +150,7 @@ export class FeaturesTab extends TabRenderer {
 			// Apply spacing directly to description element
 			const descEl = setting.settingEl.querySelector('.setting-item-description');
 			if (descEl) {
-				(descEl as HTMLElement).setCssProps({
+				(descEl as HTMLElement).setCssStyles({
 					marginBottom: 'var(--size-4-3)'
 				});
 			}
@@ -164,7 +164,7 @@ export class FeaturesTab extends TabRenderer {
 			});
 			textarea.value = settings.footer?.content || '© 2025 {author}. Built with the <a href="https://github.com/davidvkimball/astro-modular" target="_blank">Astro Modular</a> theme.';
 			
-			textarea.setCssProps({
+			textarea.setCssStyles({
 				width: '100%',
 				minHeight: '80px',
 				resize: 'vertical',
@@ -178,7 +178,7 @@ export class FeaturesTab extends TabRenderer {
 			});
 			
 			// Position textarea below description (not to the right)
-			setting.controlEl.setCssProps({
+			setting.controlEl.setCssStyles({
 				width: '100%',
 				display: 'block'
 			});
@@ -215,7 +215,7 @@ export class FeaturesTab extends TabRenderer {
 		// Show social icons in footer - add as setting with conditional visibility
 		globalGroup.addSetting(setting => {
 			setting.settingEl.classList.add('footer-social-setting');
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				display: (settings.footer?.enabled ?? true) ? 'block' : 'none'
 			});
 			setting
@@ -316,7 +316,7 @@ export class FeaturesTab extends TabRenderer {
 						// Update visibility of all command palette options
 						const cpSettings = container.querySelectorAll('.cp-option-setting');
 						cpSettings.forEach(el => {
-							(el as HTMLElement).setCssProps({ display: value ? 'block' : 'none' });
+							(el as HTMLElement).setCssStyles({ display: value ? 'block' : 'none' });
 						});
 						
 						await this.applyCurrentConfiguration();
@@ -327,7 +327,7 @@ export class FeaturesTab extends TabRenderer {
 		// Shortcut - add with conditional visibility
 		commandPaletteGroup.addSetting(setting => {
 			setting.settingEl.classList.add('cp-option-setting');
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				display: (settings.commandPalette?.enabled ?? true) ? 'block' : 'none'
 			});
 			setting
@@ -362,7 +362,7 @@ export class FeaturesTab extends TabRenderer {
 		// Placeholder - add with conditional visibility
 		commandPaletteGroup.addSetting(setting => {
 			setting.settingEl.classList.add('cp-option-setting');
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				display: (settings.commandPalette?.enabled ?? true) ? 'block' : 'none'
 			});
 			setting
@@ -396,7 +396,7 @@ export class FeaturesTab extends TabRenderer {
 		// Search content types - all with conditional visibility
 		commandPaletteGroup.addSetting(setting => {
 			setting.settingEl.classList.add('cp-option-setting');
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				display: (settings.commandPalette?.enabled ?? true) ? 'block' : 'none'
 			});
 			setting
@@ -420,7 +420,7 @@ export class FeaturesTab extends TabRenderer {
 
 		commandPaletteGroup.addSetting(setting => {
 			setting.settingEl.classList.add('cp-option-setting');
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				display: (settings.commandPalette?.enabled ?? true) ? 'block' : 'none'
 			});
 			setting
@@ -441,7 +441,7 @@ export class FeaturesTab extends TabRenderer {
 
 		commandPaletteGroup.addSetting(setting => {
 			setting.settingEl.classList.add('cp-option-setting');
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				display: (settings.commandPalette?.enabled ?? true) ? 'block' : 'none'
 			});
 			setting
@@ -462,7 +462,7 @@ export class FeaturesTab extends TabRenderer {
 
 		commandPaletteGroup.addSetting(setting => {
 			setting.settingEl.classList.add('cp-option-setting');
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				display: (settings.commandPalette?.enabled ?? true) ? 'block' : 'none'
 			});
 			setting
@@ -484,7 +484,7 @@ export class FeaturesTab extends TabRenderer {
 		// Command palette sections - all with conditional visibility
 		commandPaletteGroup.addSetting(setting => {
 			setting.settingEl.classList.add('cp-option-setting');
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				display: (settings.commandPalette?.enabled ?? true) ? 'block' : 'none'
 			});
 			setting
@@ -502,7 +502,7 @@ export class FeaturesTab extends TabRenderer {
 						// Update visibility of quick actions options
 						const qaSettings = container.querySelectorAll('.qa-option-setting');
 						qaSettings.forEach(el => {
-							(el as HTMLElement).setCssProps({ display: value ? 'block' : 'none' });
+							(el as HTMLElement).setCssStyles({ display: value ? 'block' : 'none' });
 						});
 						
 						await this.applyCurrentConfiguration();
@@ -512,7 +512,7 @@ export class FeaturesTab extends TabRenderer {
 		// Quick actions options - with conditional visibility based on both enabled and quickActions section
 		commandPaletteGroup.addSetting(setting => {
 			setting.settingEl.classList.add('cp-option-setting', 'qa-option-setting');
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				display: (settings.commandPalette?.enabled ?? true) && (settings.commandPalette?.sections?.quickActions ?? true) ? 'block' : 'none'
 			});
 			setting
@@ -534,7 +534,7 @@ export class FeaturesTab extends TabRenderer {
 
 		commandPaletteGroup.addSetting(setting => {
 			setting.settingEl.classList.add('cp-option-setting', 'qa-option-setting');
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				display: (settings.commandPalette?.enabled ?? true) && (settings.commandPalette?.sections?.quickActions ?? true) ? 'block' : 'none'
 			});
 			setting
@@ -556,7 +556,7 @@ export class FeaturesTab extends TabRenderer {
 
 		commandPaletteGroup.addSetting(setting => {
 			setting.settingEl.classList.add('cp-option-setting', 'qa-option-setting');
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				display: (settings.commandPalette?.enabled ?? true) && (settings.commandPalette?.sections?.quickActions ?? true) ? 'block' : 'none'
 			});
 			setting
@@ -578,7 +578,7 @@ export class FeaturesTab extends TabRenderer {
 
 		commandPaletteGroup.addSetting(setting => {
 			setting.settingEl.classList.add('cp-option-setting');
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				display: (settings.commandPalette?.enabled ?? true) ? 'block' : 'none'
 			});
 			setting
@@ -599,7 +599,7 @@ export class FeaturesTab extends TabRenderer {
 
 		commandPaletteGroup.addSetting(setting => {
 			setting.settingEl.classList.add('cp-option-setting');
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				display: (settings.commandPalette?.enabled ?? true) ? 'block' : 'none'
 			});
 			setting
@@ -648,7 +648,7 @@ export class FeaturesTab extends TabRenderer {
 						// Update visibility of featured post options
 						const fpSettings = container.querySelectorAll('.fp-option-setting');
 						fpSettings.forEach(el => {
-							(el as HTMLElement).setCssProps({ display: value ? 'block' : 'none' });
+							(el as HTMLElement).setCssStyles({ display: value ? 'block' : 'none' });
 						});
 						
 						await this.applyCurrentConfiguration();
@@ -659,7 +659,7 @@ export class FeaturesTab extends TabRenderer {
 		// Featured Post options - with conditional visibility
 		homeOptionsGroup.addSetting(setting => {
 			setting.settingEl.classList.add('fp-option-setting');
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				display: (settings.homeOptions?.featuredPost?.enabled ?? true) ? 'block' : 'none'
 			});
 			setting
@@ -680,7 +680,7 @@ export class FeaturesTab extends TabRenderer {
 							// Update visibility of slug field
 							const fpSlugSetting = container.querySelector('.fp-slug-setting') as HTMLElement;
 							if (fpSlugSetting) {
-								fpSlugSetting.setCssProps({ display: value === 'featured' ? 'block' : 'none' });
+								fpSlugSetting.setCssStyles({ display: value === 'featured' ? 'block' : 'none' });
 							}
 							
 							await this.applyCurrentConfiguration();
@@ -689,7 +689,7 @@ export class FeaturesTab extends TabRenderer {
 					setTimeout(() => {
 						const selectEl = setting.controlEl.querySelector('select');
 						if (selectEl) {
-							selectEl.setCssProps({
+							selectEl.setCssStyles({
 								width: '200px',
 								minWidth: '200px',
 								maxWidth: '200px'
@@ -702,7 +702,7 @@ export class FeaturesTab extends TabRenderer {
 		// Featured post slug - with conditional visibility
 		homeOptionsGroup.addSetting(setting => {
 			setting.settingEl.classList.add('fp-option-setting', 'fp-slug-setting');
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				display: (settings.homeOptions?.featuredPost?.enabled ?? true) && (settings.homeOptions?.featuredPost?.type === 'featured') ? 'block' : 'none'
 			});
 			setting
@@ -760,7 +760,7 @@ export class FeaturesTab extends TabRenderer {
 						// Update visibility of recent posts count
 						const rpCountSetting = container.querySelector('.rp-count-setting') as HTMLElement;
 						if (rpCountSetting) {
-							rpCountSetting.setCssProps({ display: value ? 'block' : 'none' });
+							rpCountSetting.setCssStyles({ display: value ? 'block' : 'none' });
 						}
 						
 						await this.applyCurrentConfiguration();
@@ -770,7 +770,7 @@ export class FeaturesTab extends TabRenderer {
 		// Recent Posts count - with conditional visibility
 		homeOptionsGroup.addSetting(setting => {
 			setting.settingEl.classList.add('rp-count-setting');
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				display: (settings.homeOptions?.recentPosts?.enabled ?? true) ? 'block' : 'none'
 			});
 			setting
@@ -826,7 +826,7 @@ export class FeaturesTab extends TabRenderer {
 						// Update visibility of projects count
 						const pCountSetting = container.querySelector('.p-count-setting') as HTMLElement;
 						if (pCountSetting) {
-							pCountSetting.setCssProps({ display: value ? 'block' : 'none' });
+							pCountSetting.setCssStyles({ display: value ? 'block' : 'none' });
 						}
 						
 						await this.applyCurrentConfiguration();
@@ -836,7 +836,7 @@ export class FeaturesTab extends TabRenderer {
 		// Projects count - with conditional visibility
 		homeOptionsGroup.addSetting(setting => {
 			setting.settingEl.classList.add('p-count-setting');
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				display: (settings.homeOptions?.projects?.enabled ?? true) ? 'block' : 'none'
 			});
 			setting
@@ -890,7 +890,7 @@ export class FeaturesTab extends TabRenderer {
 						// Update visibility of docs count
 						const dCountSetting = container.querySelector('.d-count-setting') as HTMLElement;
 						if (dCountSetting) {
-							dCountSetting.setCssProps({ display: value ? 'block' : 'none' });
+							dCountSetting.setCssStyles({ display: value ? 'block' : 'none' });
 						}
 						
 						await this.applyCurrentConfiguration();
@@ -900,7 +900,7 @@ export class FeaturesTab extends TabRenderer {
 		// Docs count - with conditional visibility
 		homeOptionsGroup.addSetting(setting => {
 			setting.settingEl.classList.add('d-count-setting');
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				display: (settings.homeOptions?.docs?.enabled ?? true) ? 'block' : 'none'
 			});
 			setting
@@ -960,7 +960,7 @@ export class FeaturesTab extends TabRenderer {
 					setTimeout(() => {
 						const selectEl = setting.controlEl.querySelector('select');
 						if (selectEl) {
-							selectEl.setCssProps({
+							selectEl.setCssStyles({
 								width: '200px',
 								minWidth: '200px',
 								maxWidth: '200px'
@@ -1079,7 +1079,7 @@ export class FeaturesTab extends TabRenderer {
 						// Update visibility of compact view setting
 						const lmCompactSetting = container.querySelector('.lm-compact-setting') as HTMLElement;
 						if (lmCompactSetting) {
-							lmCompactSetting.setCssProps({ display: value ? 'block' : 'none' });
+							lmCompactSetting.setCssStyles({ display: value ? 'block' : 'none' });
 						}
 						
 						await this.applyCurrentConfiguration();
@@ -1089,7 +1089,7 @@ export class FeaturesTab extends TabRenderer {
 		// Linked Mentions Compact - with conditional visibility
 		postOptionsGroup.addSetting(setting => {
 			setting.settingEl.classList.add('lm-compact-setting');
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				display: (settings.postOptions?.linkedMentions?.enabled ?? true) ? 'block' : 'none'
 			});
 			setting
@@ -1127,7 +1127,7 @@ export class FeaturesTab extends TabRenderer {
 						// Update visibility of graph view options
 						const gvSettings = container.querySelectorAll('.gv-option-setting');
 						gvSettings.forEach(el => {
-							(el as HTMLElement).setCssProps({ display: value ? 'block' : 'none' });
+							(el as HTMLElement).setCssStyles({ display: value ? 'block' : 'none' });
 						});
 						
 						await this.applyCurrentConfiguration();
@@ -1137,7 +1137,7 @@ export class FeaturesTab extends TabRenderer {
 		// Graph View options - with conditional visibility
 		postOptionsGroup.addSetting(setting => {
 			setting.settingEl.classList.add('gv-option-setting');
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				display: (settings.postOptions?.graphView?.enabled ?? true) ? 'block' : 'none'
 			});
 			setting
@@ -1157,7 +1157,7 @@ export class FeaturesTab extends TabRenderer {
 
 		postOptionsGroup.addSetting(setting => {
 			setting.settingEl.classList.add('gv-option-setting');
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				display: (settings.postOptions?.graphView?.enabled ?? true) ? 'block' : 'none'
 			});
 			setting
@@ -1179,7 +1179,7 @@ export class FeaturesTab extends TabRenderer {
 
 		postOptionsGroup.addSetting(setting => {
 			setting.settingEl.classList.add('gv-option-setting');
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				display: (settings.postOptions?.graphView?.enabled ?? true) ? 'block' : 'none'
 			});
 			setting
@@ -1244,7 +1244,7 @@ export class FeaturesTab extends TabRenderer {
 					setTimeout(() => {
 						const selectEl = setting.controlEl.querySelector('select');
 						if (selectEl) {
-							selectEl.setCssProps({
+							selectEl.setCssStyles({
 								width: '200px',
 								minWidth: '200px',
 								maxWidth: '200px'
@@ -1283,7 +1283,7 @@ export class FeaturesTab extends TabRenderer {
 							// Update visibility of custom aspect ratio setting
 							const customARSetting = container.querySelector('.custom-ar-setting') as HTMLElement;
 							if (customARSetting) {
-								customARSetting.setCssProps({ display: value === 'custom' ? 'block' : 'none' });
+								customARSetting.setCssStyles({ display: value === 'custom' ? 'block' : 'none' });
 							}
 							
 							await this.applyCurrentConfiguration();
@@ -1292,7 +1292,7 @@ export class FeaturesTab extends TabRenderer {
 					setTimeout(() => {
 						const selectEl = setting.controlEl.querySelector('select');
 						if (selectEl) {
-							selectEl.setCssProps({
+							selectEl.setCssStyles({
 								width: '200px',
 								minWidth: '200px',
 								maxWidth: '200px'
@@ -1305,7 +1305,7 @@ export class FeaturesTab extends TabRenderer {
 		// Custom aspect ratio - with conditional visibility
 		postOptionsGroup.addSetting(setting => {
 			setting.settingEl.classList.add('custom-ar-setting');
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				display: (settings.postOptions?.postCardAspectRatio === 'custom') ? 'block' : 'none'
 			});
 			setting
@@ -1355,7 +1355,7 @@ export class FeaturesTab extends TabRenderer {
 		this.renderCommentsSetting(optionalFeaturesGroup, settings);
 	}
 
-	private renderProfilePictureSetting(group: SettingsContainer, settings: AstroModularSettings): void {
+	public renderProfilePictureSetting(group: SettingsContainer, settings: AstroModularSettings): void {
 		const isEnabled = settings.features?.profilePicture || settings.optionalFeatures?.profilePicture?.enabled;
 		const profileSettings: ProfilePictureSettings = settings.optionalFeatures?.profilePicture || {
 			enabled: false,
@@ -1387,7 +1387,7 @@ export class FeaturesTab extends TabRenderer {
 						const ppSettings = setting.settingEl.parentElement?.querySelectorAll('.pp-option-setting');
 						if (ppSettings) {
 							ppSettings.forEach(el => {
-								(el as HTMLElement).setCssProps({ display: value ? 'block' : 'none' });
+								(el as HTMLElement).setCssStyles({ display: value ? 'block' : 'none' });
 							});
 						}
 						
@@ -1403,7 +1403,7 @@ export class FeaturesTab extends TabRenderer {
 		// Detailed options - add as custom setting within group
 		group.addSetting(setting => {
 			setting.settingEl.classList.add('pp-option-setting');
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				display: isEnabled ? 'block' : 'none',
 				marginTop: '10px'
 			});
@@ -1412,10 +1412,10 @@ export class FeaturesTab extends TabRenderer {
 			const nameEl = setting.settingEl.querySelector('.setting-item-name');
 			const descEl = setting.settingEl.querySelector('.setting-item-description');
 			const controlEl = setting.settingEl.querySelector('.setting-item-control');
-			if (nameEl) (nameEl as HTMLElement).setCssProps({ display: 'none' });
-			if (descEl) (descEl as HTMLElement).setCssProps({ display: 'none' });
-			if (controlEl) (controlEl as HTMLElement).setCssProps({ display: 'none' });
-			setting.settingEl.setCssProps({
+			if (nameEl) (nameEl as HTMLElement).setCssStyles({ display: 'none' });
+			if (descEl) (descEl as HTMLElement).setCssStyles({ display: 'none' });
+			if (controlEl) (controlEl as HTMLElement).setCssStyles({ display: 'none' });
+			setting.settingEl.setCssStyles({
 				borderTop: 'none',
 				paddingTop: '0',
 				paddingBottom: '0'
@@ -1425,7 +1425,7 @@ export class FeaturesTab extends TabRenderer {
 
 			// Create two-column grid for options
 			const optionsGrid = optionsContainer.createDiv('options-grid');
-		optionsGrid.setCssProps({
+		optionsGrid.setCssStyles({
 			display: 'grid',
 			gridTemplateColumns: '1fr 1fr',
 			gap: '10px',
@@ -1532,7 +1532,7 @@ export class FeaturesTab extends TabRenderer {
 		});
 	}
 
-	private renderCommentsSetting(group: SettingsContainer, settings: AstroModularSettings): void {
+	public renderCommentsSetting(group: SettingsContainer, settings: AstroModularSettings): void {
 		// Use optionalFeatures.comments.enabled as the primary source, fallback to others
 		const isEnabled = settings.optionalFeatures?.comments?.enabled ?? settings.features?.comments ?? settings.postOptions?.comments?.enabled ?? false;
 		const commentsSettings = settings.postOptions?.comments || settings.optionalFeatures?.comments || {
@@ -1592,7 +1592,7 @@ export class FeaturesTab extends TabRenderer {
 					const commentsSettings = commentsSettingsEls;
 						if (commentsSettings) {
 							commentsSettings.forEach(el => {
-								(el as HTMLElement).setCssProps({ display: value ? 'block' : 'none' });
+								(el as HTMLElement).setCssStyles({ display: value ? 'block' : 'none' });
 							});
 						}
 						
@@ -1608,7 +1608,7 @@ export class FeaturesTab extends TabRenderer {
 		// Options container - add as custom setting within group
 		group.addSetting(setting => {
 			setting.settingEl.classList.add('comments-option-setting');
-			setting.settingEl.setCssProps({
+			setting.settingEl.setCssStyles({
 				display: isEnabled ? 'block' : 'none',
 				marginTop: '10px'
 			});
@@ -1617,10 +1617,10 @@ export class FeaturesTab extends TabRenderer {
 			const nameEl = setting.settingEl.querySelector('.setting-item-name');
 			const descEl = setting.settingEl.querySelector('.setting-item-description');
 			const controlEl = setting.settingEl.querySelector('.setting-item-control');
-			if (nameEl) (nameEl as HTMLElement).setCssProps({ display: 'none' });
-			if (descEl) (descEl as HTMLElement).setCssProps({ display: 'none' });
-			if (controlEl) (controlEl as HTMLElement).setCssProps({ display: 'none' });
-			setting.settingEl.setCssProps({
+			if (nameEl) (nameEl as HTMLElement).setCssStyles({ display: 'none' });
+			if (descEl) (descEl as HTMLElement).setCssStyles({ display: 'none' });
+			if (controlEl) (controlEl as HTMLElement).setCssStyles({ display: 'none' });
+			setting.settingEl.setCssStyles({
 				borderTop: 'none',
 				paddingTop: '0',
 				paddingBottom: '0'
@@ -1630,18 +1630,18 @@ export class FeaturesTab extends TabRenderer {
 
 			// Instructions
 			const instructionsDiv = optionsContainer.createDiv('comments-instructions');
-			instructionsDiv.setCssProps({
+			instructionsDiv.setCssStyles({
 				marginBottom: '15px',
 				padding: '10px',
 				background: 'var(--background-modifier-border)'
 			});
-			instructionsDiv.setCssProps({
+			instructionsDiv.setCssStyles({
 				borderRadius: '4px',
 				borderLeft: '3px solid var(--interactive-accent)'
 			});
 			
 			const instructionsText = instructionsDiv.createEl('p');
-			instructionsText.setCssProps({
+			instructionsText.setCssStyles({
 				margin: '0',
 				fontSize: '13px',
 				color: 'var(--text-muted)',
@@ -1660,7 +1660,7 @@ export class FeaturesTab extends TabRenderer {
 					rel: 'noopener noreferrer'
 				}
 			});
-			giscusLink.setCssProps({
+			giscusLink.setCssStyles({
 				color: 'var(--interactive-accent)',
 				textDecoration: 'none'
 			});
@@ -1668,10 +1668,10 @@ export class FeaturesTab extends TabRenderer {
 			
 			// Add hover effects to the link
 			giscusLink.addEventListener('mouseenter', () => {
-				giscusLink.setCssProps({ textDecoration: 'underline' });
+				giscusLink.setCssStyles({ textDecoration: 'underline' });
 			});
 			giscusLink.addEventListener('mouseleave', () => {
-				giscusLink.setCssProps({ textDecoration: 'none' });
+				giscusLink.setCssStyles({ textDecoration: 'none' });
 			});
 
 			// Script textarea
@@ -1705,7 +1705,7 @@ export class FeaturesTab extends TabRenderer {
 			}
 		});
 		
-		textarea.setCssProps({
+		textarea.setCssStyles({
 			width: '100%',
 			fontFamily: 'var(--font-monospace)',
 			fontSize: '12px',
@@ -1722,7 +1722,7 @@ export class FeaturesTab extends TabRenderer {
 		
 			// Validation and parsing
 			const validationDiv = optionsContainer.createDiv('script-validation');
-			validationDiv.setCssProps({
+			validationDiv.setCssStyles({
 				marginTop: '8px',
 				fontSize: '12px'
 			});
@@ -1814,7 +1814,7 @@ export class FeaturesTab extends TabRenderer {
 					// False positive: "Giscus" is a proper noun (product name) and should be capitalized
 					// eslint-disable-next-line obsidianmd/ui/sentence-case
 					const successSpan = validationDiv.createEl('span', { text: '✓ Valid Giscus script detected' });
-					successSpan.setCssProps({ color: 'var(--text-success)' });
+					successSpan.setCssStyles({ color: 'var(--text-success)' });
 					
 					// Parse and update all settings
 					const parsed = GiscusScriptParser.parseScript(scriptContent);
@@ -1900,7 +1900,7 @@ export class FeaturesTab extends TabRenderer {
 				} else {
 					validationDiv.empty();
 					const errorSpan = validationDiv.createEl('span', { text: `✗ ${validation.error}` });
-					errorSpan.setCssProps({ color: 'var(--text-error)' });
+					errorSpan.setCssStyles({ color: 'var(--text-error)' });
 				}
 			};
 		
