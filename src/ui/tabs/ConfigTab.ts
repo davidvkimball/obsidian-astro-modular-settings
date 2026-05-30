@@ -162,14 +162,24 @@ export class ConfigTab extends TabRenderer {
 			marginTop: '0',
 			marginBottom: 'var(--size-4-2)'
 		});
-		
-		// Get plugin status (async, so we need to handle this)
-		void this.renderPluginStatus(container, settings);
+
+		// Status cards.
+		this.renderPluginStatus(container, settings);
+
+		// Plugin actions. These were split out of renderPluginStatus so the
+		// declarative Config sub-page can give them their own group heading;
+		// the pre-1.13 tabbed fallback adds the heading + actions here so the
+		// Re-apply / Show manual instructions buttons aren't lost.
+		const pluginActionsHeading = new Setting(container)
+			.setHeading()
+			.setName('Plugin actions');
+		pluginActionsHeading.settingEl.setCssStyles({ marginTop: 'var(--size-4-4)', marginBottom: 'var(--size-4-2)' });
+		this.renderPluginActions(container, settings);
 	}
 
 	// Public so the declarative Config sub-page (SettingsTab.getSettingDefinitions)
-	// can reuse the exact plugin-status + plugin-actions DOM. Behaviour is
-	// unchanged for the tabbed fallback that calls it from render().
+	// can reuse the status cards. The pre-1.13 tabbed fallback calls this and
+	// renderPluginActions separately (see render()).
 	renderPluginStatus(container: HTMLElement, settings: AstroModularSettings): void {
 		// Get plugin status
 		const contentOrg = settings.contentOrganization;
